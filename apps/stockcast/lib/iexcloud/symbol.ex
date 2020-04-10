@@ -1,5 +1,7 @@
 defmodule Stockcast.IexCloud.Symbol do
   use Ecto.Schema
+  import Ecto.Changeset
+  alias __MODULE__
 
   schema "symbols" do
     field :symbol, :string
@@ -12,5 +14,27 @@ defmodule Stockcast.IexCloud.Symbol do
     field :currency, :string
     field :figi, :string
     field :cik, :string
+
+    timestamps(type: :utc_datetime)
+  end
+
+  def changeset(%Symbol{} = symbol, params) do
+    symbol
+    |> cast(params, [
+      :symbol,
+      :exchange,
+      :name,
+      :date,
+      :type,
+      :iex_id,
+      :region,
+      :currency,
+      :figi,
+      :cik
+    ])
+    |> validate_required([:symbol, :name, :date, :type, :iex_id, :region, :currency])
+    |> validate_length(:currency, is: 3)
+    |> validate_length(:region, is: 2)
+    |> unique_constraint(:iex_id)
   end
 end
