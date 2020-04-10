@@ -18,6 +18,10 @@ defmodule Stockcast.IexCloud.Symbol do
     timestamps(type: :utc_datetime)
   end
 
+  def changeset_insert(params) do
+    changeset(%Symbol{}, params)
+  end
+
   def changeset(%Symbol{} = symbol, params) do
     symbol
     |> cast(params, [

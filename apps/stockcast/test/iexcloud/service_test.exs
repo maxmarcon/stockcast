@@ -20,7 +20,7 @@ defmodule Stockcast.IexCloud.ServiceTest do
         assert 2 == Repo.aggregate(Symbol, :count)
 
         assert Repo.all(from Symbol, order_by: [:iex_id]) |> Enum.map(& &1.iex_id) ==
-                 Enum.map(api_symbols, & &1["iexId"]) |> Enum.sort()
+                 Enum.map(api_symbols, &Access.get(&1, "iexId")) |> Enum.sort()
       end
     end
 
@@ -44,7 +44,7 @@ defmodule Stockcast.IexCloud.ServiceTest do
       api_symbols = [
         List.first(api_symbols),
         List.last(api_symbols)
-        |> Map.put("iexId", List.first(api_symbols)["iexId"])
+        |> Map.put("iexId", Access.get(List.first(api_symbols), "iexId"))
       ]
 
       with_mock Api, get: fn _ -> api_symbols end do
