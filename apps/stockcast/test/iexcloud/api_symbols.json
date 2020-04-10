@@ -1,0 +1,26 @@
+[
+  {
+    "symbol": "A",
+    "name": "Agilent Technologies Inc.",
+    "date": "2019-03-07",
+    "type": "cs",
+    "iexId": "IEX_46574843354B2D52",
+    "region": "US",
+    "currency": "USD",
+    "isEnabled": true,
+    "figi": "BBG000C2V3D6",
+    "cik": "1090872"
+  },
+  {
+    "symbol": "AA",
+    "name": "Alcoa Corp.",
+    "date": "2019-03-07",
+    "type": "cs",
+    "iexId": "IEX_4238333734532D52",
+    "region": "US",
+    "currency": "USD",
+    "isEnabled": true,
+    "figi": "BBG00B3T3HD3",
+    "cik": "1675149"
+  }
+]

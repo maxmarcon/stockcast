@@ -38,7 +38,8 @@ defmodule Stockcast.MixProject do
     [
       {:ecto_sql, "~> 3.1"},
       {:postgrex, ">= 0.0.0"},
-      {:jason, "~> 1.0"}
+      {:jason, "~> 1.0"},
+      {:mock, "~> 0.3.0", only: :test}
     ]
   end
 

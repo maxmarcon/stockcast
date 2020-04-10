@@ -8,7 +8,7 @@ defmodule Stockcast.Repo.Migrations.CreateSymbols do
       add :name, :string, null: false
       add :date, :date, null: false
       add :type, :string, null: false
-      add :iexId, :string, null: false
+      add :iex_id, :string, null: false
       add :region, :string, size: 2, null: false
       add :currency, :string, size: 3, null: false
       add :figi, :string
@@ -16,5 +16,7 @@ defmodule Stockcast.Repo.Migrations.CreateSymbols do
 
       timestamps()
     end
+
+    create unique_index(:symbols, :iex_id)
   end
 end
