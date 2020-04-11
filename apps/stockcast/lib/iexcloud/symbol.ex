@@ -3,7 +3,7 @@ defmodule Stockcast.IexCloud.Symbol do
   import Ecto.Changeset
   alias __MODULE__
 
-  schema "symbols" do
+  schema "iexc_symbols" do
     field :symbol, :string
     field :exchange, :string
     field :name, :string

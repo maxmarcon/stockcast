@@ -74,8 +74,8 @@ defmodule Stockcast.IexCloud.ServiceTest do
 
       assert updated_symbol.iex_id == initial_symbol.iex_id
       assert updated_symbol.symbol == "AA"
-      assert DateTime.compare(updated_symbol.inserted_at, initial_symbol.inserted_at) == :eq
-      assert DateTime.compare(updated_symbol.updated_at, initial_symbol.updated_at) == :gt
+      assert updated_symbol.inserted_at == initial_symbol.inserted_at
+      refute updated_symbol.updated_at == initial_symbol.updated_at
     end
   end
 end

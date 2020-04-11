@@ -2,7 +2,7 @@ defmodule Stockcast.Repo.Migrations.CreateSymbols do
   use Ecto.Migration
 
   def change do
-    create table("symbols") do
+    create table("iexc_symbols") do
       add :symbol, :string, null: false
       add :exchange, :string
       add :name, :string, null: false
@@ -17,6 +17,6 @@ defmodule Stockcast.Repo.Migrations.CreateSymbols do
       timestamps()
     end
 
-    create unique_index(:symbols, :iex_id)
+    create unique_index(:iexc_symbols, :iex_id)
   end
 end
