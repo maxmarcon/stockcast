@@ -47,7 +47,7 @@ defmodule Stockcast.IexCloud.ServiceTest do
         Enum.at(api_symbols, 1)
         |> Map.put("iexId", api_symbol_1["iexId"])
 
-      old_symbol =
+      initial_symbol =
         with_mock Api, get: fn _ -> [api_symbol_1] end do
           assert {:ok, 1} == Service.fetch_symbols("path")
 
@@ -57,12 +57,12 @@ defmodule Stockcast.IexCloud.ServiceTest do
           symbol
         end
 
-      assert old_symbol.iex_id == api_symbol_1["iexId"]
-      assert old_symbol.symbol == "A"
+      assert initial_symbol.iex_id == api_symbol_1["iexId"]
+      assert initial_symbol.symbol == "A"
 
       Process.sleep(1000)
 
-      new_symbol =
+      updated_symbol =
         with_mock Api, get: fn _ -> [api_symbol_2] end do
           assert {:ok, 1} == Service.fetch_symbols("path")
 
@@ -72,10 +72,10 @@ defmodule Stockcast.IexCloud.ServiceTest do
           symbol
         end
 
-      assert new_symbol.iex_id == old_symbol.iex_id
-      assert new_symbol.symbol == "AA"
-      assert DateTime.compare(new_symbol.inserted_at, old_symbol.inserted_at) == :eq
-      assert DateTime.compare(new_symbol.updated_at, old_symbol.updated_at) == :gt
+      assert updated_symbol.iex_id == initial_symbol.iex_id
+      assert updated_symbol.symbol == "AA"
+      assert DateTime.compare(updated_symbol.inserted_at, initial_symbol.inserted_at) == :eq
+      assert DateTime.compare(updated_symbol.updated_at, initial_symbol.updated_at) == :gt
     end
   end
 end
