@@ -40,22 +40,42 @@ defmodule Stockcast.IexCloud.ServiceTest do
       end
     end
 
-    test "updates entries if iex_id alrady exists", %{api_symbols: api_symbols} do
-      api_symbols = [
-        List.first(api_symbols),
-        List.last(api_symbols)
-        |> Map.put("iexId", Access.get(List.first(api_symbols), "iexId"))
-      ]
+    test "updates symbols if given iex_id already exists", %{api_symbols: api_symbols} do
+      api_symbol_1 = List.first(api_symbols)
 
-      with_mock Api, get: fn _ -> api_symbols end do
-        assert {:ok, 2} == Service.fetch_symbols("path")
+      api_symbol_2 =
+        Enum.at(api_symbols, 1)
+        |> Map.put("iexId", api_symbol_1["iexId"])
 
-        assert 1 == Repo.aggregate(Symbol, :count)
-        symbol = Repo.one(Symbol)
+      old_symbol =
+        with_mock Api, get: fn _ -> [api_symbol_1] end do
+          assert {:ok, 1} == Service.fetch_symbols("path")
 
-        assert symbol.iex_id == "IEX_46574843354B2D52"
-        assert symbol.symbol == "AA"
-      end
+          assert 1 == Repo.aggregate(Symbol, :count)
+          symbol = Repo.one(Symbol)
+
+          symbol
+        end
+
+      assert old_symbol.iex_id == api_symbol_1["iexId"]
+      assert old_symbol.symbol == "A"
+
+      Process.sleep(1000)
+
+      new_symbol =
+        with_mock Api, get: fn _ -> [api_symbol_2] end do
+          assert {:ok, 1} == Service.fetch_symbols("path")
+
+          assert 1 == Repo.aggregate(Symbol, :count)
+          symbol = Repo.one(Symbol)
+
+          symbol
+        end
+
+      assert new_symbol.iex_id == old_symbol.iex_id
+      assert new_symbol.symbol == "AA"
+      assert DateTime.compare(new_symbol.inserted_at, old_symbol.inserted_at) == :eq
+      assert DateTime.compare(new_symbol.updated_at, old_symbol.updated_at) == :gt
     end
   end
 end

@@ -7,7 +7,7 @@ defmodule Stockcast.IexCloud.Service do
   def fetch_symbols(symbol_path) do
     saved =
       Api.get(symbol_path)
-      |> Stream.map(&save_symbol/1)
+      |> Enum.map(&save_symbol/1)
       |> Enum.count(fn
         {:ok, _} -> true
         _ -> false
@@ -21,7 +21,7 @@ defmodule Stockcast.IexCloud.Service do
     |> parse_symbol_data
     |> Symbol.changeset_insert()
     |> Repo.insert(
-      on_conflict: :replace_all,
+      on_conflict: {:replace_all_except, [:inserted_at]},
       conflict_target: :iex_id
     )
   end
@@ -29,5 +29,6 @@ defmodule Stockcast.IexCloud.Service do
   defp parse_symbol_data(symbol_data) do
     symbol_data
     |> Map.put("iex_id", symbol_data["iexId"])
+    |> Map.delete("iexId")
   end
 end
