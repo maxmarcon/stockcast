@@ -16,3 +16,10 @@ config :stockcast_web, StockcastWeb.Endpoint,
 
 # Print only warnings and errors during test
 config :logger, level: :warn
+
+config :tesla, adapter: Tesla.Mock
+
+config :stockcast,
+       Stockcast.IexCloud.Api,
+       api_token: "fake_token",
+       base_url: "https://sandbox.iexapis.com/v1"

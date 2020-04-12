@@ -1,27 +1,27 @@
 defmodule Stockcast.IexCloud.ServiceTest do
   use Stockcast.DataCase
 
-  import Mock
-
-  alias Stockcast.IexCloud.{Service, Symbol, Api}
+  alias Stockcast.IexCloud.{Service, Symbol}
   alias Stockcast.Repo
 
   setup do
     api_symbols = Jason.decode!(File.read!("#{__DIR__}/api_symbols.json"))
+
+    Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: api_symbols, status: 200} end)
 
     [api_symbols: api_symbols]
   end
 
   describe "fetch_symbols/1" do
     test "fetches and saves symbols", %{api_symbols: api_symbols} do
-      with_mock Api, get: fn _ -> api_symbols end do
-        assert {:ok, 2} == Service.fetch_symbols("path")
+      assert {:ok, 2} == Service.fetch_symbols("path")
 
-        assert 2 == Repo.aggregate(Symbol, :count)
+      assert 2 == Repo.aggregate(Symbol, :count)
 
-        assert Repo.all(from Symbol, order_by: [:iex_id]) |> Enum.map(& &1.iex_id) ==
-                 Enum.map(api_symbols, &Access.get(&1, "iexId")) |> Enum.sort()
-      end
+      assert Repo.all(from Symbol, order_by: [:iex_id])
+             |> Enum.map(& &1.iex_id) ==
+               Enum.map(api_symbols, &Access.get(&1, "iexId"))
+               |> Enum.sort()
     end
 
     test "doesn't save symbols if some data is missing", %{api_symbols: api_symbols} do
@@ -31,13 +31,13 @@ defmodule Stockcast.IexCloud.ServiceTest do
         |> Map.delete("name")
       ]
 
-      with_mock Api, get: fn _ -> api_symbols end do
-        assert {:ok, 1} == Service.fetch_symbols("path")
+      Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: api_symbols, status: 200} end)
 
-        assert 1 == Repo.aggregate(Symbol, :count)
+      assert {:ok, 1} == Service.fetch_symbols("path")
 
-        assert Repo.one(Symbol).iex_id == "IEX_46574843354B2D52"
-      end
+      assert 1 == Repo.aggregate(Symbol, :count)
+
+      assert Repo.one(Symbol).iex_id == "IEX_46574843354B2D52"
     end
 
     test "updates symbols if given iex_id already exists", %{api_symbols: api_symbols} do
@@ -47,30 +47,24 @@ defmodule Stockcast.IexCloud.ServiceTest do
         Enum.at(api_symbols, 1)
         |> Map.put("iexId", api_symbol_1["iexId"])
 
-      initial_symbol =
-        with_mock Api, get: fn _ -> [api_symbol_1] end do
-          assert {:ok, 1} == Service.fetch_symbols("path")
+      Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: [api_symbol_1], status: 200} end)
 
-          assert 1 == Repo.aggregate(Symbol, :count)
-          symbol = Repo.one(Symbol)
+      assert {:ok, 1} == Service.fetch_symbols("path")
 
-          symbol
-        end
+      assert 1 == Repo.aggregate(Symbol, :count)
+      initial_symbol = Repo.one(Symbol)
 
       assert initial_symbol.iex_id == api_symbol_1["iexId"]
       assert initial_symbol.symbol == "A"
 
       Process.sleep(1000)
 
-      updated_symbol =
-        with_mock Api, get: fn _ -> [api_symbol_2] end do
-          assert {:ok, 1} == Service.fetch_symbols("path")
+      Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: [api_symbol_2], status: 200} end)
 
-          assert 1 == Repo.aggregate(Symbol, :count)
-          symbol = Repo.one(Symbol)
+      assert {:ok, 1} == Service.fetch_symbols("path")
 
-          symbol
-        end
+      assert 1 == Repo.aggregate(Symbol, :count)
+      updated_symbol = Repo.one(Symbol)
 
       assert updated_symbol.iex_id == initial_symbol.iex_id
       assert updated_symbol.symbol == "AA"
