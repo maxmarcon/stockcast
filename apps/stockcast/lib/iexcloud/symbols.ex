@@ -3,40 +3,24 @@ defmodule Stockcast.IexCloud.Symbols do
 
   alias Stockcast.IexCloud.Api
   alias Stockcast.IexCloud.Symbol
+
   alias Stockcast.Repo
 
-  @spec fetch_symbols(String.t()) :: {:ok, integer()} | any()
-  def fetch_symbols(symbol_path) do
-    case Api.fetch(:get, symbol_path) do
-      {:ok, symbol_list} -> {:ok, save_symbols(symbol_list)}
-      error -> error
+  @spec fetch(String.t(), (String.t() -> any())) ::
+          {:ok, %{fetched: integer(), saved: integer()}} | {:error, any()}
+  def fetch(symbol_path, progress_callback \\ fn _ -> nil end)
+      when is_binary(symbol_path) and is_function(progress_callback) do
+    case Api.call_api_and_process_request(:get, symbol_path) do
+      {:ok, symbols} ->
+        progress_callback.({:ok, "fetched #{length(symbols)} symbols"})
+        {:ok, %{fetched: length(symbols), saved: save_symbols(symbols, progress_callback)}}
+
+      error ->
+        error
     end
   end
 
-  @spec fetch_symbols() :: integer()
-  def fetch_symbols() do
-    Enum.reduce(
-      Access.get(Application.get_env(:stockcast, __MODULE__, []), :symbol_paths) ||
-        raise("You need to specify a list of symbol paths"),
-      0,
-      fn symbol_path, saved_so_far ->
-        case fetch_symbols(symbol_path) do
-          {:ok, saved} -> saved + saved_so_far
-          _ -> saved_so_far
-        end
-      end
-    )
-  end
-
-  defp parse_symbol_data(symbol_data) do
-    symbol_data
-    |> Map.put("iex_id", symbol_data["iexId"])
-    |> Map.delete("iexId")
-  end
-
-  defp save_symbols(symbols) do
-    Logger.info("retrieved #{length(symbols)} symbols.")
-
+  defp save_symbols(symbols, progress_callback) do
     symbols
     |> Enum.map(&save_symbol/1)
     |> Enum.count(fn
@@ -44,7 +28,7 @@ defmodule Stockcast.IexCloud.Symbols do
         true
 
       {:error, %{errors: errors}} ->
-        Logger.error(errors)
+        progress_callback.({:error, "error while saving symbol: #{inspect(errors)}"})
         false
     end)
   end
@@ -57,5 +41,11 @@ defmodule Stockcast.IexCloud.Symbols do
       on_conflict: {:replace_all_except, [:inserted_at]},
       conflict_target: :iex_id
     )
+  end
+
+  defp parse_symbol_data(symbol_data) do
+    symbol_data
+    |> Map.put("iex_id", symbol_data["iexId"])
+    |> Map.delete("iexId")
   end
 end

@@ -12,9 +12,9 @@ defmodule Stockcast.IexCloud.SymbolsTest do
     [api_symbols: api_symbols]
   end
 
-  describe "fetch_symbols/1" do
+  describe "fetch/1" do
     test "fetches and saves symbols", %{api_symbols: api_symbols} do
-      assert {:ok, 2} == Symbols.fetch_symbols("path")
+      assert {:ok, %{fetched: 2, saved: 2}} == Symbols.fetch("path")
 
       assert 2 == Repo.aggregate(Symbol, :count)
 
@@ -33,7 +33,7 @@ defmodule Stockcast.IexCloud.SymbolsTest do
 
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: api_symbols, status: 200} end)
 
-      assert {:ok, 1} == Symbols.fetch_symbols("path")
+      assert {:ok, %{fetched: 2, saved: 1}} == Symbols.fetch("path")
 
       assert 1 == Repo.aggregate(Symbol, :count)
 
@@ -49,7 +49,7 @@ defmodule Stockcast.IexCloud.SymbolsTest do
 
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: [api_symbol_1], status: 200} end)
 
-      assert {:ok, 1} == Symbols.fetch_symbols("path")
+      assert {:ok, %{fetched: 1, saved: 1}} == Symbols.fetch("path")
 
       assert 1 == Repo.aggregate(Symbol, :count)
       initial_symbol = Repo.one(Symbol)
@@ -61,7 +61,7 @@ defmodule Stockcast.IexCloud.SymbolsTest do
 
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: [api_symbol_2], status: 200} end)
 
-      assert {:ok, 1} == Symbols.fetch_symbols("path")
+      assert {:ok, %{fetched: 1, saved: 1}} == Symbols.fetch("path")
 
       assert 1 == Repo.aggregate(Symbol, :count)
       updated_symbol = Repo.one(Symbol)
@@ -70,6 +70,12 @@ defmodule Stockcast.IexCloud.SymbolsTest do
       assert updated_symbol.symbol == "AA"
       assert updated_symbol.inserted_at == initial_symbol.inserted_at
       refute updated_symbol.updated_at == initial_symbol.updated_at
+    end
+
+    test "passes through api errors" do
+      Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: "API_ERROR", status: 422} end)
+
+      assert {:error, "API_ERROR"} == Symbols.fetch("path")
     end
   end
 end

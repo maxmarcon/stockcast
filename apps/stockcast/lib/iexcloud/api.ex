@@ -6,11 +6,15 @@ defmodule Stockcast.IexCloud.Api do
   plug(Tesla.Middleware.BaseUrl, base_url())
   plug(Tesla.Middleware.JSON)
   plug(Tesla.Middleware.Query, token: api_token())
-  plug(Tesla.Middleware.Logger)
 
-  def fetch(method, path) do
+  plug(Tesla.Middleware.Headers, [
+    {"Accept", "application/json"},
+    {"Content-Type", "application/json"}
+  ])
+
+  def call_api_and_process_request(method, path) do
     case request(method: method, url: path) do
-      {:ok, %{status: 200, body: body}} ->
+      {:ok, %{status: status, body: body}} when status >= 200 and status < 300 ->
         {:ok, body}
 
       {:ok, %{body: body}} ->
