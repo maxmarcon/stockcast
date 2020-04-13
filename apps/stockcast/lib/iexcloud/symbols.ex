@@ -6,18 +6,32 @@ defmodule Stockcast.IexCloud.Symbols do
 
   alias Stockcast.Repo
 
+  @chunk_size 100
+
   @spec fetch(String.t(), (String.t() -> any())) ::
           {:ok, %{fetched: integer(), saved: integer()}} | {:error, any()}
   def fetch(symbol_path, progress_callback \\ fn _ -> nil end)
       when is_binary(symbol_path) and is_function(progress_callback) do
     case Api.call_api_and_process_request(:get, symbol_path) do
       {:ok, symbols} ->
-        progress_callback.({:ok, "fetched #{length(symbols)} symbols"})
-        {:ok, %{fetched: length(symbols), saved: save_symbols(symbols, progress_callback)}}
+        progress_callback.({:ok, %{fetched: length(symbols)}})
+
+        {:ok,
+         %{fetched: length(symbols), saved: save_symbols_chunked(symbols, progress_callback)}}
 
       error ->
         error
     end
+  end
+
+  defp save_symbols_chunked(symbols, progress_callback) do
+    symbols
+    |> Enum.chunk_every(@chunk_size)
+    |> Enum.reduce(0, fn chunked_symbols, saved_so_far ->
+      saved = save_symbols(chunked_symbols, progress_callback)
+      progress_callback.({:ok, %{saved: saved_so_far + saved, total: length(symbols)}})
+      saved_so_far + saved
+    end)
   end
 
   defp save_symbols(symbols, progress_callback) do
@@ -27,8 +41,8 @@ defmodule Stockcast.IexCloud.Symbols do
       {:ok, _} ->
         true
 
-      {:error, %{errors: errors}} ->
-        progress_callback.({:error, "error while saving symbol: #{inspect(errors)}"})
+      {:error, changeset} ->
+        progress_callback.({:error, changeset})
         false
     end)
   end

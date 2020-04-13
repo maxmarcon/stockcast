@@ -28,24 +28,22 @@ defmodule Mix.Tasks.Fetch.Symbols do
       symbol_paths(symbol_paths_from_args)
       |> Enum.reduce(
         %{fetched: 0, saved: 0},
-        fn path, %{fetched: fetched, saved: saved} = progress ->
-          ok("fetching: #{path}}")
+        fn path, progress ->
+          ok("\nfetching: #{path}}")
 
           case Symbols.fetch(path, &print_progress/1) do
-            {:ok, %{fetched: newly_fetched, saved: newly_saved}} ->
-              %{fetched: fetched + newly_fetched, saved: saved + newly_saved}
+            {:ok, %{fetched: fetched, saved: saved}} ->
+              %{fetched: progress.fetched + fetched, saved: progress.saved + saved}
 
             {:error, error} ->
-              error("API error while fetching data #{inspect(error)}")
+              error("API error while fetching data: #{inspect(error)}")
               progress
           end
         end
       )
 
-    ok("")
-
     ok(
-      "fetched #{summary.fetched} symbols, saved #{summary.saved} in #{
+      "\nfetched #{summary.fetched} symbols, saved #{summary.saved} in #{
         format_msec(Time.diff(Time.utc_now(), start_time, :millisecond))
       }"
     )
@@ -69,11 +67,21 @@ defmodule Mix.Tasks.Fetch.Symbols do
     from_args
   end
 
+  defp print_progress({:ok, %{fetched: fetched}}) do
+    ok("fetched #{fetched} symbols")
+  end
+
+  defp print_progress({:ok, %{saved: saved, total: total}}) do
+    IO.write(
+      IO.ANSI.cyan() <> "\rsaved #{saved} symbols (#{Float.round(100 * saved / total, 0)}%)"
+    )
+  end
+
   defp print_progress({:ok, message}) do
     ok(message)
   end
 
-  defp print_progress({:error, message}) do
-    error(message)
+  defp print_progress({:error, %{data: data, errors: errors}}) do
+    error("error saving symbol #{inspect(data)}: #{inspect(errors)}")
   end
 end
