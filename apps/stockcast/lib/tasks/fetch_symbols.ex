@@ -73,7 +73,7 @@ defmodule Mix.Tasks.Fetch.Symbols do
 
   defp print_progress({:ok, %{saved: saved, total: total}}) do
     IO.write(
-      IO.ANSI.cyan() <> "\rsaved #{saved} symbols (#{Float.round(100 * saved / total, 0)}%)"
+      IO.ANSI.cyan() <> "\rsaved #{saved} symbols (#{Float.round(100 * saved / total, 1)}%)"
     )
   end
 

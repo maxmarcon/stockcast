@@ -7,7 +7,7 @@ defmodule Stockcast.Repo.Migrations.CreateSymbols do
       add :exchange, :string
       add :name, :string, null: false
       add :date, :date, null: false
-      add :type, :string, null: false
+      add :type, :string
       add :iex_id, :string, null: false
       add :region, :string, size: 2, null: false
       add :currency, :string, size: 3, null: false

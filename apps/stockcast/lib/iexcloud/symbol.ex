@@ -36,7 +36,7 @@ defmodule Stockcast.IexCloud.Symbol do
       :figi,
       :cik
     ])
-    |> validate_required([:symbol, :name, :date, :type, :iex_id, :region, :currency])
+    |> validate_required([:symbol, :name, :date, :iex_id, :region, :currency])
     |> validate_length(:currency, is: 3)
     |> validate_length(:region, is: 2)
     |> unique_constraint(:iex_id)
