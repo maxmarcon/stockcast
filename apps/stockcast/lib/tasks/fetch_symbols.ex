@@ -12,11 +12,15 @@ defmodule Mix.Tasks.Fetch.Symbols do
 
   use Mix.Task
 
+  import Mix.Tasks.Utils
+
   alias Stockcast.IexCloud.Symbols
 
   @impl Mix.Task
   def run(args) do
     {_, symbol_paths_from_args, _} = OptionParser.parse(args, strict: [])
+
+    start_time = Time.utc_now()
 
     Application.ensure_all_started(:stockcast)
 
@@ -38,15 +42,13 @@ defmodule Mix.Tasks.Fetch.Symbols do
         end
       )
 
-    ok("fetched #{summary.fetched} symbols, saved #{summary.saved}")
-  end
+    ok("")
 
-  defp print_progress({:ok, message}) do
-    ok(message)
-  end
-
-  defp print_progress({:error, message}) do
-    error(message)
+    ok(
+      "fetched #{summary.fetched} symbols, saved #{summary.saved} in #{
+        format_msec(Time.diff(Time.utc_now(), start_time, :millisecond))
+      }"
+    )
   end
 
   defp symbol_paths([]) do
@@ -67,16 +69,11 @@ defmodule Mix.Tasks.Fetch.Symbols do
     from_args
   end
 
-  defp fail(message) do
+  defp print_progress({:ok, message}) do
+    ok(message)
+  end
+
+  defp print_progress({:error, message}) do
     error(message)
-    exit({:shutdown, 1})
-  end
-
-  defp error(message) do
-    IO.puts(IO.ANSI.red() <> message)
-  end
-
-  defp ok(message) do
-    IO.puts(IO.ANSI.green() <> message)
   end
 end
