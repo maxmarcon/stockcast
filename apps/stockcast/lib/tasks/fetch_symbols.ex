@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Fetch.Symbols do
       |> Enum.reduce(
         %{fetched: 0, saved: 0},
         fn path, progress ->
-          ok("\nfetching: #{path}}")
+          ok("\nfetching: #{path}")
 
           case Symbols.fetch(path, &print_progress/1) do
             {:ok, %{fetched: fetched, saved: saved}} ->
@@ -58,7 +58,7 @@ defmodule Mix.Tasks.Fetch.Symbols do
       )
     end
 
-    ok("fetching all symbol paths from the configuration")
+    ok("fetching all symbol paths from the configuration: #{inspect(symbol_paths)}")
     symbol_paths
   end
 
