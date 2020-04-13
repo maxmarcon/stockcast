@@ -1,7 +1,7 @@
-defmodule Stockcast.IexCloud.ServiceTest do
+defmodule Stockcast.IexCloud.SymbolsTest do
   use Stockcast.DataCase
 
-  alias Stockcast.IexCloud.{Service, Symbol}
+  alias Stockcast.IexCloud.{Symbols, Symbol}
   alias Stockcast.Repo
 
   setup do
@@ -14,7 +14,7 @@ defmodule Stockcast.IexCloud.ServiceTest do
 
   describe "fetch_symbols/1" do
     test "fetches and saves symbols", %{api_symbols: api_symbols} do
-      assert {:ok, 2} == Service.fetch_symbols("path")
+      assert {:ok, 2} == Symbols.fetch_symbols("path")
 
       assert 2 == Repo.aggregate(Symbol, :count)
 
@@ -33,7 +33,7 @@ defmodule Stockcast.IexCloud.ServiceTest do
 
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: api_symbols, status: 200} end)
 
-      assert {:ok, 1} == Service.fetch_symbols("path")
+      assert {:ok, 1} == Symbols.fetch_symbols("path")
 
       assert 1 == Repo.aggregate(Symbol, :count)
 
@@ -49,7 +49,7 @@ defmodule Stockcast.IexCloud.ServiceTest do
 
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: [api_symbol_1], status: 200} end)
 
-      assert {:ok, 1} == Service.fetch_symbols("path")
+      assert {:ok, 1} == Symbols.fetch_symbols("path")
 
       assert 1 == Repo.aggregate(Symbol, :count)
       initial_symbol = Repo.one(Symbol)
@@ -61,7 +61,7 @@ defmodule Stockcast.IexCloud.ServiceTest do
 
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: [api_symbol_2], status: 200} end)
 
-      assert {:ok, 1} == Service.fetch_symbols("path")
+      assert {:ok, 1} == Symbols.fetch_symbols("path")
 
       assert 1 == Repo.aggregate(Symbol, :count)
       updated_symbol = Repo.one(Symbol)

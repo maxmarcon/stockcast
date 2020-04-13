@@ -20,7 +20,7 @@ config :stockcast_web,
   ]
 
 config :stockcast,
-       Stockcast.IexCloud.Service,
+       Stockcast.IexCloud.Symbols,
        symbol_paths: [
          "ref-data/mutual-funds/symbols",
          "ref-data/region/DE/symbols",

@@ -29,7 +29,6 @@ config :stockcast_web,
 
 config :stockcast,
        Stockcast.IexCloud.Api,
-       api_token: "Tpk_c77a89bf019a4a4cb31a20c73a859f59",
        base_url: "https://sandbox.iexapis.com/v1"
 
 # ## SSL Support
@@ -67,3 +66,5 @@ config :phoenix, :plug_init_mode, :runtime
 config :phoenix, :stacktrace_depth, 20
 
 config :tesla, Tesla.Middleware.Logger, debug: false
+
+import_config "dev.secret.exs"

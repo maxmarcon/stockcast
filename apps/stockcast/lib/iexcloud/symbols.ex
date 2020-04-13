@@ -1,4 +1,4 @@
-defmodule Stockcast.IexCloud.Service do
+defmodule Stockcast.IexCloud.Symbols do
   require Logger
 
   alias Stockcast.IexCloud.Api
@@ -35,6 +35,8 @@ defmodule Stockcast.IexCloud.Service do
   end
 
   defp save_symbols(symbols) do
+    Logger.info("retrieved #{length(symbols)} symbols.")
+
     symbols
     |> Enum.map(&save_symbol/1)
     |> Enum.count(fn
