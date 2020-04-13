@@ -13,11 +13,14 @@ defmodule Stockcast.IexCloud.Symbols do
   def fetch(symbol_path, progress_callback \\ fn _ -> nil end)
       when is_binary(symbol_path) and is_function(progress_callback) do
     case Api.call_api_and_process_request(:get, symbol_path) do
-      {:ok, symbols} ->
+      {:ok, symbols} when is_list(symbols) ->
         progress_callback.({:ok, %{fetched: length(symbols)}})
 
         {:ok,
          %{fetched: length(symbols), saved: save_symbols_chunked(symbols, progress_callback)}}
+
+      {:ok, _} ->
+        {:error, :empty_body}
 
       error ->
         error

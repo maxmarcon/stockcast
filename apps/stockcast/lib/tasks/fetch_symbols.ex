@@ -81,7 +81,7 @@ defmodule Mix.Tasks.Fetch.Symbols do
     ok(message)
   end
 
-  defp print_progress({:error, %{data: data, errors: errors}}) do
-    error("error saving symbol #{inspect(data)}: #{inspect(errors)}")
+  defp print_progress({:error, %{changes: changes, errors: errors}}) do
+    error("error saving symbol #{inspect(changes)}: #{inspect(errors)}")
   end
 end

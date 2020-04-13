@@ -72,6 +72,18 @@ defmodule Stockcast.IexCloud.SymbolsTest do
       refute updated_symbol.updated_at == initial_symbol.updated_at
     end
 
+    test "can deal with empty response" do
+      Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: [], status: 200} end)
+
+      assert {:ok, %{fetched: 0, saved: 0}} == Symbols.fetch("path")
+    end
+
+    test "can deal with missing body" do
+      Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: nil, status: 200} end)
+
+      assert {:error, :empty_body} == Symbols.fetch("path")
+    end
+
     test "passes through api errors" do
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: "API_ERROR", status: 422} end)
 
