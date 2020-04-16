@@ -12,8 +12,13 @@ defmodule Stockcast.IexCloud.Api do
     {"Content-Type", "application/json"}
   ])
 
-  def call_api_and_process_request(method, path) do
-    case request(method: method, url: path) do
+  @spec get_data(binary(), keyword()) :: any()
+  def get_data(path, query \\ []) when is_binary(path),
+    do: call_api_and_parse_response(:get, path, query)
+
+  @spec call_api_and_parse_response(atom(), binary(), keyword()) :: any()
+  def call_api_and_parse_response(method, path, query) when is_atom(method) and is_binary(path) do
+    case request(method: method, url: path, query: query) do
       {:ok, %{status: status, body: body}} when status >= 200 and status < 300 ->
         {:ok, body}
 

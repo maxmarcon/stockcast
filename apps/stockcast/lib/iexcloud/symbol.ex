@@ -2,6 +2,7 @@ defmodule Stockcast.IexCloud.Symbol do
   use Ecto.Schema
   import Ecto.Changeset
   alias __MODULE__
+  alias Stockcast.IexCloud.Isin
 
   schema "iexc_symbols" do
     field :symbol, :string
@@ -15,14 +16,11 @@ defmodule Stockcast.IexCloud.Symbol do
     field :figi, :string
     field :cik, :string
 
+    has_one :isin, Isin, foreign_key: :iex_id, references: :iex_id
     timestamps(type: :utc_datetime)
   end
 
-  def changeset_insert(params) do
-    changeset(%Symbol{}, params)
-  end
-
-  def changeset(%Symbol{} = symbol, params) do
+  def changeset(symbol \\ %Symbol{}, params) do
     symbol
     |> cast(params, [
       :symbol,

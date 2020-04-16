@@ -12,7 +12,7 @@ defmodule Stockcast.IexCloud.Symbols do
           {:ok, %{fetched: integer(), saved: integer()}} | {:error, any()}
   def fetch(symbol_path, progress_callback \\ fn _ -> nil end)
       when is_binary(symbol_path) and is_function(progress_callback) do
-    case Api.call_api_and_process_request(:get, symbol_path) do
+    case Api.get_data(symbol_path) do
       {:ok, symbols} when is_list(symbols) ->
         progress_callback.({:ok, %{fetched: length(symbols)}})
 
@@ -53,7 +53,7 @@ defmodule Stockcast.IexCloud.Symbols do
   defp save_symbol(symbol_data) when is_map(symbol_data) do
     symbol_data
     |> parse_symbol_data
-    |> Symbol.changeset_insert()
+    |> Symbol.changeset()
     |> Repo.insert(
       on_conflict: {:replace_all_except, [:inserted_at]},
       conflict_target: :iex_id
