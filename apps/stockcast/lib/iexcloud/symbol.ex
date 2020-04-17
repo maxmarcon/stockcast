@@ -16,7 +16,7 @@ defmodule Stockcast.IexCloud.Symbol do
     field :figi, :string
     field :cik, :string
 
-    has_one :isin, Isin, foreign_key: :iex_id, references: :iex_id
+    has_many :isin, Isin, foreign_key: :iex_id, references: :iex_id
     timestamps(type: :utc_datetime)
   end
 
