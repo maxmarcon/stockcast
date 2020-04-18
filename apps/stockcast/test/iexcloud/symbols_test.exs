@@ -4,6 +4,8 @@ defmodule Stockcast.IexCloud.SymbolsTest do
   alias Stockcast.IexCloud.{Symbols, Symbol}
   alias Stockcast.Repo
 
+  @symbols_path "ref-data/symbols"
+
   setup do
     api_symbols = Jason.decode!(File.read!("#{__DIR__}/api_symbols.json"))
 
@@ -14,7 +16,7 @@ defmodule Stockcast.IexCloud.SymbolsTest do
 
   describe "fetch/1" do
     test "fetches and saves symbols", %{api_symbols: api_symbols} do
-      assert {:ok, %{fetched: 2, saved: 2}} == Symbols.fetch("path")
+      assert {:ok, %{fetched: 2, saved: 2}} == Symbols.fetch(@symbols_path)
 
       assert 2 == Repo.aggregate(Symbol, :count)
 
@@ -33,7 +35,7 @@ defmodule Stockcast.IexCloud.SymbolsTest do
 
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: api_symbols, status: 200} end)
 
-      assert {:ok, %{fetched: 2, saved: 1}} == Symbols.fetch("path")
+      assert {:ok, %{fetched: 2, saved: 1}} == Symbols.fetch(@symbols_path)
 
       assert 1 == Repo.aggregate(Symbol, :count)
 
@@ -49,7 +51,7 @@ defmodule Stockcast.IexCloud.SymbolsTest do
 
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: [api_symbol_1], status: 200} end)
 
-      assert {:ok, %{fetched: 1, saved: 1}} == Symbols.fetch("path")
+      assert {:ok, %{fetched: 1, saved: 1}} == Symbols.fetch(@symbols_path)
 
       assert 1 == Repo.aggregate(Symbol, :count)
       initial_symbol = Repo.one(Symbol)
@@ -61,7 +63,7 @@ defmodule Stockcast.IexCloud.SymbolsTest do
 
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: [api_symbol_2], status: 200} end)
 
-      assert {:ok, %{fetched: 1, saved: 1}} == Symbols.fetch("path")
+      assert {:ok, %{fetched: 1, saved: 1}} == Symbols.fetch(@symbols_path)
 
       assert 1 == Repo.aggregate(Symbol, :count)
       updated_symbol = Repo.one(Symbol)
@@ -75,13 +77,13 @@ defmodule Stockcast.IexCloud.SymbolsTest do
     test "can deal with empty response" do
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: [], status: 200} end)
 
-      assert {:ok, %{fetched: 0, saved: 0}} == Symbols.fetch("path")
+      assert {:ok, %{fetched: 0, saved: 0}} == Symbols.fetch(@symbols_path)
     end
 
     test "can deal with missing response" do
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: nil, status: 200} end)
 
-      assert {:error, :unexpected_response} == Symbols.fetch("path")
+      assert {:error, :unexpected_response} == Symbols.fetch(@symbols_path)
     end
 
     test "can deal with unexpected response" do
@@ -89,13 +91,13 @@ defmodule Stockcast.IexCloud.SymbolsTest do
         %Tesla.Env{body: "not what you were expecting", status: 200}
       end)
 
-      assert {:error, :unexpected_response} == Symbols.fetch("path")
+      assert {:error, :unexpected_response} == Symbols.fetch(@symbols_path)
     end
 
     test "passes through api errors" do
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: "API_ERROR", status: 422} end)
 
-      assert {:error, "API_ERROR"} == Symbols.fetch("path")
+      assert {:error, "API_ERROR"} == Symbols.fetch(@symbols_path)
     end
   end
 end
