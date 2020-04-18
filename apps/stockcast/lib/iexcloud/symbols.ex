@@ -20,7 +20,7 @@ defmodule Stockcast.IexCloud.Symbols do
          %{fetched: length(symbols), saved: save_symbols_chunked(symbols, progress_callback)}}
 
       {:ok, _} ->
-        {:error, :empty_body}
+        {:error, :unexpected_response}
 
       error ->
         error

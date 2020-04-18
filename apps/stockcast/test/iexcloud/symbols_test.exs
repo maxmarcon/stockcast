@@ -78,10 +78,18 @@ defmodule Stockcast.IexCloud.SymbolsTest do
       assert {:ok, %{fetched: 0, saved: 0}} == Symbols.fetch("path")
     end
 
-    test "can deal with missing body" do
+    test "can deal with missing response" do
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: nil, status: 200} end)
 
-      assert {:error, :empty_body} == Symbols.fetch("path")
+      assert {:error, :unexpected_response} == Symbols.fetch("path")
+    end
+
+    test "can deal with unexpected response" do
+      Tesla.Mock.mock(fn %{method: :get} ->
+        %Tesla.Env{body: "not what you were expecting", status: 200}
+      end)
+
+      assert {:error, :unexpected_response} == Symbols.fetch("path")
     end
 
     test "passes through api errors" do
