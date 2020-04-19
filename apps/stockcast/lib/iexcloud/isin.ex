@@ -6,6 +6,8 @@ defmodule Stockcast.IexCloud.Isin do
   alias __MODULE__
   alias Stockcast.IexCloud.Symbol
 
+  @isin_format ~r/^[A-Z]{2}\w{9}\d$/
+
   schema "iexc_isins" do
     field :isin, :string
 
@@ -17,5 +19,6 @@ defmodule Stockcast.IexCloud.Isin do
     symbol
     |> cast(params, [:isin, :iex_id])
     |> validate_required([:isin])
+    |> validate_format(:isin, @isin_format)
   end
 end
