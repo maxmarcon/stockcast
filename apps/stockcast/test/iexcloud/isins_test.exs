@@ -87,5 +87,13 @@ defmodule Stockcast.IexCloud.IsinsTest do
 
       assert [%{isin: @isin, iex_id: nil} | _] = isins
     end
+
+    test "doesn't add an isin with null iex_id if format is wrong" do
+      Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: [], status: 200} end)
+
+      assert {:error, %{errors: [isin: {_, [validation: :format]}]}} = Isins.fetch(@invalid_isin)
+
+      assert Repo.aggregate(Isin, :count) == 0
+    end
   end
 end

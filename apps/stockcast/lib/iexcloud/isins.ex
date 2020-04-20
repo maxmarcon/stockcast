@@ -34,7 +34,7 @@ defmodule Stockcast.IexCloud.Isins do
   end
 
   defp save_isins(isin, _) do
-    case Repo.insert(%Isin{isin: isin}) do
+    case Repo.insert(Isin.changeset(%{isin: isin})) do
       {:ok, _} -> {:ok, 1}
       error -> error
     end
