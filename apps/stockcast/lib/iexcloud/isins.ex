@@ -20,33 +20,29 @@ defmodule Stockcast.IexCloud.Isins do
   defp update_isins(isin, mappings) do
     Repo.transaction(fn ->
       {deleted, _} = Repo.delete_all(from Isin, where: [isin: ^isin])
-      %{deleted: deleted, created: save_isins(isin, mappings)}
+
+      case save_isins(isin, mappings) do
+        {:ok, created} -> %{deleted: deleted, created: created}
+        {:error, error} -> Repo.rollback(error)
+      end
     end)
   end
 
   defp save_isins(isin, mappings) when is_list(mappings) and length(mappings) > 0 do
-    case Enum.reduce_while(
-           mappings,
-           0,
-           &save_isin(isin, &1, &2)
-         ) do
-      created when is_integer(created) -> created
-      error -> Repo.rollback(error)
-    end
+    Enum.find_value(mappings, {:ok, length(mappings)}, &save_isin(isin, &1))
   end
 
   defp save_isins(isin, _) do
-    with {:ok, _} <- Repo.insert(%Isin{isin: isin}) do
-      1
-    else
+    case Repo.insert(%Isin{isin: isin}) do
+      {:ok, _} -> {:ok, 1}
       error -> error
     end
   end
 
-  defp save_isin(isin, %{"iexId" => iex_id}, created) do
+  defp save_isin(isin, %{"iexId" => iex_id}) do
     case Repo.insert(Isin.changeset(%{isin: isin, iex_id: iex_id})) do
-      {:ok, _} -> {:cont, created + 1}
-      {:error, changeset} -> {:halt, changeset}
+      {:ok, _} -> nil
+      error -> error
     end
   end
 end
