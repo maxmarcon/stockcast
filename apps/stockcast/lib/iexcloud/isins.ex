@@ -29,7 +29,8 @@ defmodule Stockcast.IexCloud.Isins do
   end
 
   defp save_isins(isin, mappings) when is_list(mappings) and length(mappings) > 0 do
-    Enum.find_value(mappings, {:ok, length(mappings)}, &save_isin(isin, &1))
+    mappings
+    |> Enum.find_value({:ok, length(mappings)}, &save_isin(isin, &1))
   end
 
   defp save_isins(isin, _) do
