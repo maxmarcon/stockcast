@@ -14,11 +14,27 @@ defmodule Mix.Tasks.Utils do
     exit({:shutdown, 1})
   end
 
-  def error(message) do
-    IO.puts(IO.ANSI.red() <> message)
+  def error(message, %Ecto.Changeset{} = changeset) when is_binary(message) do
+    changeset_errors =
+      Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+        Enum.reduce(opts, msg, fn {key, value}, acc ->
+          String.replace(acc, "%{#{key}}", to_string(value))
+        end)
+      end)
+
+    error(changeset)
+    error(message, changeset_errors)
   end
 
-  def ok(message) do
-    IO.puts(IO.ANSI.green() <> message)
-  end
+  def error(message, data) when is_binary(message), do: error("#{message}: " <> inspect(data))
+
+  def error(message) when is_binary(message), do: IO.puts(IO.ANSI.red() <> message)
+
+  def error(message), do: error(inspect(message))
+
+  def ok(message), do: IO.puts(IO.ANSI.green() <> message)
+
+  def progress(message, :no_newline), do: IO.write(IO.ANSI.yellow() <> "\r#{message}")
+
+  def progress(message), do: IO.puts(IO.ANSI.yellow() <> message)
 end

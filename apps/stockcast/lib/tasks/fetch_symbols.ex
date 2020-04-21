@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Fetch.Symbols do
   @moduledoc ~s"""
   fetches symbols from #{@iexcloud}
 
-    * `symbol_path_1 symbol_path_2` - then names of the symbol paths to fetch
+    * `symbol_path_1 symbol_path_2 ...` - names of the symbol paths to fetch
 
   if paths are omitted, all paths defined in the configuration will be fetched
   """
@@ -35,8 +35,8 @@ defmodule Mix.Tasks.Fetch.Symbols do
             {:ok, %{fetched: fetched, saved: saved}} ->
               %{fetched: progress.fetched + fetched, saved: progress.saved + saved}
 
-            {:error, error} ->
-              error("API error while fetching data: #{inspect(error)}")
+            {:error, err} ->
+              error("API error while fetching data", err)
               progress
           end
         end
@@ -67,21 +67,15 @@ defmodule Mix.Tasks.Fetch.Symbols do
     from_args
   end
 
-  defp print_progress({:ok, %{fetched: fetched}}) do
-    ok("fetched #{fetched} symbols")
-  end
+  defp print_progress({:ok, %{fetched: fetched}}), do: ok("fetched #{fetched} symbols")
 
   defp print_progress({:ok, %{saved: saved, total: total}}) do
-    IO.write(
-      IO.ANSI.cyan() <> "\rsaved #{saved} symbols (#{Float.round(100 * saved / total, 1)}%)"
-    )
+    progress("\rsaved #{saved} symbols (#{Float.round(100 * saved / total, 1)}%)", :no_newline)
   end
 
-  defp print_progress({:ok, message}) do
-    ok(message)
-  end
+  defp print_progress({:ok, message}), do: ok(message)
 
-  defp print_progress({:error, %{changes: changes, errors: errors}}) do
-    error("error saving symbol #{inspect(changes)}: #{inspect(errors)}")
+  defp print_progress({:error, err}) do
+    error("error saving symbol", err)
   end
 end
