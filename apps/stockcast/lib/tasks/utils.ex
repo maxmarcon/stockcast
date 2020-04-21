@@ -22,7 +22,6 @@ defmodule Mix.Tasks.Utils do
         end)
       end)
 
-    error(changeset)
     error(message, changeset_errors)
   end
 
