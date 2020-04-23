@@ -9,6 +9,6 @@ defmodule Stockcast.Repo.Migrations.CreateIsins do
       timestamps()
     end
 
-    create unique_index(:iexc_isins, [:isin, :iex_id])
+    create unique_index(:iexc_isins, [:isin, :iex_id], name: :iexc_isins_isin_iex_id_index)
   end
 end

@@ -15,10 +15,11 @@ defmodule Stockcast.IexCloud.Isin do
     timestamps(type: :utc_datetime)
   end
 
-  def changeset(symbol \\ %Isin{}, params) do
-    symbol
+  def changeset(isin \\ %Isin{}, params) do
+    isin
     |> cast(params, [:isin, :iex_id])
     |> validate_required([:isin])
     |> validate_format(:isin, @isin_format)
+    |> unique_constraint(:isin, name: :iexc_isins_isin_iex_id_index)
   end
 end

@@ -39,7 +39,8 @@ defmodule Stockcast.MixProject do
       {:ecto_sql, "~> 3.1"},
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.0"},
-      {:tesla, "~> 1.3.0"}
+      {:tesla, "~> 1.3.0"},
+      {:decimal, "~> 1.0"}
     ]
   end
 
