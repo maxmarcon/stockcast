@@ -24,10 +24,16 @@ defmodule Mix.Tasks.Fetch.Isins do
 
     Application.ensure_all_started(:stockcast)
 
+    start_time = Time.utc_now()
+
     %{deleted: deleted, created: created} =
       Enum.reduce(isins, %{deleted: 0, created: 0}, &fetch_isin/2)
 
-    ok("deleted #{deleted} old ISINs, created #{created} new ones")
+    ok(
+      "deleted #{deleted} old ISINs, created #{created} new ones in #{
+        format_msec(Time.diff(Time.utc_now(), start_time, :millisecond))
+      }"
+    )
   end
 
   defp fetch_isin(isin, %{deleted: deleted, created: created}) do

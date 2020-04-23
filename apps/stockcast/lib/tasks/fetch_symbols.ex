@@ -20,9 +20,9 @@ defmodule Mix.Tasks.Fetch.Symbols do
   def run(args) do
     {_, symbol_paths_from_args, _} = OptionParser.parse(args, strict: [])
 
-    start_time = Time.utc_now()
-
     Application.ensure_all_started(:stockcast)
+
+    start_time = Time.utc_now()
 
     summary =
       symbol_paths(symbol_paths_from_args)
