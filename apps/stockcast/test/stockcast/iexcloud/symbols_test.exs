@@ -16,9 +16,9 @@ defmodule Stockcast.IexCloud.SymbolsTest do
 
   describe "fetch/1" do
     test "fetches and saves symbols", %{api_symbols: api_symbols} do
-      assert {:ok, %{fetched: 2, saved: 2}} == Symbols.fetch(@symbols_path)
+      assert {:ok, %{fetched: 3, saved: 3}} == Symbols.fetch(@symbols_path)
 
-      assert 2 == Repo.aggregate(Symbol, :count)
+      assert 3 == Repo.aggregate(Symbol, :count)
 
       assert Repo.all(from Symbol, order_by: [:iex_id])
              |> Enum.map(& &1.iex_id) ==

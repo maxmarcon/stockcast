@@ -17,6 +17,17 @@ defmodule Stockcast.IexCloud.Isins do
     end
   end
 
+  @spec fetch(binary()) :: %{deleted: integer(), created: integer()}
+  def fetch!(isin) when is_binary(isin) do
+    case fetch(isin) do
+      {:ok, result} -> result
+      {:error, error} -> raise_exception(error)
+      error -> raise_exception(error)
+    end
+  end
+
+  defp raise_exception(error), do: raise("Error while retrieving isins: #{inspect(error)}")
+
   defp update_isins(isin, mappings) do
     Repo.transaction(fn ->
       {deleted, _} = Repo.delete_all(from Isin, where: [isin: ^isin])

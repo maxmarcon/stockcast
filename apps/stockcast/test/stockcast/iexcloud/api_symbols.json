@@ -22,5 +22,18 @@
     "isEnabled": true,
     "figi": "BBG00B3T3HD3",
     "cik": "1675149"
+  },
+  {
+    "symbol": "00XP-GY",
+    "exchange": "RET",
+    "name": "RaagmrW us EGoeteadirCr lDtmrie e dadel(eHU- nT saGy.) N",
+    "date": "2020-04-26",
+    "type": "et",
+    "iexId": "IEX_5339503747312D52",
+    "region": "DE",
+    "currency": "EUR",
+    "isEnabled": true,
+    "figi": "Q5BBS02RZ0G4",
+    "cik": null
   }
 ]

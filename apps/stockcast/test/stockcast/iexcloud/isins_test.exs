@@ -96,4 +96,37 @@ defmodule Stockcast.IexCloud.IsinsTest do
       assert Repo.aggregate(Isin, :count) == 0
     end
   end
+
+  describe "fetch!/1" do
+    setup do
+      api_isins = Jason.decode!(File.read!("#{__DIR__}/api_isins.json"))
+
+      Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: api_isins, status: 200} end)
+
+      [api_isins: api_isins]
+    end
+
+    test "fetches and stores new isins" do
+      assert %{deleted: 0, created: 3} == Isins.fetch!(@isin)
+
+      isins = Repo.all(Isin)
+      assert length(isins) == 3
+
+      Enum.each(
+        isins,
+        fn %{isin: isin, iex_id: iex_id} ->
+          assert isin == @isin
+          refute is_nil(iex_id)
+        end
+      )
+    end
+
+    test "raises in case of error" do
+      assert_raise RuntimeError, ~r/Error while retrieving isins/, fn ->
+        Isins.fetch!(@invalid_isin)
+      end
+
+      assert Repo.aggregate(Isin, :count) == 0
+    end
+  end
 end
