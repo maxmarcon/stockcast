@@ -40,7 +40,8 @@ defmodule Stockcast.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.0"},
       {:tesla, "~> 1.3.0"},
-      {:decimal, "~> 1.0"}
+      {:decimal, "~> 1.0"},
+      {:junit_formatter, "~> 3.0", only: [:test]}
     ]
   end
 
