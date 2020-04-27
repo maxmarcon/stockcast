@@ -1,0 +1,122 @@
+version: 2.1
+
+elixir_image: &elixir_image circleci/elixir:1.10.0
+node_image: &node_image circleci/node:13.7.0
+node_image_browsers: &node_image_browsers circleci/node:13.7.0-browsers
+
+commands:
+  restore_mix_cache:
+    steps:
+      - restore_cache:
+          key: mix-deps-{{ checksum "mix.lock" }}
+
+  save_mix_cache:
+    steps:
+      - save_cache:
+          key: mix-deps-{{ checksum "mix.lock" }}
+          paths:
+            - deps
+
+  restore_yarn_cache:
+    steps:
+      - restore_cache:
+          key: node-modules-{{ checksum "yarn.lock" }}
+
+  save_yarn_cache:
+    steps:
+      - save_cache:
+          key: node-modules-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+
+jobs:
+  build_back_end:
+    docker:
+      - image: *elixir_image
+    environment:
+      MIX_ENV: test
+    steps:
+      - checkout
+      - restore_mix_cache
+      - run:
+          command: |
+            mix local.hex --force
+            mix local.rebar --force
+            mix deps.get
+            mix compile
+      - save_mix_cache
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project
+            - .mix
+
+  build_front_end:
+    docker:
+      - image: *node_image
+    working_directory: ~/project/webapp
+    steps:
+      - attach_workspace:
+          at: ~/
+      - restore_yarn_cache
+      - run:
+          command: |
+            yarn install --frozen-lockfile
+      - save_yarn_cache
+
+  backend_unit_tests:
+    docker:
+      - image: *elixir_image
+      - image: circleci/postgres
+        environment:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: stockcast_dev
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run: mix test --trace
+      - store_test_results:
+          path: test-results
+
+  frontend_unit_tests:
+    docker:
+      - image: *node_image_browsers
+    working_directory: ~/project/webapp
+    steps:
+      - attach_workspace:
+          at: ~/
+      - restore_yarn_cache
+      - run:
+          command: |
+            yarn lint
+            yarn test-once
+      - store_test_results:
+          path: test-results
+
+workflows:
+  version: 2.1
+  build_and_test:
+    jobs:
+      - build_back_end:
+          filters:
+            tags:
+              only: /^v.*/
+      - backend_unit_tests:
+          requires:
+            - build_back_end
+          filters:
+            tags:
+              only: /^v.*/
+#      - build_front_end:
+#          requires:
+#            - build_back_end
+#          filters:
+#            tags:
+#              only: /^v.*/
+#      - frontend_unit_tests:
+#          requires:
+#            - build_front_end
+#          filters:
+#            tags:
+#              only: /^v.*/
+
