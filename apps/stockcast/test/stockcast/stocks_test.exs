@@ -112,4 +112,13 @@ defmodule Stockcast.StocksTest do
       Stocks.search("De00B4L5Y984") == [symbol]
     end
   end
+
+  describe "get/1" do
+    
+    test "find stocks by ID", %{iex_symbols: iex_symbols} do
+      symbol = Enum.at(iex_symbols, 1)
+
+      assert Stocks.get("IEX_4E53503759592D52") == symbol
+    end
+  end
 end

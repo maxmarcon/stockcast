@@ -18,6 +18,7 @@ defmodule Stockcast.Stocks do
     2. A prefix of the symbol ID (including the entire symbol)
     3. An ISIN
   """
+  @spec search(binary()) :: [%IexSymbol{}]
   def search(term) when is_binary(term), do: iex_cloud_search(term)
 
   defp iex_cloud_search(term) do
@@ -40,6 +41,12 @@ defmodule Stockcast.Stocks do
             ilike(i.isin, ^prefix_like_exp)
     )
   end
+
+  @doc ~S"""
+  find stocks by ID. At the moment only supports IexCloud IDs
+  """
+  @spec get(binary()) :: %IexSymbol{}
+  def get(id), do: Repo.get_by(IexSymbol, iex_id: id)
 
   defp iex_cloud_maybe_fetch_isins(term) do
     upcase_term = String.upcase(term)
