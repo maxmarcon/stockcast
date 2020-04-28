@@ -1,4 +1,4 @@
-defmodule Stockcast.Search do
+defmodule Stockcast.Stocks do
   @moduledoc """
   To search for stocks
   """
@@ -8,9 +8,7 @@ defmodule Stockcast.Search do
   alias Stockcast.IexCloud.Symbol, as: IexSymbol
   alias Stockcast.IexCloud.Isin, as: IexIsin
   alias Stockcast.IexCloud.Isins, as: IexIsins
-
-  alias Stockcast.Search.Stock
-
+  
   @isin_format ~r/^[A-Z]{2}\w{9}\d$/
 
   @doc ~S"""

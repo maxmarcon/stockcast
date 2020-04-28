@@ -1,7 +1,7 @@
-defmodule Stockcast.SearchTest do
+defmodule Stockcast.StocksTest do
   use Stockcast.DataCase
 
-  alias Stockcast.Search
+  alias Stockcast.Stocks
   alias Stockcast.Repo
   alias Stockcast.IexCloud.Symbol
   alias Stockcast.IexCloud.Isin
@@ -81,35 +81,35 @@ defmodule Stockcast.SearchTest do
     test "can find stocks by symbol", %{iex_symbols: iex_symbols} do
       symbol = Enum.at(iex_symbols, 1)
 
-      assert Search.search("00XR-GY") == [symbol]
+      assert Stocks.search("00XR-GY") == [symbol]
     end
 
     test "can find stocks by symbol prefix", %{iex_symbols: iex_symbols} do
-      assert Search.search("00x") == iex_symbols
+      assert Stocks.search("00x") == iex_symbols
     end
 
     test "can find stocks by name", %{iex_symbols: iex_symbols} do
       symbol = Enum.at(iex_symbols, 1)
 
-      assert Search.search("Gienrte") == [symbol]
+      assert Stocks.search("Gienrte") == [symbol]
     end
 
     test "can find stocks by isin", %{iex_symbols: iex_symbols} do
       symbol = Enum.at(iex_symbols, 2)
 
-      assert Search.search("Ie00B4L5Y983") == [symbol]
+      assert Stocks.search("Ie00B4L5Y983") == [symbol]
     end
 
     test "can find stocks by isin prefix", %{iex_symbols: iex_symbols} do
       symbol = Enum.at(iex_symbols, 2)
 
-      assert Search.search("Ie00") == [symbol]
+      assert Stocks.search("Ie00") == [symbol]
     end
 
     test "triggers isin search if isin is not present", %{iex_symbols: iex_symbols} do
       symbol = Enum.at(iex_symbols, 0)
 
-      Search.search("De00B4L5Y984") == [symbol]
+      Stocks.search("De00B4L5Y984") == [symbol]
     end
   end
 end
