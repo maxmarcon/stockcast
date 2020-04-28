@@ -11,6 +11,6 @@ defmodule StockcastWeb.StockView do
   end
 
   def render("stock.json", %{stock: stock}) do
-    %{id: stock.id}
+    stock
   end
 end

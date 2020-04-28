@@ -6,10 +6,14 @@ defmodule StockcastWeb.FallbackController do
   """
   use StockcastWeb, :controller
 
-  def call(conn, {:error, :not_found}) do
+  def call(conn, {:error, reason_atom}) when is_atom(reason_atom) do
+    code = Plug.Conn.Status.code(reason_atom)
+
     conn
-    |> put_status(:not_found)
+    |> put_status(reason_atom)
     |> put_view(StockcastWeb.ErrorView)
-    |> render(:"404")
+    |> render("#{code}.json", %{
+      reason: %{message: Plug.Conn.Status.reason_phrase(code)}
+    })
   end
 end

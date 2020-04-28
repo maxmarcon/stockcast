@@ -3,7 +3,7 @@ defmodule Stockcast.StocksTest do
 
   alias Stockcast.Stocks
   alias Stockcast.Repo
-  alias Stockcast.IexCloud.Symbol
+  alias Stockcast.IexCloud.Symbol, as: IexSymbol
   alias Stockcast.IexCloud.Isin
 
   @iex_symbols [
@@ -52,14 +52,14 @@ defmodule Stockcast.StocksTest do
 
   setup do
     Enum.each(@iex_symbols, fn iex_symbol ->
-      Repo.insert!(Symbol.changeset(iex_symbol))
+      Repo.insert!(IexSymbol.changeset(iex_symbol))
     end)
 
     Repo.insert!(Isin.changeset(@isin))
 
     setup_isins_api_mock()
 
-    [iex_symbols: Repo.all(Symbol)]
+    [iex_symbols: Repo.all(IexSymbol)]
   end
 
   defp setup_isins_api_mock do
@@ -114,11 +114,28 @@ defmodule Stockcast.StocksTest do
   end
 
   describe "get/1" do
-    
     test "find stocks by ID", %{iex_symbols: iex_symbols} do
       symbol = Enum.at(iex_symbols, 1)
 
       assert Stocks.get("IEX_4E53503759592D52") == symbol
+    end
+
+    test "returns nil if none is found" do
+      assert is_nil(Stocks.get("DOESNOTEXIST"))
+    end
+  end
+
+  describe "get!/1" do
+    test "find stocks by ID", %{iex_symbols: iex_symbols} do
+      symbol = Enum.at(iex_symbols, 1)
+
+      assert Stocks.get("IEX_4E53503759592D52") == symbol
+    end
+
+    test "throws if none is found" do
+      assert_raise Ecto.NoResultsError, fn ->
+        Stocks.get!("DOESNOTEXIST")
+      end
     end
   end
 end

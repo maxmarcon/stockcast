@@ -8,7 +8,7 @@ defmodule Stockcast.Stocks do
   alias Stockcast.IexCloud.Symbol, as: IexSymbol
   alias Stockcast.IexCloud.Isin, as: IexIsin
   alias Stockcast.IexCloud.Isins, as: IexIsins
-  
+
   @isin_format ~r/^[A-Z]{2}\w{9}\d$/
 
   @doc ~S"""
@@ -45,8 +45,14 @@ defmodule Stockcast.Stocks do
   @doc ~S"""
   find stocks by ID. At the moment only supports IexCloud IDs
   """
-  @spec get(binary()) :: %IexSymbol{}
+  @spec get(binary()) :: %IexSymbol{} | nil
   def get(id), do: Repo.get_by(IexSymbol, iex_id: id)
+
+  @doc ~S"""
+  find stocks by ID, throws if none found. At the moment only supports IexCloud IDs
+  """
+  @spec get(binary()) :: %IexSymbol{}
+  def get!(id), do: Repo.get_by!(IexSymbol, iex_id: id)
 
   defp iex_cloud_maybe_fetch_isins(term) do
     upcase_term = String.upcase(term)

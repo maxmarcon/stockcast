@@ -5,7 +5,9 @@ defmodule StockcastWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/api", StockcastWeb do
+  scope "/v1", StockcastWeb do
     pipe_through :api
+
+    get("/stocks/:id", StockController, :show)
   end
 end
