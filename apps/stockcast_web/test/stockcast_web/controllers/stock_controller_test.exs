@@ -105,6 +105,25 @@ defmodule StockcastWeb.StockControllerTest do
            ]
   end
 
+  test "can search for stocks and limit result set", %{conn: conn} do
+    conn = get(conn, Routes.stock_path(conn, :search, q: "ad", limit: 1))
+
+    assert json_response(conn, 200)["data"] == [
+             %{
+               "symbol" => "00XP-GY",
+               "exchange" => "RET",
+               "name" => "RaagmrW us EGoeteadirCr lDtmrie e dadel(eHU- nT saGy.) N",
+               "date" => "2020-04-26",
+               "type" => "et",
+               "iex_id" => "IEX_5339503747312D52",
+               "region" => "DE",
+               "currency" => "EUR",
+               "figi" => "Q5BBS02RZ0G4",
+               "cik" => nil
+             }
+           ]
+  end
+
   test "returns 400 if search parameters are missing", %{conn: conn} do
     assert_error_sent(400, fn -> get(conn, Routes.stock_path(conn, :search)) end)
   end

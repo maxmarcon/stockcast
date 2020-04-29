@@ -18,8 +18,10 @@ defmodule Stockcast.Stocks do
     2. A prefix of the symbol ID (including the entire symbol)
     3. An ISIN
   """
-  @spec search(binary()) :: [%IexSymbol{}]
-  def search(term) when is_binary(term), do: iex_cloud_search(term)
+  @spec search(binary(), integer()) :: [%IexSymbol{}]
+  def search(term, limit \\ 100) when is_binary(term) do
+    Repo.all(from iex_cloud_search(term), limit: ^limit)
+  end
 
   defp iex_cloud_search(term) do
     iex_cloud_maybe_fetch_isins(term)
@@ -33,13 +35,11 @@ defmodule Stockcast.Stocks do
     prefix_like_exp = "#{term}%"
     infix_like_exp = "%#{term}%"
 
-    Repo.all(
-      from [s, i] in base_query,
-        where:
-          ilike(s.symbol, ^prefix_like_exp) or
-            ilike(s.name, ^infix_like_exp) or
-            ilike(i.isin, ^prefix_like_exp)
-    )
+    from [s, i] in base_query,
+      where:
+        ilike(s.symbol, ^prefix_like_exp) or
+          ilike(s.name, ^infix_like_exp) or
+          ilike(i.isin, ^prefix_like_exp)
   end
 
   @doc ~S"""

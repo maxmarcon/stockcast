@@ -77,7 +77,7 @@ defmodule Stockcast.StocksTest do
     end)
   end
 
-  describe "search/1" do
+  describe "search/2" do
     test "can find stocks by symbol", %{iex_symbols: iex_symbols} do
       symbol = Enum.at(iex_symbols, 1)
 
