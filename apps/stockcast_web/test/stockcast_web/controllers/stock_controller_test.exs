@@ -73,4 +73,39 @@ defmodule StockcastWeb.StockControllerTest do
       get(conn, Routes.stock_path(conn, :show, "DONTEXIST"))
     end)
   end
+
+  test "can search for stocks", %{conn: conn} do
+    conn = get(conn, Routes.stock_path(conn, :search, q: "ad"))
+
+    assert json_response(conn, 200)["data"] == [
+             %{
+               "symbol" => "00XP-GY",
+               "exchange" => "RET",
+               "name" => "RaagmrW us EGoeteadirCr lDtmrie e dadel(eHU- nT saGy.) N",
+               "date" => "2020-04-26",
+               "type" => "et",
+               "iex_id" => "IEX_5339503747312D52",
+               "region" => "DE",
+               "currency" => "EUR",
+               "figi" => "Q5BBS02RZ0G4",
+               "cik" => nil
+             },
+             %{
+               "symbol" => "00XR-GY",
+               "exchange" => "TRE",
+               "name" => " elmldRe(mSeEyrsgirv aDeGienrte.Ur - ad)  WHediC To",
+               "date" => "2020-04-26",
+               "type" => "et",
+               "iex_id" => "IEX_4E53503759592D52",
+               "region" => "DE",
+               "currency" => "EUR",
+               "figi" => "70GBB60WQ0R2",
+               "cik" => nil
+             }
+           ]
+  end
+
+  test "returns 400 if search parameters are missing", %{conn: conn} do
+    assert_error_sent(400, fn -> get(conn, Routes.stock_path(conn, :search)) end)
+  end
 end

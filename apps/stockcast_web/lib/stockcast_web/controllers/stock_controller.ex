@@ -10,4 +10,10 @@ defmodule StockcastWeb.StockController do
 
     render(conn, :show, %{stock: stock})
   end
+
+  def search(conn, %{"q" => term}) do
+    stocks = Stocks.search(term)
+
+    render(conn, :index, %{stocks: stocks})
+  end
 end

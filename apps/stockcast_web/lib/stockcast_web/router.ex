@@ -8,6 +8,7 @@ defmodule StockcastWeb.Router do
   scope "/v1", StockcastWeb do
     pipe_through :api
 
+    get("/stocks/search", StockController, :search)
     get("/stocks/:id", StockController, :show)
   end
 end
