@@ -2,8 +2,6 @@ defmodule StockcastWeb.StockControllerTest do
   use StockcastWeb.ConnCase
 
   alias Stockcast.Repo
-  alias Stockcast.Search
-  alias Stockcast.Search.Stock
   alias Stockcast.IexCloud.Symbol, as: IexSymbol
 
   @iex_symbols [
@@ -56,16 +54,17 @@ defmodule StockcastWeb.StockControllerTest do
   test "can retrieve a stock", %{conn: conn} do
     conn = get(conn, Routes.stock_path(conn, :show, "IEX_5339503747312D52"))
 
-    stock_as_json = json_response(conn, 200)
-
-    assert stock_as_json = %{
+    assert json_response(conn, 200)["data"] == %{
              "iex_id" => "IEX_5339503747312D52",
              "exchange" => "RET",
              "name" => "RaagmrW us EGoeteadirCr lDtmrie e dadel(eHU- nT saGy.) N",
              "date" => "2020-04-26",
              "type" => "et",
              "region" => "DE",
-             "currency" => "EUR"
+             "currency" => "EUR",
+             "symbol" => "00XP-GY",
+             "figi" => "Q5BBS02RZ0G4",
+             "cik" => nil
            }
   end
 

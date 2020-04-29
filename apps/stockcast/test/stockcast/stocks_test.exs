@@ -109,7 +109,7 @@ defmodule Stockcast.StocksTest do
     test "triggers isin search if isin is not present", %{iex_symbols: iex_symbols} do
       symbol = Enum.at(iex_symbols, 0)
 
-      Stocks.search("De00B4L5Y984") == [symbol]
+      assert Stocks.search("De00B4L5Y984") == [symbol]
     end
   end
 

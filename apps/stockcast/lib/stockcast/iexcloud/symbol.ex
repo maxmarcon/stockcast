@@ -4,7 +4,7 @@ defmodule Stockcast.IexCloud.Symbol do
   alias __MODULE__
   alias Stockcast.IexCloud.Isin
 
-  @derive {Jason.Encoder, except: [:__meta__, :isin]}
+  @derive {Jason.Encoder, except: [:__meta__, :isin, :inserted_at, :updated_at, :id]}
 
   schema "iexc_symbols" do
     field :symbol, :string
