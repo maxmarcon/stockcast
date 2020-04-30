@@ -19,7 +19,7 @@ defmodule Stockcast.Stocks do
     3. An ISIN
   """
   @spec search(binary(), integer()) :: [%IexSymbol{}]
-  def search(term, limit \\ 100) when is_binary(term) do
+  def search(term, limit \\ 100) when is_binary(term) and is_integer(limit) do
     Repo.all(from iex_cloud_search(term), limit: ^limit)
   end
 

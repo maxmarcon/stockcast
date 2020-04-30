@@ -12,9 +12,12 @@ defmodule StockcastWeb.StockController do
   end
 
   def search(conn, %{"q" => term, "limit" => limit}) do
-    stocks = Stocks.search(term, limit)
-
-    render(conn, :index, %{stocks: stocks})
+    with {limit, _} <- Integer.parse(limit) do
+      stocks = Stocks.search(term, limit)
+      render(conn, :index, %{stocks: stocks})
+    else
+      _ -> {:error, :bad_request}
+    end
   end
 
   def search(conn, %{"q" => term}) do
