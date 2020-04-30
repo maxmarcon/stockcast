@@ -29,30 +29,27 @@ defmodule Stockcast.Stocks do
     term_list
     |> Enum.each(&iex_cloud_maybe_fetch_isins/1)
 
-    base_query =
-      from s in IexSymbol,
-        left_join: i in IexIsin,
-        on: s.iex_id == i.iex_id
-#        order_by: [s.symbol, s.iex_id]
+    conditions =
+      Enum.reduce(term_list, false, fn term, conditions ->
+        prefix_like_exp = "#{term}%"
+        infix_like_exp = "%#{term}%"
 
-    search_query = Enum.reduce(term_list, base_query, fn term, query ->
-      prefix_like_exp = "#{term}%"
-      infix_like_exp = "%#{term}%"
-
-      from [s, i] in base_query,
-        where: 
+        dynamic(
+          [symbol: s, isin: i],
           ilike(s.symbol, ^prefix_like_exp) or
             ilike(s.name, ^infix_like_exp) or
-            ilike(i.isin, ^prefix_like_exp)
-    end)
-    
-    from s in subquery(search_query), order_by: [s.symbol, s.iex_id]
-  end
+            ilike(i.isin, ^prefix_like_exp) or ^conditions
+        )
+      end)
 
-  #  defp iex_cloud_where_clause(term_list) do
-  #    term_list
-  #    |> Enum.map()
-  #  end
+    from s in IexSymbol,
+      as: :symbol,
+      left_join: i in IexIsin,
+      as: :isin,
+      on: s.iex_id == i.iex_id,
+      where: ^conditions,
+      order_by: [s.symbol, s.iex_id]
+  end
 
   @doc ~S"""
   find stocks by ID. At the moment only supports IexCloud IDs

@@ -8,7 +8,7 @@ config :stockcast,
        database: "stockcast_test",
        hostname: "localhost",
        pool: Ecto.Adapters.SQL.Sandbox,
-        log: false
+       log: false
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.

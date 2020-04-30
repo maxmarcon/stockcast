@@ -106,7 +106,7 @@ defmodule Stockcast.StocksTest do
       assert Stocks.search("Ie00") == [symbol]
     end
 
-    test "can find stocks by multiple search term separated by spaces", %{
+    test "can find stocks by multiple search terms separated by spaces", %{
       iex_symbols: iex_symbols
     } do
       [_ | symbols] = iex_symbols

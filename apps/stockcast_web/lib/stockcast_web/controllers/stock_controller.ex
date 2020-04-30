@@ -13,6 +13,7 @@ defmodule StockcastWeb.StockController do
 
   def search(conn, %{"q" => term, "limit" => limit}) do
     stocks = Stocks.search(term, limit)
+
     render(conn, :index, %{stocks: stocks})
   end
 
