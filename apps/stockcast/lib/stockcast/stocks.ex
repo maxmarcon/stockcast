@@ -19,28 +19,40 @@ defmodule Stockcast.Stocks do
     3. An ISIN
   """
   @spec search(binary(), integer()) :: [%IexSymbol{}]
-  def search(term, limit \\ 100) when is_binary(term) and is_integer(limit) do
-    Repo.all(from iex_cloud_search(term), limit: ^limit)
+  def search(term, limit \\ 100) when is_binary(term) do
+    term_list = String.split(term)
+
+    Repo.all(from iex_cloud_search(term_list), limit: type(^limit, :integer))
   end
 
-  defp iex_cloud_search(term) do
-    iex_cloud_maybe_fetch_isins(term)
+  defp iex_cloud_search(term_list) do
+    term_list
+    |> Enum.each(&iex_cloud_maybe_fetch_isins/1)
 
     base_query =
       from s in IexSymbol,
         left_join: i in IexIsin,
-        on: s.iex_id == i.iex_id,
-        order_by: [s.symbol, s.iex_id]
+        on: s.iex_id == i.iex_id
+#        order_by: [s.symbol, s.iex_id]
 
-    prefix_like_exp = "#{term}%"
-    infix_like_exp = "%#{term}%"
+    search_query = Enum.reduce(term_list, base_query, fn term, query ->
+      prefix_like_exp = "#{term}%"
+      infix_like_exp = "%#{term}%"
 
-    from [s, i] in base_query,
-      where:
-        ilike(s.symbol, ^prefix_like_exp) or
-          ilike(s.name, ^infix_like_exp) or
-          ilike(i.isin, ^prefix_like_exp)
+      from [s, i] in base_query,
+        where: 
+          ilike(s.symbol, ^prefix_like_exp) or
+            ilike(s.name, ^infix_like_exp) or
+            ilike(i.isin, ^prefix_like_exp)
+    end)
+    
+    from s in subquery(search_query), order_by: [s.symbol, s.iex_id]
   end
+
+  #  defp iex_cloud_where_clause(term_list) do
+  #    term_list
+  #    |> Enum.map()
+  #  end
 
   @doc ~S"""
   find stocks by ID. At the moment only supports IexCloud IDs

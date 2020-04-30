@@ -129,7 +129,8 @@ defmodule StockcastWeb.StockControllerTest do
   end
 
   test "returns 400 if some search parameters have wrong format", %{conn: conn} do
-    get(conn, Routes.stock_path(conn, :search, q: "X", limit: "not a number"))
-    |> json_response(400)
+    assert_error_sent(400, fn ->
+      get(conn, Routes.stock_path(conn, :search, q: "X", limit: "not a number"))
+    end)
   end
 end
