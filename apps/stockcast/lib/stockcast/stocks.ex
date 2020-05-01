@@ -29,26 +29,22 @@ defmodule Stockcast.Stocks do
     term_list
     |> Enum.each(&iex_cloud_maybe_fetch_isins/1)
 
-    conditions =
-      Enum.reduce(term_list, false, fn term, conditions ->
-        prefix_like_exp = "#{term}%"
-        infix_like_exp = "%#{term}%"
+    query =
+      from s in IexSymbol,
+        left_join: i in IexIsin,
+        on: s.iex_id == i.iex_id,
+        order_by: [s.symbol, s.iex_id]
 
-        dynamic(
-          [symbol: s, isin: i],
+    Enum.reduce(term_list, query, fn term, query ->
+      prefix_like_exp = "#{term}%"
+      infix_like_exp = "%#{term}%"
+
+      from [s, i] in query,
+        or_where:
           ilike(s.symbol, ^prefix_like_exp) or
             ilike(s.name, ^infix_like_exp) or
-            ilike(i.isin, ^prefix_like_exp) or ^conditions
-        )
-      end)
-
-    from s in IexSymbol,
-      as: :symbol,
-      left_join: i in IexIsin,
-      as: :isin,
-      on: s.iex_id == i.iex_id,
-      where: ^conditions,
-      order_by: [s.symbol, s.iex_id]
+            ilike(i.isin, ^prefix_like_exp)
+    end)
   end
 
   @doc ~S"""
