@@ -23,6 +23,8 @@ defmodule Stockcast.Repo.Migrations.CreateIexcHistoricalPrices do
       timestamps()
     end
 
-    create unique_index(:iexc_historical_prices, [:symbol, :date], name: :iexc_historical_prices_symbol_date_index)
+    create unique_index(:iexc_historical_prices, [:symbol, :date],
+             name: :iexc_historical_prices_symbol_date_index
+           )
   end
 end

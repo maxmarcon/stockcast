@@ -35,7 +35,8 @@ defmodule Stockcast.Stocks do
         on: s.iex_id == i.iex_id,
         order_by: [s.symbol, s.iex_id]
 
-    Enum.reduce(term_list, query, fn term, query ->
+    term_list
+    |> Enum.reduce(query, fn term, query ->
       prefix_like_exp = "#{term}%"
       infix_like_exp = "%#{term}%"
 
