@@ -47,6 +47,6 @@ defmodule Stockcast.IexCloud.HistoricalPrice do
       :changeOverTime
     ])
     |> validate_required([:symbol, :date])
-    |> unique_constraint(:isin, name: :iexc_historical_prices_symbol_date_index)
+    |> unique_constraint(:symbol, name: :iexc_historical_prices_symbol_date_index)
   end
 end
