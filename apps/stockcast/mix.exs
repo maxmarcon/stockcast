@@ -41,7 +41,8 @@ defmodule Stockcast.MixProject do
       {:jason, "~> 1.0"},
       {:tesla, "~> 1.3.0"},
       {:decimal, "~> 1.0"},
-      {:junit_formatter, "~> 3.0", only: [:test]}
+      {:junit_formatter, "~> 3.0", only: [:test]},
+      {:mock, "~> 0.3.0", only: [:test]}
     ]
   end
 

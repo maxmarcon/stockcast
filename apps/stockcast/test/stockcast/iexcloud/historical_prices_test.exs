@@ -1,6 +1,8 @@
 defmodule Stockcast.IexCloud.HistoricalPricesTest do
   use Stockcast.DataCase
 
+  import Mock
+
   alias Stockcast.IexCloud.HistoricalPrices, as: Prices
   alias Stockcast.IexCloud.HistoricalPrice, as: Price
   alias Stockcast.Repo
@@ -26,7 +28,7 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
     Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: api_prices, status: 200} end)
   end
 
-  defp mock_api(:missing_field) do
+  defp mock_api(:missing_date) do
     api_prices =
       Jason.decode!(File.read!("#{__DIR__}/api_prices.json"))
       |> Enum.map(&Map.delete(&1, "date"))
@@ -66,18 +68,24 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
       [prices: prices]
     end
 
-    test "retrieve/3 fetches and returns them", %{prices: prices} do
+    test "retrieve/3 fetches via the API and returns them", %{prices: prices} do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
 
-      assert retrieved_prices |> Enum.map(&Map.delete(&1, :id)) ==
-               prices |> Enum.map(&Map.delete(&1, :id))
+      assert retrieved_prices |> Enum.map(&Map.drop(&1, [:id, :updated_at, :inserted_at])) ==
+               prices |> Enum.map(&Map.drop(&1, [:id, :updated_at, :inserted_at]))
     end
 
     test "retrieve/3 returns an error with changeset if some data can't be stored" do
-      mock_api(:missing_field)
+      mock_api(:missing_date)
 
       assert {:error, %Ecto.Changeset{errors: [date: {_, [{:validation, :required}]}]}} =
                Prices.retrieve(@symbol, @data_from, @data_to)
+    end
+
+    test "retrieve/3 returns an error if the data to be fetched is too far back in time" do
+      with_mock Date, [:passthrough], utc_today: fn -> ~D[2025-04-02] end do
+        assert {:error, :too_old} == Prices.retrieve(@symbol, @data_from, @data_to)
+      end
     end
   end
 end

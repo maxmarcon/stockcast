@@ -40,7 +40,7 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
       end
     else
       true -> :ok
-      other -> other
+      error -> error
     end
   end
 
