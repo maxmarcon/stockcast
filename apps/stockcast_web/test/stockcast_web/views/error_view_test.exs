@@ -7,13 +7,14 @@ defmodule StockcastWeb.ErrorViewTest do
   import Phoenix.View
 
   test "renders <STATUS>.json with known status" do
-    assert render(ErrorView, "404.json", []) == %{status: 404, message: "Not Found"}
+    assert render(ErrorView, "404.json", %{}) == %{status: %{detail: "Not Found"}}
   end
 
   test "render <STATUS>.json with bogus status" do
-    assert render(ErrorView, "FOO.json", []) == %{
-             status: 500,
-             message: "Internal Server Error"
+    assert render(ErrorView, "FOO.json", %{}) == %{
+             status: %{
+               detail: "Internal Server Error"
+             }
            }
   end
 end

@@ -12,8 +12,6 @@ defmodule StockcastWeb.FallbackController do
     conn
     |> put_status(reason_atom)
     |> put_view(StockcastWeb.ErrorView)
-    |> render("#{code}.json", %{
-      reason: %{message: Plug.Conn.Status.reason_phrase(code)}
-    })
+    |> render("#{code}.json", %{})
   end
 end
