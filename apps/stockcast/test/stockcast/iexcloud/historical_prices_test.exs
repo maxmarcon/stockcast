@@ -73,12 +73,11 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
                prices |> Enum.map(&Map.delete(&1, :id))
     end
 
-    test "retrieve/3 raises  if some data can't be stored" do
+    test "retrieve/3 returns an error with changeset if some data can't be stored" do
       mock_api(:missing_field)
 
-      assert_raise RuntimeError, fn ->
-        Prices.retrieve(@symbol, @data_from, @data_to)
-      end
+      assert {:error, %Ecto.Changeset{errors: [date: {_, [{:validation, :required}]}]}} =
+               Prices.retrieve(@symbol, @data_from, @data_to)
     end
   end
 end

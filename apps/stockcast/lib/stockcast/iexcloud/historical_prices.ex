@@ -36,7 +36,7 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
       try do
         fetch_prices(symbol, range)
       rescue
-        _ in Ecto.InvalidChangesetError -> raise "the IexCloud API returned some invalid data"
+        e in Ecto.InvalidChangesetError -> {:error, e.changeset}
       end
     else
       true -> :ok
