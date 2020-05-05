@@ -41,7 +41,11 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
       {:error, :invalid_dates} = Prices.retrieve(@symbol, @data_to, @data_from)
     end
 
-    test "retrieve/3 returns an error (future dates)" do
+    test "retrieve/3 returns an error (today prices)" do
+      {:error, :invalid_dates} = Prices.retrieve(@symbol, @data_to, Date.utc_today())
+    end
+
+    test "retrieve/3 returns an error (future prices)" do
       {:error, :invalid_dates} = Prices.retrieve(@symbol, @data_to, Date.add(Date.utc_today(), 1))
     end
   end
@@ -66,6 +70,10 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
       mock_api()
 
       [prices: prices]
+    end
+
+    setup_with_mocks([{Date, [:passthrough], utc_today: fn -> ~D[2020-04-16] end}]) do
+      :ok
     end
 
     test "retrieve/3 fetches via the API and returns them", %{prices: prices} do
