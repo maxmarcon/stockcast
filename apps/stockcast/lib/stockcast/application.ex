@@ -7,7 +7,11 @@ defmodule Stockcast.Application do
 
   def start(_type, _args) do
     children = [
-      Stockcast.Repo
+      Stockcast.Repo,
+      %{
+        id: :iex_cloud_cache,
+        start: {Cachex, :start_link, [:iex_cloud, []]}
+      }
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Stockcast.Supervisor)

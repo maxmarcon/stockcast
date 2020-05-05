@@ -25,7 +25,7 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
   defp delete_some_prices() do
     {2, _} = Repo.delete_all(from p in Price, where: p.date >= ^~D[2020-04-14])
   end
-  
+
   defp mock_api() do
     api_prices = Jason.decode!(File.read!("#{__DIR__}/api_prices.json"))
 
@@ -71,7 +71,7 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
     setup do
       prices = store_prices()
       mock_api()
-      
+
       delete_some_prices()
 
       [prices: prices]
@@ -100,14 +100,14 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
         assert {:error, :too_old} == Prices.retrieve(@symbol, @data_from, @data_to)
       end
     end
-    
+
     @tag :skip
     test "retrieve/3 returns does not attempt to fetch the data from the API again if it was done recently" do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
 
       delete_some_prices()
       Tesla.Mock.mock(fn _ -> raise "should not be called" end)
-      
+
       {:ok, ^retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
     end
 
@@ -116,6 +116,7 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
 
       delete_some_prices()
+
       # fast-forward time...
 
       {:ok, ^retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)

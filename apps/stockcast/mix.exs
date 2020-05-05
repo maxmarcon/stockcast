@@ -23,7 +23,8 @@ defmodule Stockcast.MixProject do
   def application do
     [
       mod: {Stockcast.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools],
+      applications: [:cachex]
     ]
   end
 
@@ -41,6 +42,7 @@ defmodule Stockcast.MixProject do
       {:jason, "~> 1.0"},
       {:tesla, "~> 1.3.0"},
       {:decimal, "~> 1.0"},
+      {:cachex, "~> 3.2"},
       {:junit_formatter, "~> 3.0", only: [:test]},
       {:mock, "~> 0.3.0", only: [:test]}
     ]
