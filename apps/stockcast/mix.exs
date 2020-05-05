@@ -23,8 +23,7 @@ defmodule Stockcast.MixProject do
   def application do
     [
       mod: {Stockcast.Application, []},
-      extra_applications: [:logger, :runtime_tools],
-      applications: [:cachex]
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 

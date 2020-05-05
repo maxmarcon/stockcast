@@ -6,7 +6,7 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
   alias Stockcast.IexCloud.Api
 
   @data_fraction_thr 0.95
-  @time_thr 86400
+  @min_time_between_calls_ms 6 * 3600 * 1000
   @ranges [
     [range: "1m", days: 30],
     [range: "3m", days: 30 * 3],
@@ -62,8 +62,14 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
   end
 
   defp fetch_prices(symbol, range) do
-    case Api.get_data("/stock/#{symbol}/chart/#{range}") do
-      {:ok, prices} when is_list(prices) -> save_prices(symbol, prices)
+    url = "/stock/#{symbol}/chart/#{range}"
+
+    with {:ok, false} <- Cachex.exists?(:iex_cloud, url),
+         {:ok, true} <- Cachex.put(:iex_cloud, url, true, ttl: @min_time_between_calls_ms),
+         {:ok, prices} when is_list(prices) <- Api.get_data(url) do
+      save_prices(symbol, prices)
+    else
+      {:ok, true} -> :ok
       error -> error
     end
   end

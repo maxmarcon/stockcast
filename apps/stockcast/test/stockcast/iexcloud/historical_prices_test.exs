@@ -40,6 +40,10 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
     Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: api_prices, status: 200} end)
   end
 
+  defp reset_cache() do
+    {:ok, true} = Cachex.reset(:iex_cloud)
+  end
+
   describe "with invalid dates" do
     test "retrieve/3 returns an error (wrong order)" do
       {:error, :invalid_dates} = Prices.retrieve(@symbol, @data_to, @data_from)
@@ -70,9 +74,9 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
   describe "when less than @data_fraction_thr prices are available locally" do
     setup do
       prices = store_prices()
-      mock_api()
-
       delete_some_prices()
+      mock_api()
+      reset_cache()
 
       [prices: prices]
     end
@@ -101,25 +105,26 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
       end
     end
 
-    @tag :skip
-    test "retrieve/3 returns does not attempt to fetch the data from the API again if it was done recently" do
+    test "retrieve/3 does not attempt to fetch the data from the API again if it was done recently" do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
+      assert length(retrieved_prices) == 10
 
       delete_some_prices()
       Tesla.Mock.mock(fn _ -> raise "should not be called" end)
 
-      {:ok, ^retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
+      {:ok, retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
+      assert length(retrieved_prices) == 8
     end
 
-    @tag :skip
     test "retrieve/3 fetches the data from the API again if enough time has elapsed since the last call" do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
+      assert length(retrieved_prices) == 10
 
       delete_some_prices()
+      reset_cache()
 
-      # fast-forward time...
-
-      {:ok, ^retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
+      {:ok, retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
+      assert length(retrieved_prices) == 10
     end
   end
 end
