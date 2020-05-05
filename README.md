@@ -4,7 +4,7 @@ Visualize, analyze and predict stock prices
 
 ## Data source
 
-Stockwatch uses the [IEX Cloud API](https://iexcloud.io/) to retrieve financial data.
+Stockcast uses the [IEX Cloud API](https://iexcloud.io/) to retrieve financial data.
 
 ## Installation and Set-up
 
