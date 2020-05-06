@@ -10,6 +10,9 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
   @symbol "00XP-GY"
   @data_from ~D[2020-04-02]
   @data_to ~D[2020-04-15]
+  @tomorrow Date.add(Date.utc_today(), 1)
+  @today Date.utc_today()
+  @far_future ~D[2025-04-16]
 
   defp store_prices(how_many) do
     api_prices = Jason.decode!(File.read!("#{__DIR__}/api_prices.json"))
@@ -50,11 +53,11 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
     end
 
     test "retrieve/3 returns an error (today prices)" do
-      {:error, :invalid_dates} = Prices.retrieve(@symbol, @data_to, Date.utc_today())
+      {:error, :invalid_dates} = Prices.retrieve(@symbol, @data_to, @today)
     end
 
     test "retrieve/3 returns an error (future prices)" do
-      {:error, :invalid_dates} = Prices.retrieve(@symbol, @data_to, Date.add(Date.utc_today(), 1))
+      {:error, :invalid_dates} = Prices.retrieve(@symbol, @data_to, @tomorrow)
     end
   end
 
@@ -81,7 +84,7 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
       [prices: prices]
     end
 
-    setup_with_mocks([{Date, [:passthrough], utc_today: fn -> ~D[2020-04-16] end}]) do
+    setup_with_mocks([{Date, [:passthrough], utc_today: fn -> @today end}]) do
       :ok
     end
 
@@ -100,7 +103,7 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
     end
 
     test "retrieve/3 returns an error if the data to be fetched is too far back in time" do
-      with_mock Date, [:passthrough], utc_today: fn -> ~D[2025-04-02] end do
+      with_mock Date, [:passthrough], utc_today: fn -> @far_future end do
         assert {:error, :too_old} == Prices.retrieve(@symbol, @data_from, @data_to)
       end
     end
