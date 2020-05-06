@@ -74,6 +74,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/
+      - run: sleep 5
       - run: mix test --trace
       - store_test_results:
           path: test-results
