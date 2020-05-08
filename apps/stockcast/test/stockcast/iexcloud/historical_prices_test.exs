@@ -102,11 +102,13 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
                Prices.retrieve(@symbol, @data_from, @data_to)
     end
 
-    test "retrieve/3 returns an error if the data to be fetched is too far back in time" do
-      with_mock Date, [:passthrough], utc_today: fn -> @far_future end do
-        assert {:error, :too_old} == Prices.retrieve(@symbol, @data_from, @data_to)
-      end
+    test_with_mock "retrieve/3 returns an error if the data to be fetched is too far back in time",
+                   Date,
+                   [:passthrough],
+                   utc_today: fn -> @far_future end do
+      assert {:error, :too_old} == Prices.retrieve(@symbol, @data_from, @data_to)
     end
+  end
 
     test "retrieve/3 does not attempt to fetch the data from the API again if it was done recently" do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
@@ -129,5 +131,4 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
       assert length(retrieved_prices) == 10
     end
-  end
 end
