@@ -1,17 +1,15 @@
 defmodule Stockcast.IexCloud.SymbolsTest do
   use Stockcast.DataCase
 
+  import Stockcast.TestUtils
+
   alias Stockcast.IexCloud.{Symbols, Symbol}
   alias Stockcast.Repo
 
   @symbols_path "ref-data/symbols"
 
   setup do
-    api_symbols = Jason.decode!(File.read!("#{__DIR__}/api_symbols.json"))
-
-    Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: api_symbols, status: 200} end)
-
-    [api_symbols: api_symbols]
+    [api_symbols: mock_symbols_api()]
   end
 
   describe "fetch/1" do

@@ -36,4 +36,12 @@ defmodule Stockcast.TestUtils do
 
     Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: api_isins, status: 200} end)
   end
+
+  def mock_symbols_api() do
+    api_symbols = Jason.decode!(File.read!("#{__DIR__}/../stockcast/iexcloud/api_symbols.json"))
+
+    Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: api_symbols, status: 200} end)
+
+    api_symbols
+  end
 end

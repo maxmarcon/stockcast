@@ -10,5 +10,6 @@ defmodule StockcastWeb.Router do
 
     get("/stocks/search", StockController, :search)
     get("/stocks/:id", StockController, :show)
+    get("/prices/:symbol", PriceController, :retrieve)
   end
 end
