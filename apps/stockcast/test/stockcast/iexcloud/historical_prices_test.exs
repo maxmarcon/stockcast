@@ -81,8 +81,7 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
       delete_some_prices()
       Tesla.Mock.mock(fn _ -> raise "should not be called" end)
 
-      {:ok, retrieved_prices} = Prices.retrieve(@symbol, @date_from, @date_to)
-      assert length(retrieved_prices) == 8
+      {:error, :fetched_recently} = Prices.retrieve(@symbol, @date_from, @date_to)
     end
 
     test "retrieve/3 fetches the data from the API again if enough time has elapsed since the last call" do

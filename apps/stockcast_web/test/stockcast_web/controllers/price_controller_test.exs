@@ -92,6 +92,7 @@ defmodule StockcastWeb.PriceControllerTest do
   describe "when prices need to be fetched from the API" do
     setup do
       delete_some_prices()
+      mock_price_api()
 
       :ok
     end
@@ -114,6 +115,20 @@ defmodule StockcastWeb.PriceControllerTest do
         get(conn, Routes.price_path(conn, :retrieve, @symbol, from: @date_from, to: @date_to))
 
       json_response(conn, 500)
+    end
+
+    test "returns 429 if prices have been fetched recently", %{conn: conn} do
+      conn =
+        get(conn, Routes.price_path(conn, :retrieve, @symbol, from: @date_from, to: @date_to))
+
+      json_response(conn, 200)
+
+      delete_some_prices()
+
+      conn =
+        get(conn, Routes.price_path(conn, :retrieve, @symbol, from: @date_from, to: @date_to))
+
+      json_response(conn, 429)
     end
   end
 
