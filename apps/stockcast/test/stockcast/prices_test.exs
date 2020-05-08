@@ -2,6 +2,7 @@ defmodule Stockcast.PricesTest do
   use Stockcast.DataCase
 
   import Mock
+  import Stockcast.TestUtils
 
   alias Stockcast.Prices
   alias Stockcast.Repo
@@ -10,14 +11,6 @@ defmodule Stockcast.PricesTest do
   @symbol "00XP-GY"
   @data_from ~D[2020-04-02]
   @data_to ~D[2020-04-15]
-
-  defp store_prices() do
-    api_prices = Jason.decode!(File.read!("#{__DIR__}/iexcloud/api_prices.json"))
-
-    api_prices
-    |> Enum.map(&Repo.insert!(Price.changeset(Map.put_new(&1, "symbol", @symbol))))
-    |> Enum.sort_by(& &1.date)
-  end
 
   setup do
     prices = store_prices()

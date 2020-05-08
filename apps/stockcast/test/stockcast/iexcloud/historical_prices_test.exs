@@ -2,6 +2,7 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
   use Stockcast.DataCase
 
   import Mock
+  import Stockcast.TestUtils
 
   alias Stockcast.IexCloud.HistoricalPrices, as: Prices
   alias Stockcast.IexCloud.HistoricalPrice, as: Price
@@ -13,35 +14,6 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
   @tomorrow Date.add(Date.utc_today(), 1)
   @today Date.utc_today()
   @far_future ~D[2025-04-16]
-
-  defp store_prices(how_many) do
-    api_prices = Jason.decode!(File.read!("#{__DIR__}/api_prices.json"))
-
-    api_prices
-    |> Enum.take(how_many)
-    |> Enum.map(&Repo.insert!(Price.changeset(Map.put_new(&1, "symbol", @symbol))))
-    |> Enum.sort_by(& &1.date)
-  end
-
-  defp store_prices, do: store_prices(10)
-
-  defp delete_some_prices() do
-    {2, _} = Repo.delete_all(from p in Price, where: p.date >= ^~D[2020-04-14])
-  end
-
-  defp mock_api() do
-    api_prices = Jason.decode!(File.read!("#{__DIR__}/api_prices.json"))
-
-    Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: api_prices, status: 200} end)
-  end
-
-  defp mock_api(:missing_date) do
-    api_prices =
-      Jason.decode!(File.read!("#{__DIR__}/api_prices.json"))
-      |> Enum.map(&Map.delete(&1, "date"))
-
-    Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: api_prices, status: 200} end)
-  end
 
   defp reset_cache() do
     {:ok, true} = Cachex.reset(:iex_cloud)
@@ -78,7 +50,7 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
     setup do
       prices = store_prices()
       delete_some_prices()
-      mock_api()
+      mock_price_api()
       reset_cache()
 
       [prices: prices]
@@ -96,7 +68,7 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
     end
 
     test "retrieve/3 returns an error with changeset if some data can't be stored" do
-      mock_api(:missing_date)
+      mock_price_api(:missing_date)
 
       assert {:error, %Ecto.Changeset{errors: [date: {_, [{:validation, :required}]}]}} =
                Prices.retrieve(@symbol, @data_from, @data_to)
