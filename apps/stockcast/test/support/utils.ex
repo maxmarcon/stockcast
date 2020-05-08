@@ -44,4 +44,8 @@ defmodule Stockcast.TestUtils do
 
     api_symbols
   end
+
+  def reset_cache() do
+    {:ok, true} = Cachex.reset(:iex_cloud)
+  end
 end

@@ -12,11 +12,12 @@ defmodule StockcastWeb.PriceControllerTest do
 
   setup do
     store_prices()
+    reset_cache()
 
     :ok
   end
 
-  setup_with_mocks([{Date, [:passthrough], utc_today: fn -> ~D[2020-04-16] end}]) do
+  setup_with_mocks([{Date, [:passthrough], utc_today: fn -> @today end}]) do
     :ok
   end
 
@@ -95,10 +96,6 @@ defmodule StockcastWeb.PriceControllerTest do
       :ok
     end
 
-    setup_with_mocks([{Date, [:passthrough], utc_today: fn -> @today end}]) do
-      :ok
-    end
-
     test_with_mock "returns 410 if the data to be fetched is too far back in time",
                    %{conn: conn},
                    Date,
@@ -110,10 +107,7 @@ defmodule StockcastWeb.PriceControllerTest do
       json_response(conn, 410)
     end
 
-    @tag :skip
     test "returns 500 if some prices cannot be stored", %{conn: conn} do
-      # this test is failing in spurious ways when run together with other tests
-      # the below mock appears to be overwritten
       mock_price_api(:missing_date)
 
       conn =

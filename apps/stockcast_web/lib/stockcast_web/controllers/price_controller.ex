@@ -29,7 +29,6 @@ defmodule StockcastWeb.PriceController do
       {:ok, prices} -> render(conn, :index, %{prices: prices})
       {:error, :invalid_dates} -> {:error, :bad_request}
       {:error, :too_old} -> {:error, :gone}
-      {:error, _} -> {:error, :internal_server_error}
       _ -> {:error, :internal_server_error}
     end
   end

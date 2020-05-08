@@ -12,10 +12,6 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
   @today ~D[2020-04-16]
   @far_future ~D[2025-04-16]
 
-  defp reset_cache() do
-    {:ok, true} = Cachex.reset(:iex_cloud)
-  end
-
   describe "with invalid dates" do
     test "retrieve/3 returns an error (wrong order)" do
       {:error, :invalid_dates} = Prices.retrieve(@symbol, @date_to, @date_from)
