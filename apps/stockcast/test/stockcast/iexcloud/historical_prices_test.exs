@@ -108,7 +108,6 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
                    utc_today: fn -> @far_future end do
       assert {:error, :too_old} == Prices.retrieve(@symbol, @data_from, @data_to)
     end
-  end
 
     test "retrieve/3 does not attempt to fetch the data from the API again if it was done recently" do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
@@ -131,4 +130,5 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @data_from, @data_to)
       assert length(retrieved_prices) == 10
     end
+  end
 end
