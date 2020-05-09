@@ -22,7 +22,7 @@ defmodule StockcastWeb.PriceControllerTest do
   end
 
   test "can retrieve prices", %{conn: conn} do
-    conn = get(conn, Routes.price_path(conn, :retrieve, @symbol, from: @date_from, to: @date_to))
+    conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
     json_data = json_response(conn, 200)["data"]
 
@@ -30,29 +30,21 @@ defmodule StockcastWeb.PriceControllerTest do
   end
 
   test "can retrieve prices if to date is omitted", %{conn: conn} do
-    conn = get(conn, Routes.price_path(conn, :retrieve, @symbol, from: @date_from))
+    conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from))
 
     json_data = json_response(conn, 200)["data"]
 
     assert_json_data(json_data)
   end
 
-  test "returns 400 if from is missing", %{conn: conn} do
-    assert_error_sent(400, fn ->
-      get(conn, Routes.price_path(conn, :retrieve, @symbol, to: @date_to))
-    end)
-  end
-
   test "returns 400 if from date is invalid", %{conn: conn} do
-    conn =
-      get(conn, Routes.price_path(conn, :retrieve, @symbol, from: "invalid date", to: @date_to))
+    conn = get(conn, Routes.price_path(conn, :index, @symbol, "invalid date", @date_to))
 
     json_response(conn, 400)
   end
 
   test "returns 400 if to date is invalid", %{conn: conn} do
-    conn =
-      get(conn, Routes.price_path(conn, :retrieve, @symbol, from: @date_from, to: "invalid date"))
+    conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, "invalid date"))
 
     json_response(conn, 400)
   end
@@ -61,9 +53,12 @@ defmodule StockcastWeb.PriceControllerTest do
     conn =
       get(
         conn,
-        Routes.price_path(conn, :retrieve, @symbol,
-          from: @date_from,
-          to: Date.to_iso8601(Date.add(Date.utc_today(), 1))
+        Routes.price_path(
+          conn,
+          :index,
+          @symbol,
+          @date_from,
+          Date.to_iso8601(Date.add(Date.utc_today(), 1))
         )
       )
 
@@ -74,17 +69,14 @@ defmodule StockcastWeb.PriceControllerTest do
     conn =
       get(
         conn,
-        Routes.price_path(conn, :retrieve, @symbol,
-          from: @date_from,
-          to: Date.to_iso8601(Date.utc_today())
-        )
+        Routes.price_path(conn, :index, @symbol, @date_from, Date.to_iso8601(Date.utc_today()))
       )
 
     json_response(conn, 400)
   end
 
   test "returns 400 if order of dates is wrong", %{conn: conn} do
-    conn = get(conn, Routes.price_path(conn, :retrieve, @symbol, from: @date_to, to: @date_from))
+    conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_to, @date_from))
 
     json_response(conn, 400)
   end
@@ -102,8 +94,7 @@ defmodule StockcastWeb.PriceControllerTest do
                    Date,
                    [:passthrough],
                    utc_today: fn -> Date.from_iso8601!(@far_future) end do
-      conn =
-        get(conn, Routes.price_path(conn, :retrieve, @symbol, from: @date_from, to: @date_to))
+      conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
       json_response(conn, 410)
     end
@@ -111,22 +102,19 @@ defmodule StockcastWeb.PriceControllerTest do
     test "returns 500 if some prices cannot be stored", %{conn: conn} do
       mock_price_api(:missing_date)
 
-      conn =
-        get(conn, Routes.price_path(conn, :retrieve, @symbol, from: @date_from, to: @date_to))
+      conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
       json_response(conn, 500)
     end
 
     test "returns 429 if prices have been fetched recently", %{conn: conn} do
-      conn =
-        get(conn, Routes.price_path(conn, :retrieve, @symbol, from: @date_from, to: @date_to))
+      conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
       json_response(conn, 200)
 
       delete_some_prices()
 
-      conn =
-        get(conn, Routes.price_path(conn, :retrieve, @symbol, from: @date_from, to: @date_to))
+      conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
       json_response(conn, 429)
     end
