@@ -5,6 +5,8 @@ defmodule StockcastWeb.PriceController do
 
   alias Stockcast.Prices
 
+  @invalid_date_format "Invalid date format"
+
   action_fallback StockcastWeb.FallbackController
 
   def index(conn, %{"symbol" => symbol, "from" => from, "to" => to}) do
@@ -12,7 +14,7 @@ defmodule StockcastWeb.PriceController do
          {:ok, to_date} <- Date.from_iso8601(to) do
       retrieve_prices_and_send_response(conn, symbol, from_date, to_date)
     else
-      _ -> {:error, :bad_request, "Invalid dates"}
+      _ -> {:error, :bad_request, @invalid_date_format}
     end
   end
 
@@ -22,7 +24,7 @@ defmodule StockcastWeb.PriceController do
         retrieve_prices_and_send_response(conn, symbol, from_date, Date.add(Date.utc_today(), -1))
 
       _ ->
-        {:error, :bad_request, "Invalid dates"}
+        {:error, :bad_request, @invalid_date_format}
     end
   end
 

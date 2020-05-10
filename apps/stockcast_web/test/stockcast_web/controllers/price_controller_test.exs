@@ -41,13 +41,13 @@ defmodule StockcastWeb.PriceControllerTest do
   test "returns 400 if from date is invalid", %{conn: conn} do
     conn = get(conn, Routes.price_path(conn, :index, @symbol, "invalid date", @date_to))
 
-    json_error_response(conn, 400, "Invalid dates")
+    json_error_response(conn, 400, "Invalid date format")
   end
 
   test "returns 400 if to date is invalid", %{conn: conn} do
     conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, "invalid date"))
 
-    json_error_response(conn, 400, "Invalid dates")
+    json_error_response(conn, 400, "Invalid date format")
   end
 
   test "returns 400 if asked for future prices", %{conn: conn} do
