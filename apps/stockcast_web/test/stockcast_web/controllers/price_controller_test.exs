@@ -119,6 +119,14 @@ defmodule StockcastWeb.PriceControllerTest do
 
       json_error_response(conn, 429, "Fetched recently")
     end
+
+    test "returns 404 if symbol can't be found", %{conn: conn} do
+      mock_price_api(:not_found)
+
+      conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
+
+      json_error_response(conn, 404, "Unknown symbol")
+    end
   end
 
   defp assert_json_data(data) do

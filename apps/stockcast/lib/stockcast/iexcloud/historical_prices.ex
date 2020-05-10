@@ -69,6 +69,7 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
          {:ok, prices} when is_list(prices) <- Api.get_data(url) do
       save_prices(symbol, prices)
     else
+      {:error, 404, _} -> {:error, :unknown_symbol}
       {:ok, true} -> {:error, :fetched_recently}
       error -> error
     end

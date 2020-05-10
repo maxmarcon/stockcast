@@ -42,6 +42,9 @@ defmodule StockcastWeb.PriceController do
       {:error, :fetched_recently} ->
         {:error, :too_many_requests, :fetched_recently}
 
+      {:error, :unknown_symbol} ->
+        {:error, :not_found, :unknown_symbol}
+
       {:error, error} ->
         Logger.error(inspect(error))
         {:error, :internal_server_error}

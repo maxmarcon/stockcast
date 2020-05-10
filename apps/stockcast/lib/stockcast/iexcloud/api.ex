@@ -22,8 +22,8 @@ defmodule Stockcast.IexCloud.Api do
       {:ok, %{status: status, body: body}} when status >= 200 and status < 300 ->
         {:ok, body}
 
-      {:ok, %{body: body}} ->
-        {:error, body}
+      {:ok, %{status: status, body: body}} ->
+        {:error, status, body}
 
       error ->
         error

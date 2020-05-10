@@ -74,6 +74,13 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
       assert {:error, :too_old} == Prices.retrieve(@symbol, @date_from, @date_to)
     end
 
+    test "retrieve/3 returns an error if symbol can't be found" do
+      mock_price_api(:not_found)
+
+      assert {:error, :unknown_symbol} ==
+               Prices.retrieve(@symbol, @date_from, @date_to)
+    end
+
     test "retrieve/3 does not attempt to fetch the data from the API again if it was done recently" do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @date_from, @date_to)
       assert length(retrieved_prices) == 10

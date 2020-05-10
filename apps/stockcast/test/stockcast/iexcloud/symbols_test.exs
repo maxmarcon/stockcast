@@ -95,7 +95,7 @@ defmodule Stockcast.IexCloud.SymbolsTest do
     test "passes through api errors" do
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: "API_ERROR", status: 422} end)
 
-      assert {:error, "API_ERROR"} == Symbols.fetch(@symbols_path)
+      assert {:error, 422, "API_ERROR"} == Symbols.fetch(@symbols_path)
     end
   end
 end
