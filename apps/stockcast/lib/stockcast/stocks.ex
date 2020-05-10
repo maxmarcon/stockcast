@@ -18,9 +18,9 @@ defmodule Stockcast.Stocks do
     2. A prefix of the symbol ID (including the entire symbol)
     3. An ISIN
   """
-  @spec search(binary(), integer() | binary()) :: [%IexSymbol{}]
+  @spec search(binary(), integer()) :: [%IexSymbol{}]
   def search(term, limit \\ 100)
-      when is_binary(term) and (is_binary(limit) or is_integer(limit)) do
+      when is_binary(term) and is_integer(limit) do
     term_list = String.split(term)
 
     Repo.all(from iex_cloud_search(term_list), limit: ^limit)

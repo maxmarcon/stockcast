@@ -12,9 +12,13 @@ defmodule StockcastWeb.StockController do
   end
 
   def search(conn, %{"q" => term, "limit" => limit}) do
-    stocks = Stocks.search(term, limit)
+    case Integer.parse(limit) do
+      {limit, _} ->
+        render(conn, :index, %{stocks: Stocks.search(term, limit)})
 
-    render(conn, :index, %{stocks: stocks})
+      :error ->
+        {:error, :bad_request, "Limit must be an integer"}
+    end
   end
 
   def search(conn, %{"q" => term}) do

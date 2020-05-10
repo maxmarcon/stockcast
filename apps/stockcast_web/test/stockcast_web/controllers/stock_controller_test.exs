@@ -4,6 +4,8 @@ defmodule StockcastWeb.StockControllerTest do
   alias Stockcast.Repo
   alias Stockcast.IexCloud.Symbol, as: IexSymbol
 
+  import StockcastWeb.TestUtils
+
   @iex_symbols [
     %{
       symbol: "00XP-GY",
@@ -129,8 +131,8 @@ defmodule StockcastWeb.StockControllerTest do
   end
 
   test "returns 400 if some search parameters have wrong format", %{conn: conn} do
-    assert_error_sent(400, fn ->
-      get(conn, Routes.stock_path(conn, :search, q: "X", limit: "not a number"))
-    end)
+    conn = get(conn, Routes.stock_path(conn, :search, q: "X", limit: "not a number"))
+
+    json_error_response(conn, 400, "Limit must be an integer")
   end
 end
