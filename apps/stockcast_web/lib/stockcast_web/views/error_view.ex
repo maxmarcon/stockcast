@@ -10,7 +10,16 @@ defmodule StockcastWeb.ErrorView do
   # By default, Phoenix returns the status message from
   # the template name. For example, "404.json" becomes
   # "Not Found".
+  def template_not_found(template, %{detail: message}) do
+    %{
+      status: %{
+        error: Phoenix.Controller.status_message_from_template(template),
+        detail: message
+      }
+    }
+  end
+
   def template_not_found(template, _assigns) do
-    %{status: %{detail: Phoenix.Controller.status_message_from_template(template)}}
+    %{status: %{error: Phoenix.Controller.status_message_from_template(template)}}
   end
 end
