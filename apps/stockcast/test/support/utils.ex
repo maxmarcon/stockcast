@@ -32,7 +32,7 @@ defmodule Stockcast.TestUtils do
   end
 
   def mock_price_api(:not_found) do
-    Tesla.Mock.mock(fn %{method: get} -> %Tesla.Env{body: "Unknown symbol", status: 404} end)
+    Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: "Unknown symbol", status: 404} end)
   end
 
   def mock_isin_api() do
