@@ -9,7 +9,10 @@
     "test": "vue-cli-service test:unit"
   },
   "dependencies": {
+    "bootstrap-vue": "^2.14.0",
     "core-js": "^3.6.4",
+    "node-sass": "^4.14.1",
+    "sass-loader": "^8.0.2",
     "vue": "^2.6.11"
   },
   "devDependencies": {
