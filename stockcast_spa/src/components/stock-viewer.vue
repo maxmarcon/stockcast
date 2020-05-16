@@ -8,6 +8,6 @@
                 </b-col>
             </b-row>
         </template>
-        Stocks here $$$
+        Money here $$$
     </b-card>
 </template>

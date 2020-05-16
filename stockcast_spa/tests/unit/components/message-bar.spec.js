@@ -15,6 +15,12 @@ let alert
 
 describe('messageBar', () => {
 
+    it('can be mounted', () => {
+
+        wrapper = shallowMount(messageBar)
+        expect(wrapper.isVueInstance()).toBeTruthy
+    })
+
     describe('without countdown', () => {
 
         beforeEach(async () => {
