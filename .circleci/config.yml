@@ -54,7 +54,7 @@ jobs:
   build_front_end:
     docker:
       - image: *node_image
-    working_directory: ~/project/webapp
+    working_directory: ~/project/stockcast_spa
     steps:
       - attach_workspace:
           at: ~/
@@ -90,7 +90,7 @@ jobs:
       - run:
           command: |
             yarn lint
-            yarn test-once
+            yarn test
       - store_test_results:
           path: test-results
 
@@ -108,16 +108,16 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-#      - build_front_end:
-#          requires:
-#            - build_back_end
-#          filters:
-#            tags:
-#              only: /^v.*/
-#      - frontend_unit_tests:
-#          requires:
-#            - build_front_end
-#          filters:
-#            tags:
-#              only: /^v.*/
+      - build_front_end:
+          requires:
+            - build_back_end
+          filters:
+            tags:
+              only: /^v.*/
+      - frontend_unit_tests:
+          requires:
+            - build_front_end
+          filters:
+            tags:
+              only: /^v.*/
 
