@@ -82,7 +82,7 @@ jobs:
   frontend_unit_tests:
     docker:
       - image: *node_image_browsers
-    working_directory: ~/project/webapp
+    working_directory: ~/project/stockcast_spa
     steps:
       - attach_workspace:
           at: ~/

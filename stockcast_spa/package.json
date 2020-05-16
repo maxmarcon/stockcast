@@ -7,7 +7,7 @@
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint",
-    "test": "vue-cli-service test:unit"
+    "test": "JEST_JUNIT_OUTPUT_DIR=test-results/jest vue-cli-service test:unit --reporters=default --reporters=jest-junit"
   },
   "dependencies": {
     "bootstrap-vue": "^2.14.0",
@@ -25,6 +25,7 @@
     "babel-eslint": "^10.1.0",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
+    "jest-junit": "^10.0.0",
     "vue-template-compiler": "^2.6.11"
   },
   "eslintConfig": {
