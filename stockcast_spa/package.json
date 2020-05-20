@@ -10,6 +10,7 @@
     "test": "JEST_JUNIT_OUTPUT_DIR=test-results/jest vue-cli-service test:unit --reporters=default --reporters=jest-junit"
   },
   "dependencies": {
+    "@johmun/vue-tags-input": "^2.1.0",
     "bootstrap-vue": "^2.14.0",
     "core-js": "^3.6.4",
     "node-sass": "^4.14.1",
