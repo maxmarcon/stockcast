@@ -24,13 +24,21 @@
           <b-col md="auto">
             <b-form-group label="From:"
                           labe-for="date-from">
-              <b-form-datepicker id="date-from"></b-form-datepicker>
+              <b-form-datepicker id="date-from"
+                                 v-model="dateFrom"
+                                 :date-format-options="dateFormatOptions"
+                                 :max="dateTo || yesterday"
+              ></b-form-datepicker>
             </b-form-group>
           </b-col>
           <b-col md="auto">
             <b-form-group label="To:"
                           labe-for="date-to">
-              <b-form-datepicker id="date-to"></b-form-datepicker>
+              <b-form-datepicker id="date-to"
+                                 v-model="dateTo"
+                                 :date-format-options="dateFormatOptions"
+                                 :max="yesterday"
+              ></b-form-datepicker>
             </b-form-group>
           </b-col>
         </b-form-row>
@@ -40,11 +48,16 @@
   </b-card>
 </template>
 <script>
+  import {startOfYesterday} from 'date-fns'
   export default {
     data: () => ({
       tag: '',
       tags: [],
-      autocompleteItems: []
+      autocompleteItems: [],
+      dateFormatOptions: {year: 'numeric', month: 'numeric', day: 'numeric'},
+      yesterday: startOfYesterday(),
+      dateFrom: null,
+      dateTo: null
     }),
     methods: {
       tagsChanged() {
