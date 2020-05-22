@@ -1,5 +1,7 @@
 use Mix.Config
 
+config :stockcast, :env, :dev
+
 # Configure your database
 config :stockcast,
        Stockcast.Repo,

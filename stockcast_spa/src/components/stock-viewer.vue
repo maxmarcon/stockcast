@@ -11,7 +11,6 @@
                 id="stocks"
                 v-model="tag"
                 :tags="tags"
-                @tags-changed="tagsChanged"
                 :avoidAddingDuplicates="true"
                 :autocomplete-items="autocompleteItems"
                 :max-tags="10"
@@ -49,6 +48,8 @@
 </template>
 <script>
   import {startOfYesterday} from 'date-fns'
+  import debounce from 'debounce-async'
+
   export default {
     data: () => ({
       tag: '',
@@ -57,10 +58,20 @@
       dateFormatOptions: {year: 'numeric', month: 'numeric', day: 'numeric'},
       yesterday: startOfYesterday(),
       dateFrom: null,
-      dateTo: null
+      dateTo: null,
+      debouncedSearch: null
     }),
-    methods: {
-      tagsChanged() {
+    mounted() {
+      this.debouncedSearch = debounce(
+        async (term) => await this.axios.get("stocks/search", {params: {q: term, limit: 10}}), 800)
+    },
+    watch: {
+      async tag(newTagInput) {
+        if (newTagInput.length < 3) {
+          return
+        }
+        const result = await this.debouncedSearch(newTagInput)
+        this.autocompleteItems = result.data.data.map(({symbol}) => ({text: symbol}))
       }
     }
   }

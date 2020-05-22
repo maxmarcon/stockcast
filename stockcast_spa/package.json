@@ -11,12 +11,15 @@
   },
   "dependencies": {
     "@johmun/vue-tags-input": "^2.1.0",
+    "axios": "^0.19.2",
     "bootstrap-vue": "^2.14.0",
     "core-js": "^3.6.4",
     "date-fns": "^2.14.0",
+    "debounce-async": "^0.0.2",
     "node-sass": "^4.14.1",
     "sass-loader": "^8.0.2",
-    "vue": "^2.6.11"
+    "vue": "^2.6.11",
+    "vue-axios": "^2.1.5"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.3.0",

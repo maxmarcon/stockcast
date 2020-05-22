@@ -41,5 +41,10 @@ defmodule StockcastWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
+
+  if Application.get_env(:stockcast, :env) == :dev do
+    plug(CORSPlug, origin: "*")
+  end
+
   plug StockcastWeb.Router
 end
