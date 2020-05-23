@@ -1,10 +1,12 @@
 import Vue from 'vue'
+import VueRouter from 'vue-router'
 import {BootstrapVue, IconsPlugin} from 'bootstrap-vue'
 import VueTagsInput from '@johmun/vue-tags-input';
 import axios from 'axios'
 import VueAxios from "vue-axios";
 import './scss/main.scss'
 
+import App from '@/components/app.vue'
 import StockViewer from '@/components/stock-viewer.vue'
 import MessageBar from '@/components/message-bar.vue'
 // Install BootstrapVue
@@ -20,6 +22,17 @@ Vue.config.productionTip = false
 Vue.component('vueTagsInput', VueTagsInput)
 Vue.component('messageBar', MessageBar)
 
+Vue.use(VueRouter)
+
+const router = new VueRouter({
+  mode: 'history',
+  routes: [
+    { path: '/stocks', component: StockViewer},
+    { path: '*', redirect: '/stocks' }
+  ]
+})
+
 new Vue({
-  render: h => h(StockViewer),
+  router,
+  render: h => h(App)
 }).$mount('#app')
