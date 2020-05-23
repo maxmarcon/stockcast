@@ -27,8 +27,8 @@ Vue.use(VueRouter)
 const router = new VueRouter({
   mode: 'history',
   routes: [
-    { path: '/stocks', component: StockViewer},
-    { path: '*', redirect: '/stocks' }
+    {path: '/stocks', component: StockViewer},
+    {path: '*', redirect: '/stocks'}
   ]
 })
 

@@ -6,7 +6,7 @@
         <b-form-row>
           <b-col md="4">
             <b-form-group label="Stocks:"
-                          labe-for="stocks">
+                          label-for="stocks">
               <vue-tags-input
                 autocomplete="off"
                 id="stocks"
@@ -24,7 +24,7 @@
           </b-col>
           <b-col md="auto">
             <b-form-group label="From:"
-                          labe-for="date-from">
+                          label-for="date-from">
               <b-form-datepicker id="date-from"
                                  v-model="dateFrom"
                                  :date-format-options="dateFormatOptions"
@@ -34,7 +34,7 @@
           </b-col>
           <b-col md="auto">
             <b-form-group label="To:"
-                          labe-for="date-to">
+                          label-for="date-to">
               <b-form-datepicker id="date-to"
                                  v-model="dateTo"
                                  :date-format-options="dateFormatOptions"
