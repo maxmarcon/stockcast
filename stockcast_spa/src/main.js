@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
+import {BootstrapVue, IconsPlugin} from 'bootstrap-vue'
 import VueTagsInput from '@johmun/vue-tags-input';
 import axios from 'axios'
 import VueAxios from "vue-axios";
@@ -13,7 +13,7 @@ Vue.use(BootstrapVue)
 Vue.use(IconsPlugin)
 Vue.use(VueAxios, axios)
 
-Vue.axios.defaults.baseURL =[process.env.VUE_APP_APIBASE, 'v1'].join('/')
+Vue.axios.defaults.baseURL = [process.env.VUE_APP_APIBASE, 'v1'].join('/')
 
 Vue.config.productionTip = false
 

@@ -8,6 +8,7 @@
             <b-form-group label="Stocks:"
                           labe-for="stocks">
               <vue-tags-input
+                autocomplete="off"
                 id="stocks"
                 v-model="tag"
                 :tags="tags"
@@ -16,6 +17,7 @@
                 :max-tags="10"
                 :maxlength="50"
                 :add-only-from-autocomplete="true"
+                :autocomplete-min-length="autocompleteMinLength"
                 placeholder="Search by name, ticker, or ISIN">
               </vue-tags-input>
             </b-form-group>
@@ -50,11 +52,14 @@
   import {startOfYesterday} from 'date-fns'
   import debounce from 'debounce-async'
 
+  const DELAY = 800
+
   export default {
     data: () => ({
       tag: '',
       tags: [],
       autocompleteItems: [],
+      autocompleteMinLength: 3,
       dateFormatOptions: {year: 'numeric', month: 'numeric', day: 'numeric'},
       yesterday: startOfYesterday(),
       dateFrom: null,
@@ -62,16 +67,25 @@
       debouncedSearch: null
     }),
     mounted() {
-      this.debouncedSearch = debounce(
-        async (term) => await this.axios.get("stocks/search", {params: {q: term, limit: 10}}), 800)
+      this.debouncedSearch = debounce(this.searchStocks, DELAY)
     },
     watch: {
       async tag(newTagInput) {
-        if (newTagInput.length < 3) {
+        if (newTagInput.length < this.autocompleteMinLength) {
           return
         }
         const result = await this.debouncedSearch(newTagInput)
         this.autocompleteItems = result.data.data.map(({symbol}) => ({text: symbol}))
+      }
+    },
+    methods: {
+      async searchStocks(term) {
+        try {
+          return await this.axios.get("stocks/search", {params: {q: term, limit: 10}})
+        } catch (error) {
+          this.$refs.errorBar.show(error)
+          throw error
+        }
       }
     }
   }
