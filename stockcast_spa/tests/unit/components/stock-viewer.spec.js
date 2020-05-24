@@ -8,6 +8,7 @@ localVue.use(bootstrapVue)
 localVue.use(VueTagsInput)
 
 let axiosMock
+let routerMock
 let wrapper
 
 describe('stockViewer', () => {
@@ -17,9 +18,16 @@ describe('stockViewer', () => {
       get: jest.fn(async () => ({data: {data: [{symbol: "S1"}, {symbol: "S2"}]}}))
     }
 
+    routerMock = {
+      push: jest.fn()
+    }
+
     wrapper = mount(stockViewer, {
       localVue,
-      mocks: {axios: axiosMock},
+      mocks: {
+        axios: axiosMock,
+        $router: routerMock
+      },
       stubs: ['messageBar']
     })
   })
@@ -69,6 +77,19 @@ describe('stockViewer', () => {
         {params: expect.objectContaining({q: "1234"})}
       )
       expect(axiosMock.get).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('when new tags are entered', () => {
+
+    beforeEach(() => {
+      // await wrapper.get('div.vue-tags-input').trigger('tags-changed', [{text: "S1"}, {text: "S2"}])
+      // for some reason, the above does not work and we have to resort to this:
+      wrapper.vm.tagsChanged([{text: "S1"}, {text: "S2"}])
+    })
+
+    it("the url query parameters are updated", () => {
+      expect(routerMock.push).toHaveBeenCalledWith({name: "stocks", query: {symbols: ["S1", "S2"]}})
     })
   })
 })

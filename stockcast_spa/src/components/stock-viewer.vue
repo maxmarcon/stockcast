@@ -18,6 +18,7 @@
                 :maxlength="50"
                 :add-only-from-autocomplete="true"
                 :autocomplete-min-length="autocompleteMinLength"
+                @tags-changed="tagsChanged"
                 placeholder="Search by name, ticker, or ISIN">
               </vue-tags-input>
             </b-form-group>
@@ -54,7 +55,12 @@
 
   const DELAY = 800
 
+  const tagsToSymbols = (tags) => tags.map(({text}) => text)
+
   export default {
+    props: {
+      symbols: Array
+    },
     data: () => ({
       tag: '',
       tags: [],
@@ -86,6 +92,9 @@
           this.$refs.errorBar.show(error)
           throw error
         }
+      },
+      tagsChanged(tags) {
+        this.$router.push({name: "stocks", query: {symbols: tagsToSymbols(tags)}})
       }
     }
   }
