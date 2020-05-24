@@ -40,7 +40,23 @@ describe('stockViewer', () => {
     expect(wrapper.find('input#stocks').exists()).toBeTruthy()
   })
 
-  describe('when entering text in the search input field', () => {
+  describe('when props are passed', () => {
+    beforeEach(() => {
+      wrapper = mount(stockViewer, {
+        localVue,
+        propsData: {
+          symbols: ['S1', 'S2']
+        },
+        stubs: ['messageBar']
+      })
+    })
+
+    it('they are used to fill the form fields', () => {
+      expect(wrapper.vm.tags).toEqual([{text: 'S1'}, {text: 'S2'}])
+    })
+  })
+
+  describe('when entering text in the stocks input field', () => {
 
     beforeEach(() => {
       jest.useFakeTimers()
@@ -89,7 +105,17 @@ describe('stockViewer', () => {
     })
 
     it("the url query parameters are updated", () => {
-      expect(routerMock.push).toHaveBeenCalledWith({name: "stocks", query: {symbols: ["S1", "S2"]}})
+      expect(routerMock.push).toHaveBeenCalledWith({name: "stocks", query: {s: ["S1", "S2"]}})
+    })
+  })
+
+  describe('when the route is updated', () => {
+    beforeEach(() => {
+      wrapper.vm.$options.beforeRouteUpdate.call(wrapper.vm, {query: {s: ['C1', 'C2']}}, null, jest.fn())
+    })
+
+    it('the form fields are updated', () => {
+      expect(wrapper.vm.tags).toEqual([{text: 'C1'}, {text: 'C2'}])
     })
   })
 })

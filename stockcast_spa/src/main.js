@@ -8,6 +8,7 @@ import './scss/main.scss'
 
 import App from '@/components/app.vue'
 import StockViewer from '@/components/stock-viewer.vue'
+import {routeToProps as stockViewerRouteToProps} from "./components/stock-viewer";
 import MessageBar from '@/components/message-bar.vue'
 // Install BootstrapVue
 Vue.use(BootstrapVue)
@@ -27,7 +28,10 @@ Vue.use(VueRouter)
 const router = new VueRouter({
   mode: 'history',
   routes: [
-    {name: 'stocks', path: '/stocks', component: StockViewer},
+    {
+      name: 'stocks', path: '/stocks', component: StockViewer,
+      props: stockViewerRouteToProps
+    },
     {path: '*', redirect: {name: 'stocks'}}
   ]
 })

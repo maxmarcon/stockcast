@@ -56,10 +56,26 @@
   const DELAY = 800
 
   const tagsToSymbols = (tags) => tags.map(({text}) => text)
+  const symbolsToTags = (symbols) => symbols.map(symbol => ({text: symbol}))
+
+  export const routeToProps = (route) => {
+    const symbols = route.query.s
+    if (symbols) {
+      if (symbols instanceof Array) {
+        return {symbols}
+      } else {
+        return {symbols: [symbols]}
+      }
+    }
+    return {symbols: []}
+  }
 
   export default {
     props: {
-      symbols: Array
+      symbols: {
+        type: Array,
+        default: () => []
+      }
     },
     data: () => ({
       tag: '',
@@ -74,6 +90,11 @@
     }),
     mounted() {
       this.debouncedSearch = debounce(this.searchStocks, DELAY)
+      this.tags = symbolsToTags(this.symbols)
+    },
+    beforeRouteUpdate(to, from, next) {
+      this.tags = symbolsToTags(routeToProps(to).symbols)
+      next()
     },
     watch: {
       async tag(newTagInput) {
@@ -94,7 +115,7 @@
         }
       },
       tagsChanged(tags) {
-        this.$router.push({name: "stocks", query: {symbols: tagsToSymbols(tags)}})
+        this.$router.push({name: "stocks", query: {s: tagsToSymbols(tags)}})
       }
     }
   }
