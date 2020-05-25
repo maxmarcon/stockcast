@@ -55,24 +55,16 @@
 
   const DELAY = 800
 
-  const tagsToSymbols = (tags) => tags.map(({text}) => text)
-  const symbolsToTags = (symbols) => symbols.map(symbol => ({text: symbol}))
+  const tagPropertyFilter = ({text}) => ({text})
 
   export const routeToProps = (route) => {
-    const symbols = route.query.s
-    if (symbols) {
-      if (symbols instanceof Array) {
-        return {symbols}
-      } else {
-        return {symbols: [symbols]}
-      }
-    }
-    return {symbols: []}
+    let tags = route.query.s || "[]"
+    return {initialTags: JSON.parse(tags).map(tagPropertyFilter)}
   }
 
   export default {
     props: {
-      symbols: {
+      initialTags: {
         type: Array,
         default: () => []
       }
@@ -90,10 +82,10 @@
     }),
     mounted() {
       this.debouncedSearch = debounce(this.searchStocks, DELAY)
-      this.tags = symbolsToTags(this.symbols)
+      this.tags = this.initialTags
     },
     beforeRouteUpdate(to, from, next) {
-      this.tags = symbolsToTags(routeToProps(to).symbols)
+      this.tags = routeToProps(to).initialTags
       next()
     },
     watch: {
@@ -115,7 +107,7 @@
         }
       },
       tagsChanged(tags) {
-        this.$router.push({name: "stocks", query: {s: tagsToSymbols(tags)}})
+        this.$router.push({name: "stocks", query: {s: JSON.stringify(tags.map(tagPropertyFilter))}})
       }
     }
   }

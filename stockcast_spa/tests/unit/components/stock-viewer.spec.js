@@ -45,7 +45,7 @@ describe('stockViewer', () => {
       wrapper = mount(stockViewer, {
         localVue,
         propsData: {
-          symbols: ['S1', 'S2']
+          initialTags: [{text: 'S1'}, {text: 'S2'}]
         },
         stubs: ['messageBar']
       })
@@ -105,13 +105,16 @@ describe('stockViewer', () => {
     })
 
     it("the url query parameters are updated", () => {
-      expect(routerMock.push).toHaveBeenCalledWith({name: "stocks", query: {s: ["S1", "S2"]}})
+      expect(routerMock.push).toHaveBeenCalledWith({
+        name: "stocks",
+        query: {s: JSON.stringify([{text: "S1"}, {text: "S2"}])}
+      })
     })
   })
 
   describe('when the route is updated', () => {
     beforeEach(() => {
-      wrapper.vm.$options.beforeRouteUpdate.call(wrapper.vm, {query: {s: ['C1', 'C2']}}, null, jest.fn())
+      wrapper.vm.$options.beforeRouteUpdate.call(wrapper.vm, {query: {s: JSON.stringify([{text: 'C1'}, {text: 'C2'}])}}, null, jest.fn())
     })
 
     it('the form fields are updated', () => {
