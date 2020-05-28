@@ -15,59 +15,59 @@ let alert
 
 describe('messageBar', () => {
 
-    it('can be mounted', () => {
+  it('can be mounted', () => {
 
-        wrapper = shallowMount(messageBar)
-        expect(wrapper.isVueInstance()).toBeTruthy
+    wrapper = shallowMount(messageBar, {localVue})
+    expect(wrapper.exists()).toBeTruthy
+  })
+
+  describe('without countdown', () => {
+
+    beforeEach(async () => {
+
+      wrapper = shallowMount(messageBar, {
+        localVue,
+        propsData: {
+          seconds: 0,
+          variant: VARIANT
+        }
+      })
+
+      wrapper.vm.show(MESSAGE)
     })
 
-    describe('without countdown', () => {
+    it('shows a permanent dismissable message', () => {
+      alert = wrapper.find('b-alert-stub')
 
-        beforeEach(async () => {
+      expect(alert.attributes('show')).toBe('true')
+      expect(alert.attributes('dismissible')).toBeTruthy()
+      expect(alert.attributes('variant')).toBe(VARIANT)
+      expect(alert.text()).toBe(MESSAGE)
+    })
+  })
 
-            wrapper = shallowMount(messageBar, {
-                localVue,
-                propsData: {
-                    seconds: 0,
-                    variant: VARIANT
-                }
-            })
+  describe('with countdown', () => {
 
-            wrapper.vm.show(MESSAGE)
-        })
+    beforeEach(async () => {
 
-        it('shows a permanent dismissable message', () => {
-            alert = wrapper.find('b-alert-stub')
+      wrapper = shallowMount(messageBar, {
+        localVue,
+        propsData: {
+          seconds: SECONDS,
+          variant: VARIANT
+        }
+      })
 
-            expect(alert.attributes('show')).toBe('true')
-            expect(alert.attributes('dismissible')).toBeTruthy()
-            expect(alert.attributes('variant')).toBe(VARIANT)
-            expect(alert.text()).toBe(MESSAGE)
-        })
+      wrapper.vm.show(MESSAGE)
     })
 
-    describe('with countdown', () => {
+    it('shows a message with countdown', () => {
+      alert = wrapper.find('b-alert-stub')
 
-        beforeEach(async () => {
-
-            wrapper = shallowMount(messageBar, {
-                localVue,
-                propsData: {
-                    seconds: SECONDS,
-                    variant: VARIANT
-                }
-            })
-
-            wrapper.vm.show(MESSAGE)
-        })
-
-        it('shows a message with countdown', () => {
-            alert = wrapper.find('b-alert-stub')
-
-            expect(alert.attributes('show')).toEqual(SECONDS.toString())
-            expect(alert.attributes('dismissible')).toBeFalsy()
-            expect(alert.attributes('variant')).toBe(VARIANT)
-            expect(alert.text()).toBe(MESSAGE)
-        })
+      expect(alert.attributes('show')).toEqual(SECONDS.toString())
+      expect(alert.attributes('dismissible')).toBeFalsy()
+      expect(alert.attributes('variant')).toBe(VARIANT)
+      expect(alert.text()).toBe(MESSAGE)
     })
+  })
 })

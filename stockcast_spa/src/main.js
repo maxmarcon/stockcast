@@ -8,6 +8,7 @@ import './scss/main.scss'
 
 import App from '@/components/app.vue'
 import StockViewer from '@/components/stock-viewer.vue'
+import StockPeriodPicker from '@/components/stock-period-picker.vue'
 import {routeToProps as stockViewerRouteToProps} from "./components/stock-viewer";
 import MessageBar from '@/components/message-bar.vue'
 // Install BootstrapVue
@@ -22,6 +23,8 @@ Vue.config.productionTip = false
 
 Vue.component('vueTagsInput', VueTagsInput)
 Vue.component('messageBar', MessageBar)
+Vue.component('stockPeriodPicker', StockPeriodPicker)
+
 
 Vue.use(VueRouter)
 
