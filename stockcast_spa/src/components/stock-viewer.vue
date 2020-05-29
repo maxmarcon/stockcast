@@ -31,7 +31,7 @@
     },
     data: () => ({
       stocks: {
-        tags: [],
+        tags: null,
         dateFrom: subMonths(startOfYesterday(), 3),
         dateTo: startOfYesterday()
       }
@@ -52,7 +52,7 @@
           } else {
             newRoute = {name: "stocks"}
           }
-          this.$router.push(newRoute)
+          this.$router.push(newRoute).catch(err => err)
         },
         deep: true
       }

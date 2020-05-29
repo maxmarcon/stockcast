@@ -12,7 +12,7 @@ describe('stockViewer', () => {
 
   beforeEach(() => {
     routerMock = {
-      push: jest.fn()
+      push: jest.fn(() => Promise.resolve())
     }
 
     wrapper = mount(stockViewer, {
