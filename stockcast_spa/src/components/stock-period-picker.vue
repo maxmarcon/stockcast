@@ -26,7 +26,8 @@
                            :value="value.dateFrom"
                            @input="dateFromChanged"
                            :date-format-options="dateFormatOptions"
-                           :max="dateTo || yesterday">
+                           :value-as-date="true"
+                           :max="yesterday">
         </b-form-datepicker>
       </b-form-group>
     </b-col>
@@ -37,6 +38,7 @@
                            :value="value.dateTo"
                            @input="dateToChanged"
                            :date-format-options="dateFormatOptions"
+                           :value-as-date="true"
                            :max="yesterday">
         </b-form-datepicker>
       </b-form-group>
@@ -44,7 +46,7 @@
   </b-form-row>
 </template>
 <script>
-  import {formatISO, max, min, parseISO, startOfYesterday, subMonths} from 'date-fns'
+  import {max, min, startOfYesterday} from 'date-fns'
   import debounce from "debounce-async";
 
   const DELAY = 800
@@ -55,9 +57,14 @@
         type: Object,
         default: () => ({
           tags: [],
-          dateFrom: subMonths(startOfYesterday(), 3),
-          dateTo: startOfYesterday()
-        })
+          dateFrom: null,
+          dateTo: null
+        }),
+        validator: (value) => {
+          return value.tags instanceof Array
+            && (value.dateFrom == null || value.dateFrom instanceof Date)
+            && (value.dateTo == null || value.dateTo instanceof Date)
+        }
       },
       maxTags: {
         type: Number,
@@ -89,12 +96,16 @@
     methods: {
       dateFromChanged(date) {
         this.value.dateFrom = date
-        this.value.dateTo = formatISO(max([date, this.value.dateTo].map(parseISO)), {representation: 'date'})
+        if (this.value.dateTo) {
+          this.value.dateTo = max([date, this.value.dateTo])
+        }
         this.$emit('input', this.value)
       },
       dateToChanged(date) {
         this.value.dateTo = date
-        this.value.dateFrom = formatISO(min([date, this.value.dateFrom].map(parseISO)), {representation: 'date'})
+        if (this.value.dateFrom) {
+          this.value.dateFrom = min([date, this.value.dateFrom])
+        }
         this.$emit('input', this.value)
       },
       tagsChanged(tags) {

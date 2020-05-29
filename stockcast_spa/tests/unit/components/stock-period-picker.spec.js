@@ -2,6 +2,7 @@ import stockPeriodPicker from '@/components/stock-period-picker'
 import bootstrapVue, {BFormDatepicker} from 'bootstrap-vue'
 import VueTagsInput from '@johmun/vue-tags-input';
 import {createLocalVue, mount} from '@vue/test-utils'
+import {parseISO} from 'date-fns'
 
 const localVue = createLocalVue()
 localVue.use(bootstrapVue)
@@ -22,8 +23,8 @@ describe('stockPeriodPicker', () => {
       propsData: {
         value: {
           tags: [{text: 'S1'}],
-          dateFrom: '2015-01-01',
-          dateTo: '2015-03-01'
+          dateFrom: parseISO('2015-01-01'),
+          dateTo: parseISO('2015-03-01')
         }
       },
       mocks: {
@@ -50,11 +51,11 @@ describe('stockPeriodPicker', () => {
   })
 
   it('initializes the date-from input', () => {
-    expect(wrapper.findAllComponents(BFormDatepicker).at(0).vm.value).toBe('2015-01-01')
+    expect(wrapper.findAllComponents(BFormDatepicker).at(0).vm.value).toEqual(parseISO('2015-01-01'))
   })
 
   it('initializes the date-to input', () => {
-    expect(wrapper.findAllComponents(BFormDatepicker).at(1).vm.value).toBe('2015-03-01')
+    expect(wrapper.findAllComponents(BFormDatepicker).at(1).vm.value).toEqual(parseISO('2015-03-01'))
   })
 
   describe('when a new tag is entered', () => {
@@ -73,35 +74,35 @@ describe('stockPeriodPicker', () => {
 
   describe('when a new date-from is entered', () => {
     beforeEach(() => {
-      wrapper.findAllComponents(BFormDatepicker).at(0).vm.$emit('input', '2020-01-01')
+      wrapper.findAllComponents(BFormDatepicker).at(0).vm.$emit('input', parseISO('2020-01-01'))
     })
 
     it('value.dateFrom is updated', () => {
-      expect(wrapper.vm.value.dateFrom).toEqual('2020-01-01')
+      expect(wrapper.vm.value.dateFrom).toEqual(parseISO('2020-01-01'))
     })
 
     it('and the input event is emitted', () => {
-      expect(wrapper.emitted().input).toEqual([[expect.objectContaining({dateFrom: '2020-01-01'})]])
+      expect(wrapper.emitted().input).toEqual([[expect.objectContaining({dateFrom: parseISO('2020-01-01')})]])
     })
   })
 
   describe('when a new date-to is entered', () => {
     beforeEach(() => {
-      wrapper.findAllComponents(BFormDatepicker).at(1).vm.$emit('input', '2020-01-01')
+      wrapper.findAllComponents(BFormDatepicker).at(1).vm.$emit('input', parseISO('2020-01-01'))
     })
 
     it('value.dateTo is updated', () => {
-      expect(wrapper.vm.value.dateTo).toEqual('2020-01-01')
+      expect(wrapper.vm.value.dateTo).toEqual(parseISO('2020-01-01'))
     })
 
     it('and the input event is emitted', () => {
-      expect(wrapper.emitted().input).toEqual([[expect.objectContaining({dateTo: '2020-01-01'})]])
+      expect(wrapper.emitted().input).toEqual([[expect.objectContaining({dateTo: parseISO('2020-01-01')})]])
     })
   })
 
   describe('when a date-from is entered which is later than date-to', () => {
     beforeEach(() => {
-      wrapper.findAllComponents(BFormDatepicker).at(0).vm.$emit('input', '2015-03-02')
+      wrapper.findAllComponents(BFormDatepicker).at(0).vm.$emit('input', parseISO('2015-03-02'))
     })
 
     it('date-to is set to date-from', () => {
@@ -111,7 +112,7 @@ describe('stockPeriodPicker', () => {
 
   describe('when a date-to is entered which is before than date-from', () => {
     beforeEach(() => {
-      wrapper.findAllComponents(BFormDatepicker).at(1).vm.$emit('input', '2014-12-31')
+      wrapper.findAllComponents(BFormDatepicker).at(1).vm.$emit('input', parseISO('2014-12-31'))
     })
 
     it('date-from is set to date-to', () => {
@@ -144,7 +145,7 @@ describe('stockPeriodPicker', () => {
 
     beforeEach(() => {
       axiosMock = {
-        get: jest.fn( () => Promise.reject('AxiosError'))
+        get: jest.fn(() => Promise.reject('AxiosError'))
       }
 
       wrapper = mount(stockPeriodPicker, {

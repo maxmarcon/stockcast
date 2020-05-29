@@ -3,9 +3,8 @@
     <template slot="header">
       <message-bar id="errorBar" ref="errorBar" variant="danger" :seconds=10></message-bar>
       <b-form>
-        <stock-period-picker :value="{tags}"
-                             @input="stockPeriodChanged"
-                             @error="this.$refs.errorBar.show($event)"
+        <stock-period-picker v-model="stocks"
+                             @error="$refs.errorBar.show($event)"
         >
         </stock-period-picker>
       </b-form>
@@ -14,6 +13,8 @@
   </b-card>
 </template>
 <script>
+  import {startOfYesterday, subMonths} from 'date-fns'
+
   const tagPropertyFilter = ({text}) => ({text})
 
   export const routeToProps = (route) => {
@@ -29,18 +30,31 @@
       }
     },
     data: () => ({
-      tags: []
+      stocks: {
+        tags: [],
+        dateFrom: subMonths(startOfYesterday(), 3),
+        dateTo: startOfYesterday()
+      }
     }),
-    mounted() {
-      this.tags = this.initialTags
+    created() {
+      this.stocks.tags = this.initialTags
     },
     beforeRouteUpdate(to, from, next) {
-      this.tags = routeToProps(to).initialTags
+      this.stocks.tags = routeToProps(to).initialTags
       next()
     },
-    methods: {
-      stockPeriodChanged({tags}) {
-        this.$router.push({name: "stocks", query: {s: JSON.stringify(tags.map(tagPropertyFilter))}})
+    watch: {
+      stocks: {
+        handler(stocks) {
+          let newRoute = null
+          if (stocks.tags.length > 0) {
+            newRoute = {name: "stocks", query: {s: JSON.stringify(stocks.tags.map(tagPropertyFilter))}}
+          } else {
+            newRoute = {name: "stocks"}
+          }
+          this.$router.push(newRoute)
+        },
+        deep: true
       }
     }
   }
