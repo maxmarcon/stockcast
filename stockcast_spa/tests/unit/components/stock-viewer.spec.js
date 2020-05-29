@@ -1,6 +1,7 @@
 import stockViewer from '@/components/stock-viewer'
 import bootstrapVue from 'bootstrap-vue'
 import {createLocalVue, mount} from '@vue/test-utils'
+import {parseISO} from 'date-fns'
 
 const localVue = createLocalVue()
 localVue.use(bootstrapVue)
@@ -17,7 +18,9 @@ describe('stockViewer', () => {
 
     wrapper = mount(stockViewer, {
       propsData: {
-        initialTags: [{text: 'S1'}, {text: 'S2'}]
+        tags: [{text: 'S1'}, {text: 'S2'}],
+        dateFrom: parseISO('2020-01-01'),
+        dateTo: parseISO('2020-03-01')
       },
       localVue,
       mocks: {
@@ -35,51 +38,53 @@ describe('stockViewer', () => {
     expect(wrapper.find('stockperiodpicker-stub').exists()).toBeTruthy()
   })
 
-  // TODO add dates
-  it('initializes the stocks with tags', () => {
-    expect(wrapper.vm.stocks).toEqual(expect.objectContaining({
-      tags: [{text: 'S1'}, {text: 'S2'}]
-    }))
+  it('initializes the stocks with tags and dates', () => {
+    expect(wrapper.vm.stocks).toEqual({
+      tags: [{text: 'S1'}, {text: 'S2'}],
+      dateFrom: parseISO('2020-01-01'),
+      dateTo: parseISO('2020-03-01')
+    })
   })
 
-  describe('when new tags are entered', () => {
+  describe('when stocks are updated', () => {
 
     beforeEach(() => {
-      wrapper.find('stockperiodpicker-stub').vm.$emit('input', {tags: [{text: "S3"}, {text: "S4"}]})
+      wrapper.find('stockperiodpicker-stub').vm.$emit('input', {
+        tags: [{text: "S3"}, {text: "S4"}],
+        dateFrom: parseISO('2019-01-01'),
+        dateTo: parseISO('2019-03-01')
+      })
     })
 
     it("the url query parameters are updated", () => {
       expect(routerMock.push).toHaveBeenCalledWith({
         name: "stocks",
-        query: {s: JSON.stringify([{text: "S3"}, {text: "S4"}])}
+        query: {
+          s: JSON.stringify([{text: "S3"}, {text: "S4"}]),
+          df: '2019-01-01',
+          dt: '2019-03-01'
+        }
       })
     })
-  })
-
-  describe('when all tags are deleted', () => {
-
-    beforeEach(() => {
-      wrapper.find('stockperiodpicker-stub').vm.$emit('input', {tags: []})
-    })
-
-    it("the url query parameters are updated", () => {
-      expect(routerMock.push).toHaveBeenCalledWith({
-        name: "stocks"
-      })
-    })
-  })
-
-  describe('when the time period changes', () => {
-    //TODO
   })
 
   describe('when the route is updated', () => {
     beforeEach(() => {
-      wrapper.vm.$options.beforeRouteUpdate.call(wrapper.vm, {query: {s: JSON.stringify([{text: 'C1'}, {text: 'C2'}])}}, null, jest.fn())
+      wrapper.vm.$options.beforeRouteUpdate.call(wrapper.vm, {
+        query: {
+          s: JSON.stringify([{text: 'C1'}, {text: 'C2'}]),
+          df: '2019-01-01',
+          dt: '2019-03-01'
+        }
+      }, null, jest.fn())
     })
 
     it('the form fields are updated', () => {
-      expect(wrapper.vm.stocks.tags).toEqual([{text: 'C1'}, {text: 'C2'}])
+      expect(wrapper.vm.stocks).toEqual({
+        tags: [{text: 'C1'}, {text: 'C2'}],
+        dateFrom: parseISO('2019-01-01'),
+        dateTo: parseISO('2019-03-01')
+      })
     })
   })
 })

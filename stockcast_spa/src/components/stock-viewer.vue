@@ -13,44 +13,67 @@
   </b-card>
 </template>
 <script>
-  import {startOfYesterday, subMonths} from 'date-fns'
+  import {formatISO, parseISO, startOfYesterday, subMonths} from 'date-fns'
 
   const tagPropertyFilter = ({text}) => ({text})
 
+  const DATE_FROM_DEFAULT = subMonths(startOfYesterday(), 3)
+  const DATE_TO_DEFAULT = startOfYesterday()
+
   export const routeToProps = (route) => {
-    let tags = route.query.s || "[]"
-    return {initialTags: JSON.parse(tags).map(tagPropertyFilter)}
+    const tags = route.query.s ? JSON.parse(route.query.s).map(tagPropertyFilter) : []
+    const dateFrom = route.query.df ? parseISO(route.query.df) : DATE_FROM_DEFAULT
+    const dateTo = route.query.dt ? parseISO(route.query.dt) : DATE_TO_DEFAULT
+
+    return {
+      tags,
+      dateFrom,
+      dateTo
+    }
   }
 
   export default {
     props: {
-      initialTags: {
+      tags: {
         type: Array,
         default: () => []
+      },
+      dateFrom: {
+        type: Date,
+        default: () => DATE_FROM_DEFAULT
+      },
+      dateTo: {
+        type: Date,
+        default: () => DATE_TO_DEFAULT
       }
     },
     data: () => ({
       stocks: {
         tags: null,
-        dateFrom: subMonths(startOfYesterday(), 3),
-        dateTo: startOfYesterday()
+        dateFrom: null,
+        dateTo: null
       }
     }),
     created() {
-      this.stocks.tags = this.initialTags
+      this.stocks.tags = this.tags
+      this.stocks.dateFrom = this.dateFrom
+      this.stocks.dateTo = this.dateTo
     },
     beforeRouteUpdate(to, from, next) {
-      this.stocks.tags = routeToProps(to).initialTags
+      this.stocks = routeToProps(to)
       next()
     },
     watch: {
       stocks: {
         handler(stocks) {
           let newRoute = null
-          if (stocks.tags.length > 0) {
-            newRoute = {name: "stocks", query: {s: JSON.stringify(stocks.tags.map(tagPropertyFilter))}}
-          } else {
-            newRoute = {name: "stocks"}
+          newRoute = {
+            name: "stocks",
+            query: {
+              s: JSON.stringify(stocks.tags.map(tagPropertyFilter)),
+              df: formatISO(stocks.dateFrom, {representation: 'date'}),
+              dt: formatISO(stocks.dateTo, {representation: 'date'})
+            }
           }
           this.$router.push(newRoute).catch(err => err)
         },
