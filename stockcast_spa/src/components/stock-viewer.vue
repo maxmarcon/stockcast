@@ -13,7 +13,7 @@
   </b-card>
 </template>
 <script>
-  import {formatISO, parseISO, startOfYesterday, subMonths} from 'date-fns'
+  import {formatISO, parseISO, subMonths, startOfYesterday} from 'date-fns'
 
   const tagPropertyFilter = ({text}) => ({text})
 
@@ -38,14 +38,8 @@
         type: Array,
         default: () => []
       },
-      dateFrom: {
-        type: Date,
-        default: () => DATE_FROM_DEFAULT
-      },
-      dateTo: {
-        type: Date,
-        default: () => DATE_TO_DEFAULT
-      }
+      dateFrom: Date,
+      dateTo: Date
     },
     data: () => ({
       stocks: {
@@ -66,14 +60,15 @@
     watch: {
       stocks: {
         handler(stocks) {
-          let newRoute = null
-          newRoute = {
-            name: "stocks",
-            query: {
-              s: JSON.stringify(stocks.tags.map(tagPropertyFilter)),
-              df: formatISO(stocks.dateFrom, {representation: 'date'}),
-              dt: formatISO(stocks.dateTo, {representation: 'date'})
-            }
+          const newRoute = {name: "stocks", query: {}}
+          if (stocks.tags.length > 0) {
+            newRoute.query.s = JSON.stringify(stocks.tags.map(tagPropertyFilter))
+          }
+          if (stocks.dateFrom) {
+            newRoute.query.df = formatISO(stocks.dateFrom, {representation: 'date'})
+          }
+          if (stocks.dateTo) {
+            newRoute.query.dt = formatISO(stocks.dateTo, {representation: 'date'})
           }
           this.$router.push(newRoute).catch(err => err)
         },
