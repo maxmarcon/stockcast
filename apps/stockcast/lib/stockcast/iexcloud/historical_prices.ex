@@ -47,7 +47,7 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
   defp prices_locally_available(symbol, from, to) do
     wanted = Date.range(from, to) |> Enum.count(&is_weekday/1)
     available = Repo.aggregate(price_query(symbol, from, to), :count)
-    available >= @data_fraction_thr * wanted
+    available >= floor(@data_fraction_thr * wanted)
   end
 
   defp prices_fetchable(from) do
