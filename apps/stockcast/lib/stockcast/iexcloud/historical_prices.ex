@@ -7,7 +7,7 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
   alias Stockcast.IexCloud.HistoricalPrice, as: Price
   alias Stockcast.IexCloud.Api
 
-  @data_fraction_thr 0.95
+  @data_fraction_thr 0.9
   @min_time_between_calls_ms 6 * 3600 * 1000
   @ranges [
     [range: "1m", days: 30],
@@ -21,7 +21,7 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
   @spec retrieve(binary(), Date.t(), %Date{}) ::
           {:ok, [%Price{}]} | {:error, atom()}
   def retrieve(symbol, from, to) when is_binary(symbol) do
-    with :lt <- Date.compare(from, to),
+    with true <- Date.compare(from, to) in [:lt, :eq],
          :lt <- Date.compare(to, Date.utc_today()) do
       case maybe_fetch_prices(symbol, from, to) do
         :ok -> {:ok, price_query(symbol, from, to) |> Repo.all()}
@@ -46,24 +46,33 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
     end
   end
 
+  defp log_availability(locally_available, symbol, from, to, wanted, available, needed) do
+    msg =
+      if locally_available do
+        "ARE"
+      else
+        "ARE NOT"
+      end
+
+    Logger.debug(
+      "prices for #{symbol} in range (#{from}, #{to}) #{msg} locally available (needed #{
+        @data_fraction_thr
+      } * #{wanted} = #{needed}, available #{available})"
+    )
+  end
+
   defp prices_locally_available(symbol, from, to) do
     wanted = Date.range(from, to) |> Enum.count(&is_weekday/1)
     available = Repo.aggregate(price_query(symbol, from, to), :count)
 
-    if available >= @data_fraction_thr * wanted do
-      Logger.debug(
-        "prices for #{symbol} in range (#{from}, #{to}) ARE locally available (needed #{wanted}, available #{
-          available
-        })"
-      )
+    needed = floor(@data_fraction_thr * wanted)
+
+    if available >= needed do
+      log_availability(true, symbol, from, to, wanted, available, needed)
 
       true
     else
-      Logger.debug(
-        "prices for #{symbol} in range (#{from}, #{to}) NOT locally available (needed #{wanted}, available #{
-          available
-        })"
-      )
+      log_availability(false, symbol, from, to, wanted, available, needed)
 
       false
     end
