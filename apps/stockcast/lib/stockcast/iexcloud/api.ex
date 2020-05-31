@@ -12,6 +12,8 @@ defmodule Stockcast.IexCloud.Api do
     {"Content-Type", "application/json"}
   ])
 
+  plug(Tesla.Middleware.Logger)
+
   @spec get_data(binary(), keyword()) :: any()
   def get_data(path, query \\ []) when is_binary(path),
     do: call_api_and_parse_response(:get, path, query)

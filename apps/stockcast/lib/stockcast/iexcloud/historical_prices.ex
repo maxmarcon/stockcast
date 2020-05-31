@@ -1,6 +1,8 @@
 defmodule Stockcast.IexCloud.HistoricalPrices do
   import Ecto.Query
 
+  require Logger
+
   alias Stockcast.Repo
   alias Stockcast.IexCloud.HistoricalPrice, as: Price
   alias Stockcast.IexCloud.Api
@@ -47,7 +49,24 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
   defp prices_locally_available(symbol, from, to) do
     wanted = Date.range(from, to) |> Enum.count(&is_weekday/1)
     available = Repo.aggregate(price_query(symbol, from, to), :count)
-    available >= floor(@data_fraction_thr * wanted)
+
+    if available >= @data_fraction_thr * wanted do
+      Logger.debug(
+        "prices for #{symbol} in range (#{from}, #{to}) ARE locally available (needed #{wanted}, available #{
+          available
+        })"
+      )
+
+      true
+    else
+      Logger.debug(
+        "prices for #{symbol} in range (#{from}, #{to}) NOT locally available (needed #{wanted}, available #{
+          available
+        })"
+      )
+
+      false
+    end
   end
 
   defp prices_fetchable(from) do
