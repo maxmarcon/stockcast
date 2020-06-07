@@ -23,6 +23,7 @@ RUN mix local.hex --force
 RUN mix local.rebar --force
 RUN mix deps.get
 
+RUN mix release.init
 RUN mix release
 
 RUN chmod ug+x docker_entrypoint_wrapper.sh
