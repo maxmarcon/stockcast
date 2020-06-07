@@ -1,0 +1,7 @@
+_build
+deps
+test
+stockcast_spa/node_modules
+*.env
+.git
+rel

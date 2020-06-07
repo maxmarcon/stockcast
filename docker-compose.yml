@@ -1,0 +1,28 @@
+version: "3"
+services:
+  stockcast:
+    image: stockcast
+    build:
+      context: ./
+      args:
+        node_version: 13.7.0
+        elixir_version: 1.10.0
+    ports:
+      - "4002:4000"
+    environment:
+      DATABASE_URL: postgresql://stockcast:secret@db:5432/stockcast
+      HOST_NAME: localhost
+      SCHEME: http
+      PORT: 4002
+      IEXCLOUD_API_TOKEN: #{YOUR_TOKEN_HERE}
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: secret
+      POSTGRES_USER: stockcast
+    ports:
+      - "5434:5432"
+    volumes:
+      - "data:/var/lib/postgresql/data"
+volumes:
+  data:

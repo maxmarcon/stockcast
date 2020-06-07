@@ -5,7 +5,14 @@ defmodule Stockcast.Umbrella.MixProject do
     [
       apps_path: "apps",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      version: "1.0.0",
+      deps: deps(),
+      default_release: :stockcast_web,
+      releases: [
+        stockcast_web: [
+          applications: [stockcast_web: :permanent]
+        ]
+      ]
     ]
   end
 
