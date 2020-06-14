@@ -1,5 +1,8 @@
 use Mix.Config
 
+config :cors_plug,
+       origin: "*"
+
 # Configure your database
 config :stockcast,
        Stockcast.Repo,
