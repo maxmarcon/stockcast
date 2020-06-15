@@ -2,11 +2,12 @@ import stockViewer from '@/components/stock-viewer'
 import bootstrapVue from 'bootstrap-vue'
 import {createLocalVue, mount} from '@vue/test-utils'
 import {parseISO} from 'date-fns'
+import priceApiResponse from './price_api_response.json'
 
 const localVue = createLocalVue()
 localVue.use(bootstrapVue)
 
-let routerMock
+let routerMock, axiosMock
 let wrapper
 
 describe('stockViewer', () => {
@@ -14,6 +15,20 @@ describe('stockViewer', () => {
   beforeEach(() => {
     routerMock = {
       push: jest.fn(() => Promise.resolve())
+    }
+
+    axiosMock = {
+      get: jest.fn(async () => ({data: priceApiResponse}))
+        .mockImplementationOnce(async () => ({
+          data: {
+            data: priceApiResponse.data.slice(1)
+          }
+        }))
+        .mockImplementationOnce(async () => ({
+          data: {
+            data: priceApiResponse.data.slice(1)
+          }
+        }))
     }
 
     wrapper = mount(stockViewer, {
@@ -24,7 +39,8 @@ describe('stockViewer', () => {
       },
       localVue,
       mocks: {
-        $router: routerMock
+        $router: routerMock,
+        axios: axiosMock
       },
       stubs: ['messageBar', 'stockPeriodPicker']
     })
@@ -46,6 +62,26 @@ describe('stockViewer', () => {
     })
   })
 
+  it('initializes the chart object', () => {
+    expect(wrapper.vm.chart).toBeTruthy()
+  })
+
+  it("queries the price api", () => {
+    expect(axiosMock.get).toHaveBeenCalledWith('/prices/S1/from/2020-01-01/to/2020-03-01')
+    expect(axiosMock.get).toHaveBeenCalledWith('/prices/S2/from/2020-01-01/to/2020-03-01')
+  })
+
+  it('updates the chart data', () => {
+    expect(wrapper.vm.chart.data.datasets.length).toBe(2)
+    expect(wrapper.vm.chart.data.datasets[0].data).toEqual(
+      priceApiResponse.data.slice(1).map(({date, close}) => ({x: parseISO(date), y: parseFloat(close)}))
+    )
+    expect(wrapper.vm.chart.data.datasets[1].data).toEqual(
+      priceApiResponse.data.slice(1).map(({date, close}) => ({x: parseISO(date), y: parseFloat(close)}))
+    )
+
+  })
+
   describe('when stocks are updated', () => {
 
     beforeEach(() => {
@@ -54,9 +90,11 @@ describe('stockViewer', () => {
         dateFrom: parseISO('2019-01-01'),
         dateTo: parseISO('2019-03-01')
       })
+
+      wrapper.vm.chart.data.datasets = []
     })
 
-    it("the url query parameters are updated", () => {
+    it("updates query parameters", () => {
       expect(routerMock.push).toHaveBeenCalledWith({
         name: "stocks",
         query: {
@@ -65,6 +103,21 @@ describe('stockViewer', () => {
           dt: '2019-03-01'
         }
       })
+    })
+
+    it("queries the prices api", () => {
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/S3/from/2019-01-01/to/2019-03-01')
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/S4/from/2019-01-01/to/2019-03-01')
+    })
+
+    it('updates the chart data', () => {
+      expect(wrapper.vm.chart.data.datasets.length).toBe(2)
+      expect(wrapper.vm.chart.data.datasets[0].data).toEqual(
+        priceApiResponse.data.map(({date, close}) => ({x: parseISO(date), y: parseFloat(close)}))
+      )
+      expect(wrapper.vm.chart.data.datasets[1].data).toEqual(
+        priceApiResponse.data.map(({date, close}) => ({x: parseISO(date), y: parseFloat(close)}))
+      )
     })
   })
 
@@ -77,14 +130,31 @@ describe('stockViewer', () => {
           dt: '2019-03-01'
         }
       }, null, jest.fn())
+
+      wrapper.vm.chart.data.datasets = []
     })
 
-    it('the form fields are updated', () => {
+    it('updates the stocks', () => {
       expect(wrapper.vm.stocks).toEqual({
         tags: [{text: 'C1'}, {text: 'C2'}],
         dateFrom: parseISO('2019-01-01'),
         dateTo: parseISO('2019-03-01')
       })
+    })
+
+    it("queries the prices api", () => {
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C2/from/2019-01-01/to/2019-03-01')
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C1/from/2019-01-01/to/2019-03-01')
+    })
+
+    it('updates the chart data', () => {
+      expect(wrapper.vm.chart.data.datasets.length).toBe(2)
+      expect(wrapper.vm.chart.data.datasets[0].data).toEqual(
+        priceApiResponse.data.map(({date, close}) => ({x: parseISO(date), y: parseFloat(close)}))
+      )
+      expect(wrapper.vm.chart.data.datasets[1].data).toEqual(
+        priceApiResponse.data.map(({date, close}) => ({x: parseISO(date), y: parseFloat(close)}))
+      )
     })
   })
 })

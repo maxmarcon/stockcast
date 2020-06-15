@@ -9,11 +9,12 @@
         </stock-period-picker>
       </b-form>
     </template>
-    Money here $$$
+    <canvas ref="chart" id="stocks_chart"></canvas>
   </b-card>
 </template>
 <script>
-  import {formatISO, parseISO, subMonths, startOfYesterday} from 'date-fns'
+  import {formatISO, parseISO, startOfYesterday, subMonths} from 'date-fns'
+  import Chart from 'chart.js'
 
   const tagPropertyFilter = ({text}) => ({text})
 
@@ -46,12 +47,21 @@
         tags: null,
         dateFrom: null,
         dateTo: null
-      }
+      },
+      chart: null
     }),
     created() {
       this.stocks.tags = this.tags
       this.stocks.dateFrom = this.dateFrom
       this.stocks.dateTo = this.dateTo
+    },
+    mounted() {
+      this.chart = new Chart(this.$refs.chart, {
+        type: 'line',
+        data: {
+          datasets: []
+        }
+      })
     },
     beforeRouteUpdate(to, from, next) {
       this.stocks = routeToProps(to)
@@ -71,9 +81,34 @@
             newRoute.query.dt = formatISO(stocks.dateTo, {representation: 'date'})
           }
           this.$router.push(newRoute).catch(err => err)
+
+          this.updateChart()
         },
         deep: true
       }
+    },
+    methods: {
+      async updateChart() {
+        try {
+          const responses = await Promise.all(this.stocks.tags.map(this.fetchPrices))
+
+          this.chart.data.datasets = responses
+            .map(this.parseResponse)
+            .map(datapoints => ({data: datapoints}))
+
+          this.chart.update()
+        } catch (error) {
+          this.$refs.errorBar.show(error)
+        }
+      },
+      fetchPrices({text: symbol}) {
+        const dateFrom = formatISO(this.stocks.dateFrom, {representation: 'date'})
+        const dateTo = formatISO(this.stocks.dateTo, {representation: 'date'})
+
+        return this.axios.get(`/prices/${symbol}/from/${dateFrom}/to/${dateTo}`)
+      },
+      parseResponse: (response) => response.data.data.map(({date, close}) =>
+        ({x: parseISO(date), y: parseFloat(close)}))
     }
   }
 </script>
