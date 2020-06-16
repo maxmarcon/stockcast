@@ -108,7 +108,7 @@ defmodule StockcastWeb.PriceControllerTest do
       json_response(conn, 500)
     end
 
-    test "returns 429 if prices have been fetched recently", %{conn: conn} do
+    test "returns stale prices if prices have been fetched recently", %{conn: conn} do
       conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
       json_response(conn, 200)
@@ -117,7 +117,9 @@ defmodule StockcastWeb.PriceControllerTest do
 
       conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
-      json_error_response(conn, 429, "Fetched recently")
+      json_data = json_response(conn, 200)["data"]
+
+      assert_json_data(json_data, 8)
     end
 
     test "returns 404 if symbol can't be found", %{conn: conn} do
@@ -129,8 +131,8 @@ defmodule StockcastWeb.PriceControllerTest do
     end
   end
 
-  defp assert_json_data(data) do
-    assert length(data) == 10
+  defp assert_json_data(data, length \\ 10) do
+    assert length(data) == length
 
     data
     |> Enum.with_index()

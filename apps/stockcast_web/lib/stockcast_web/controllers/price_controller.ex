@@ -39,9 +39,6 @@ defmodule StockcastWeb.PriceController do
       {:error, :too_old} ->
         {:error, :gone, :too_old}
 
-      {:error, :fetched_recently} ->
-        {:error, :too_many_requests, :fetched_recently}
-
       {:error, :unknown_symbol} ->
         {:error, :not_found, :unknown_symbol}
 
