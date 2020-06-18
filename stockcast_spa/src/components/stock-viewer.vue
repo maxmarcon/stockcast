@@ -60,6 +60,17 @@
         type: 'line',
         data: {
           datasets: []
+        },
+        options: {
+          scales: {
+            xAxes: [{
+              type: 'time',
+              scaleLabel: {
+                display: true,
+                labelString: 'Date'
+              }
+            }]
+          }
         }
       })
     },
@@ -94,7 +105,7 @@
 
           this.chart.data.datasets = responses
             .map(this.parseResponse)
-            .map(datapoints => ({data: datapoints}))
+            .map(this.makeDataset)
 
           this.chart.update()
         } catch (error) {
@@ -108,7 +119,9 @@
         return this.axios.get(`/prices/${symbol}/from/${dateFrom}/to/${dateTo}`)
       },
       parseResponse: (response) => response.data.data.map(({date, close}) =>
-        ({x: parseISO(date), y: parseFloat(close)}))
+        ({x: parseISO(date), y: parseFloat(close)})),
+      makeDataset: (datapoints) =>
+        ({data: datapoints, fill: false})
     }
   }
 </script>
