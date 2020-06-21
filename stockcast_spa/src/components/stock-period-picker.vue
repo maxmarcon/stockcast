@@ -16,6 +16,14 @@
           :autocomplete-min-length="autocompleteMinLength"
           @tags-changed="tagsChanged"
           placeholder="Search by name, ticker, or ISIN">
+
+          <template v-slot:autocomplete-item="{item, performAdd}">
+            <div @click="performAdd(item)">
+              <span>&nbsp; {{ `${item.text} (${item.currency})` }}</span>
+              <span v-if="item.isin">&nbsp; {{ '[' + item.isin + ']' }}</span>
+              <span class="em small">&nbsp; {{ item.name.substr(0,20) }} </span>
+            </div>
+          </template>
         </vue-tags-input>
       </b-form-group>
     </b-col>
@@ -89,7 +97,9 @@
         }
         const result = await this.debouncedSearch(newTagInput)
         if (result) {
-          this.autocompleteItems = result.data.data.map(({symbol}) => ({text: symbol}))
+          this.autocompleteItems = result.data.data.map(symbol =>
+            Object.assign({text: symbol.symbol}, symbol)
+          )
         }
       }
     },

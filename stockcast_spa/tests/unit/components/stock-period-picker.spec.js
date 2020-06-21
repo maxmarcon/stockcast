@@ -15,7 +15,15 @@ describe('stockPeriodPicker', () => {
 
   beforeEach(() => {
     axiosMock = {
-      get: jest.fn(async () => ({data: {data: [{symbol: "S1"}, {symbol: "S2"}]}}))
+      get: jest.fn(async () => ({
+          data: {
+            data: [
+              {symbol: "S1", name: "Stock 1"},
+              {symbol: "S2", name: "Stock 2"}
+            ]
+          }
+        })
+      )
     }
 
     wrapper = mount(stockPeriodPicker, {
@@ -137,7 +145,10 @@ describe('stockPeriodPicker', () => {
     })
 
     it('stores the result of the search', () => {
-      expect(wrapper.vm.autocompleteItems).toEqual([{text: "S1"}, {text: "S2"}])
+      expect(wrapper.vm.autocompleteItems).toEqual([
+        {text: "S1", symbol: "S1", name: "Stock 1"},
+        {text: "S2", symbol: "S2", name: "Stock 2"}
+      ])
     })
   })
 
