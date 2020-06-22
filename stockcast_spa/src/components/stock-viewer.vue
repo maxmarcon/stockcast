@@ -133,12 +133,15 @@
         const dateFrom = formatISO(this.stocks.dateFrom, {representation: 'date'})
         const dateTo = formatISO(this.stocks.dateTo, {representation: 'date'})
 
-        return this.axios.get(`/prices/${symbol}/from/${dateFrom}/to/${dateTo}`)
+        return this.axios.get(`/prices/${symbol}/from/${dateFrom}/to/${dateTo}`, {symbol})
       },
-      parseResponse: (response) => response.data.data.map(({date, close}) =>
-        ({x: parseISO(date), y: parseFloat(close)})),
-      makeDataset: (datapoints) =>
-        ({data: datapoints, fill: false})
+      parseResponse: (response) => ({
+        symbol: response.config.symbol,
+        datapoints: response.data.data.map(
+          ({date, close}) => ({x: parseISO(date), y: parseFloat(close)}))
+      }),
+      makeDataset: ({datapoints, symbol}) =>
+        ({data: datapoints, fill: false, label: symbol})
     }
   }
 </script>
