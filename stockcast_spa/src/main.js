@@ -3,7 +3,8 @@ import VueRouter from 'vue-router'
 import {BootstrapVue, IconsPlugin} from 'bootstrap-vue'
 import VueTagsInput from '@johmun/vue-tags-input';
 import axios from 'axios'
-import VueAxios from "vue-axios";
+import VueAxios from "vue-axios"
+import Loading from 'vue-loading-overlay'
 import './scss/main.scss'
 
 import App from '@/components/app.vue'
@@ -24,7 +25,7 @@ Vue.config.productionTip = false
 Vue.component('vueTagsInput', VueTagsInput)
 Vue.component('messageBar', MessageBar)
 Vue.component('stockPeriodPicker', StockPeriodPicker)
-
+Vue.component('loading', Loading)
 
 Vue.use(VueRouter)
 

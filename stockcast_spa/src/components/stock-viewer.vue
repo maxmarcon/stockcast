@@ -3,13 +3,26 @@
     <template slot="header">
       <message-bar id="errorBar" ref="errorBar" variant="danger" :seconds=10></message-bar>
       <b-form>
-        <stock-period-picker v-model="stocks"
-                             @error="$refs.errorBar.show($event)"
-        >
-        </stock-period-picker>
+        <b-form-row>
+          <b-col md="8">
+            <stock-period-picker v-model="stocks"
+                                 @error="$refs.errorBar.show($event)"
+            >
+            </stock-period-picker>
+          </b-col>
+          <b-col md="auto" align-self="center" class="text-center">
+            <b-icon v-if="ongoing"
+                    icon="arrow-clockwise"
+                    animation="spin"
+                    font-scale="2"
+                    class="mx-auto">
+            </b-icon>
+          </b-col>
+        </b-form-row>
       </b-form>
     </template>
-    <canvas ref="chart" id="stocks_chart"></canvas>
+    <canvas ref="chart" id="stocks_chart">
+    </canvas>
   </b-card>
 </template>
 <script>
@@ -48,7 +61,8 @@
         dateFrom: null,
         dateTo: null
       },
-      chart: null
+      chart: null,
+      ongoing: false
     }),
     created() {
       this.stocks.tags = this.tags
@@ -101,6 +115,7 @@
     methods: {
       async updateChart() {
         try {
+          this.ongoing = true
           const responses = await Promise.all(this.stocks.tags.map(this.fetchPrices))
 
           this.chart.data.datasets = responses
@@ -110,6 +125,8 @@
           this.chart.update()
         } catch (error) {
           this.$refs.errorBar.show(error)
+        } finally {
+          this.ongoing = false
         }
       },
       fetchPrices({text: symbol}) {

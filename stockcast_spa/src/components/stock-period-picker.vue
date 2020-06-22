@@ -1,8 +1,12 @@
 <template>
   <b-form-row>
-    <b-col md="4">
-      <b-form-group label="Stocks:"
-                    label-for="stocks">
+    <b-col md>
+      <b-form-group
+        label-for="stocks">
+        <template v-slot:label>
+          Stocks:
+          <b-icon v-if="ongoing" icon="arrow-clockwise" animation="spin" font-scale="1"></b-icon>
+        </template>
         <vue-tags-input
           autocomplete="off"
           id="stocks"
@@ -21,7 +25,7 @@
             <div @click="performAdd(item)">
               <span>&nbsp; {{ `${item.text} (${item.currency})` }}</span>
               <span v-if="item.isin">&nbsp; {{ '[' + item.isin + ']' }}</span>
-              <span class="em small">&nbsp; {{ item.name.substr(0,20) }} </span>
+              <span class="em small">&nbsp; {{ ellipsize(item.name, 40) }} </span>
             </div>
           </template>
         </vue-tags-input>
@@ -55,7 +59,8 @@
 </template>
 <script>
   import {max, min, startOfYesterday} from 'date-fns'
-  import debounce from "debounce-async";
+  import debounce from "debounce-async"
+  import ellipsize from "ellipsize"
 
   const DELAY = 800
 
@@ -85,7 +90,8 @@
       autocompleteItems: [],
       autocompleteMinLength: 3,
       debouncedSearch: null,
-      dateFormatOptions: {year: 'numeric', month: 'numeric', day: 'numeric'}
+      dateFormatOptions: {year: 'numeric', month: 'numeric', day: 'numeric'},
+      ongoing: false
     }),
     mounted() {
       this.debouncedSearch = debounce(this.searchStocks, DELAY)
@@ -104,6 +110,7 @@
       }
     },
     methods: {
+      ellipsize,
       dateFromChanged(date) {
         this.value.dateFrom = date
         if (this.value.dateTo) {
@@ -124,9 +131,12 @@
       },
       async searchStocks(term) {
         try {
+          this.ongoing = true
           return await this.axios.get("stocks/search", {params: {q: term, limit: 10}})
         } catch (error) {
           this.$emit('error', error)
+        } finally {
+          this.ongoing = false
         }
       }
     }

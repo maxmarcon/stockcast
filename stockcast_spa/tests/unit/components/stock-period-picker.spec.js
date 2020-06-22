@@ -37,7 +37,8 @@ describe('stockPeriodPicker', () => {
       },
       mocks: {
         axios: axiosMock
-      }
+      },
+      stubs: ['b-icon']
     })
   })
 
@@ -163,7 +164,8 @@ describe('stockPeriodPicker', () => {
         localVue,
         mocks: {
           axios: axiosMock
-        }
+        },
+        stubs: ['b-icon']
       })
     })
 
