@@ -34,6 +34,15 @@
   const DATE_FROM_DEFAULT = subMonths(startOfYesterday(), 3)
   const DATE_TO_DEFAULT = startOfYesterday()
 
+  const COLORS = [
+    '#FF0000',
+    '#00FF00',
+    '#0000FF',
+    '#FFFF00',
+    '#00FFFF',
+    '#FF00FF'
+  ]
+
   export const routeToProps = (route) => {
     const tags = route.query.s ? JSON.parse(route.query.s).map(tagPropertyFilter) : []
     const dateFrom = route.query.df ? parseISO(route.query.df) : DATE_FROM_DEFAULT
@@ -116,9 +125,12 @@
       async updateChart() {
         try {
           this.ongoing = true
-          const responses = await Promise.all(this.stocks.tags.map(this.fetchPrices))
+          const responses_with_symbols = await Promise.all(this.stocks.tags.map(async ({text: symbol}) => ({
+            response: await this.fetchPrices(symbol),
+            symbol
+          })))
 
-          this.chart.data.datasets = responses
+          this.chart.data.datasets = responses_with_symbols
             .map(this.parseResponse)
             .map(this.makeDataset)
 
@@ -129,19 +141,24 @@
           this.ongoing = false
         }
       },
-      fetchPrices({text: symbol}) {
+      fetchPrices(symbol) {
         const dateFrom = formatISO(this.stocks.dateFrom, {representation: 'date'})
         const dateTo = formatISO(this.stocks.dateTo, {representation: 'date'})
 
-        return this.axios.get(`/prices/${symbol}/from/${dateFrom}/to/${dateTo}`, {symbol})
+        return this.axios.get(`/prices/${symbol}/from/${dateFrom}/to/${dateTo}`)
       },
-      parseResponse: (response) => ({
-        symbol: response.config.symbol,
+      parseResponse: ({response, symbol}) => ({
+        symbol,
         datapoints: response.data.data.map(
           ({date, close}) => ({x: parseISO(date), y: parseFloat(close)}))
       }),
-      makeDataset: ({datapoints, symbol}) =>
-        ({data: datapoints, fill: false, label: symbol})
+      makeDataset: ({datapoints, symbol}, index) =>
+        ({
+          data: datapoints,
+          fill: false,
+          label: symbol,
+          borderColor: COLORS[index % COLORS.length],
+        })
     }
   }
 </script>

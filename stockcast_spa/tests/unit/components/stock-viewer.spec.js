@@ -19,19 +19,17 @@ describe('stockViewer', () => {
 
     axiosMock = {
       get: jest.fn(async () => ({
-        data: priceApiResponse, config: {symbol: "S1"}
+        data: priceApiResponse
       }))
         .mockImplementationOnce(async () => ({
           data: {
             data: priceApiResponse.data.slice(1)
-          },
-          config: {symbol: "S1"}
+          }
         }))
         .mockImplementationOnce(async () => ({
           data: {
             data: priceApiResponse.data.slice(1)
-          },
-          config: {symbol: "S2"}
+          }
         }))
     }
 
@@ -71,8 +69,8 @@ describe('stockViewer', () => {
   })
 
   it("queries the price api", () => {
-    expect(axiosMock.get).toHaveBeenCalledWith('/prices/S1/from/2020-01-01/to/2020-03-01', expect.anything())
-    expect(axiosMock.get).toHaveBeenCalledWith('/prices/S2/from/2020-01-01/to/2020-03-01', expect.anything())
+    expect(axiosMock.get).toHaveBeenCalledWith('/prices/S1/from/2020-01-01/to/2020-03-01')
+    expect(axiosMock.get).toHaveBeenCalledWith('/prices/S2/from/2020-01-01/to/2020-03-01')
   })
 
   it('updates the chart data', () => {
@@ -110,8 +108,8 @@ describe('stockViewer', () => {
     })
 
     it("queries the prices api", () => {
-      expect(axiosMock.get).toHaveBeenCalledWith('/prices/S3/from/2019-01-01/to/2019-03-01', expect.anything())
-      expect(axiosMock.get).toHaveBeenCalledWith('/prices/S4/from/2019-01-01/to/2019-03-01', expect.anything())
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/S3/from/2019-01-01/to/2019-03-01')
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/S4/from/2019-01-01/to/2019-03-01')
     })
 
     it('updates the chart data', () => {
@@ -147,8 +145,8 @@ describe('stockViewer', () => {
     })
 
     it("queries the prices api", () => {
-      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C2/from/2019-01-01/to/2019-03-01', expect.anything())
-      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C1/from/2019-01-01/to/2019-03-01', expect.anything())
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C2/from/2019-01-01/to/2019-03-01')
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C1/from/2019-01-01/to/2019-03-01')
     })
 
     it('updates the chart data', () => {
