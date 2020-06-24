@@ -12,25 +12,108 @@ let wrapper
 
 describe('stockViewer', () => {
 
-  beforeEach(() => {
+  beforeEach(async () => {
     routerMock = {
       push: jest.fn(() => Promise.resolve())
     }
 
     axiosMock = {
-      get: jest.fn(async () => ({
-        data: priceApiResponse
-      }))
-        .mockImplementationOnce(async () => ({
+      get: jest.fn(async (path) => {
+        const match = path.match(/stocks\/symbol\/(.+)/)
+
+        if (match) {
+          return {
+            data: {
+              data: {
+                currency: "USD",
+                symbol: match[1]
+              }
+            }
+          }
+        }
+
+        return {
+          data: {
+            data: priceApiResponse.data
+          }
+        }
+      }).mockImplementationOnce(async (path) => {
+        const match = path.match(/stocks\/symbol\/(.+)/)
+
+        if (match) {
+          return {
+            data: {
+              data: {
+                currency: "USD",
+                symbol: match[1]
+              }
+            }
+          }
+        }
+
+        return {
           data: {
             data: priceApiResponse.data.slice(1)
           }
-        }))
-        .mockImplementationOnce(async () => ({
+        }
+      }).mockImplementationOnce(async (path) => {
+        const match = path.match(/stocks\/symbol\/(.+)/)
+
+        if (match) {
+          return {
+            data: {
+              data: {
+                currency: "USD",
+                symbol: match[1]
+              }
+            }
+          }
+        }
+
+        return {
           data: {
             data: priceApiResponse.data.slice(1)
           }
-        }))
+        }
+      }).mockImplementationOnce(async (path) => {
+        const match = path.match(/stocks\/symbol\/(.+)/)
+
+        if (match) {
+          return {
+            data: {
+              data: {
+                currency: "USD",
+                symbol: match[1]
+              }
+            }
+          }
+        }
+
+        return {
+          data: {
+            data: priceApiResponse.data.slice(1)
+          }
+        }
+      }).mockImplementationOnce(async (path) => {
+        const match = path.match(/stocks\/symbol\/(.+)/)
+
+        if (match) {
+          return {
+            data: {
+              data: {
+                currency: "USD",
+                symbol: match[1]
+              }
+            }
+          }
+        }
+
+        return {
+          data: {
+            data: priceApiResponse.data.slice(1)
+          }
+        }
+      })
     }
 
     wrapper = mount(stockViewer, {
@@ -75,6 +158,8 @@ describe('stockViewer', () => {
 
   it('updates the chart data', () => {
     expect(wrapper.vm.chart.data.datasets.length).toBe(2)
+    expect(wrapper.vm.chart.data.datasets[0].label).toBe("S1 (USD)")
+    expect(wrapper.vm.chart.data.datasets[1].label).toBe("S2 (USD)")
     expect(wrapper.vm.chart.data.datasets[0].data).toEqual(
       priceApiResponse.data.slice(1).map(({date, close}) => ({x: parseISO(date), y: parseFloat(close)}))
     )
@@ -86,21 +171,19 @@ describe('stockViewer', () => {
 
   describe('when stocks are updated', () => {
 
-    beforeEach(() => {
+    beforeEach(async () => {
       wrapper.find('stockperiodpicker-stub').vm.$emit('input', {
         tags: [{text: "S3"}, {text: "S4"}],
         dateFrom: parseISO('2019-01-01'),
         dateTo: parseISO('2019-03-01')
       })
-
-      wrapper.vm.chart.data.datasets = []
     })
 
     it("updates query parameters", () => {
       expect(routerMock.push).toHaveBeenCalledWith({
         name: "stocks",
         query: {
-          s: JSON.stringify([{text: "S3"}, {text: "S4"}]),
+          s: JSON.stringify(["S3", "S4"]),
           df: '2019-01-01',
           dt: '2019-03-01'
         }
@@ -114,6 +197,8 @@ describe('stockViewer', () => {
 
     it('updates the chart data', () => {
       expect(wrapper.vm.chart.data.datasets.length).toBe(2)
+      expect(wrapper.vm.chart.data.datasets[0].label).toBe("S3 (USD)")
+      expect(wrapper.vm.chart.data.datasets[1].label).toBe("S4 (USD)")
       expect(wrapper.vm.chart.data.datasets[0].data).toEqual(
         priceApiResponse.data.map(({date, close}) => ({x: parseISO(date), y: parseFloat(close)}))
       )
@@ -124,16 +209,14 @@ describe('stockViewer', () => {
   })
 
   describe('when the route is updated', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       wrapper.vm.$options.beforeRouteUpdate.call(wrapper.vm, {
         query: {
-          s: JSON.stringify([{text: 'C1'}, {text: 'C2'}]),
+          s: JSON.stringify(['C1', 'C2']),
           df: '2019-01-01',
           dt: '2019-03-01'
         }
       }, null, jest.fn())
-
-      wrapper.vm.chart.data.datasets = []
     })
 
     it('updates the stocks', () => {
@@ -151,6 +234,8 @@ describe('stockViewer', () => {
 
     it('updates the chart data', () => {
       expect(wrapper.vm.chart.data.datasets.length).toBe(2)
+      expect(wrapper.vm.chart.data.datasets[0].label).toBe("C1 (USD)")
+      expect(wrapper.vm.chart.data.datasets[1].label).toBe("C2 (USD)")
       expect(wrapper.vm.chart.data.datasets[0].data).toEqual(
         priceApiResponse.data.map(({date, close}) => ({x: parseISO(date), y: parseFloat(close)}))
       )

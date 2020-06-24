@@ -11,7 +11,7 @@
             </stock-period-picker>
           </b-col>
           <b-col md="auto" align-self="center" class="text-center">
-            <b-icon v-if="ongoing"
+            <b-icon v-if="updateOngoing"
                     icon="arrow-clockwise"
                     animation="spin"
                     font-scale="2"
@@ -29,8 +29,6 @@
   import {formatISO, parseISO, startOfYesterday, subMonths} from 'date-fns'
   import Chart from 'chart.js'
 
-  const tagPropertyFilter = ({text, currency}) => ({text, currency})
-
   const DATE_FROM_DEFAULT = subMonths(startOfYesterday(), 3)
   const DATE_TO_DEFAULT = startOfYesterday()
 
@@ -44,7 +42,7 @@
   ]
 
   export const routeToProps = (route) => {
-    const tags = route.query.s ? JSON.parse(route.query.s).map(tagPropertyFilter) : []
+    const tags = route.query.s ? JSON.parse(route.query.s).map((text) => ({text})) : []
     const dateFrom = route.query.df ? parseISO(route.query.df) : DATE_FROM_DEFAULT
     const dateTo = route.query.dt ? parseISO(route.query.dt) : DATE_TO_DEFAULT
 
@@ -71,7 +69,7 @@
         dateTo: null
       },
       chart: null,
-      ongoing: false
+      updateOngoing: false
     }),
     created() {
       this.stocks.tags = this.tags
@@ -106,7 +104,7 @@
         handler(stocks) {
           const newRoute = {name: "stocks", query: {}}
           if (stocks.tags.length > 0) {
-            newRoute.query.s = JSON.stringify(stocks.tags.map(tagPropertyFilter))
+            newRoute.query.s = JSON.stringify(stocks.tags.map(({text}) => text))
           }
           if (stocks.dateFrom) {
             newRoute.query.df = formatISO(stocks.dateFrom, {representation: 'date'})
@@ -124,36 +122,40 @@
     methods: {
       async updateChart() {
         try {
-          this.ongoing = true
+          this.updateOngoing = true
 
-          this.chart.options.scales.yAxes = this.stocks.tags.map(({currency}) => currency)
+          const api_responses = await Promise.all(this.stocks.tags.map(async ({text: symbol}) =>
+            ({
+              metadata_response: await this.fetchMetadata(symbol),
+              prices_response: await this.fetchPrices(symbol)
+            })))
+
+          this.chart.data.datasets = api_responses
+            .map(this.parseResponse)
+            .map(this.makeDataset)
+
+          this.chart.options.scales.yAxes = this.chart.data.datasets.map(({yAxisID}) => yAxisID)
             .filter((value, index, self) => self.indexOf(value) === index)
-            .map(currency => ({
-              id: currency,
+            .map(yAxisID => ({
+              id: yAxisID,
               type: 'linear',
               scaleLabel: {
                 display: true,
-                labelString: currency
+                labelString: yAxisID
               }
             }))
 
-          const responses_with_metadata = await Promise.all(this.stocks.tags.map(async ({text: symbol, currency}) =>
-            ({
-              response: await this.fetchPrices(symbol),
-              symbol,
-              currency
-            })))
-          
-          this.chart.data.datasets = responses_with_metadata
-            .map(this.parseResponse)
-            .map(this.makeDataset)
-          
           this.chart.update()
         } catch (error) {
           this.$refs.errorBar.show(error)
+          console.log(error)
         } finally {
-          this.ongoing = false
+          this.updateOngoing = false
         }
+      },
+
+      fetchMetadata(symbol) {
+        return this.axios.get(`/stocks/symbol/${symbol}`)
       },
       fetchPrices(symbol) {
         const dateFrom = formatISO(this.stocks.dateFrom, {representation: 'date'})
@@ -161,20 +163,19 @@
 
         return this.axios.get(`/prices/${symbol}/from/${dateFrom}/to/${dateTo}`)
       },
-      parseResponse: ({response, symbol, currency}) => ({
-        symbol,
-        currency,
-        datapoints: response.data.data.map(
+      parseResponse: ({metadata_response, prices_response}) => ({
+        metadata: metadata_response.data.data,
+        datapoints: prices_response.data.data.map(
           ({date, close}) => ({x: parseISO(date), y: parseFloat(close)})
         )
       }),
-      makeDataset: ({datapoints, symbol, currency}, index) =>
+      makeDataset: ({datapoints, metadata}, index) =>
         ({
           data: datapoints,
           fill: false,
-          label: `${symbol} (${currency})`,
+          label: `${metadata.symbol} (${metadata.currency})`,
           borderColor: COLORS[index % COLORS.length],
-          yAxisID: currency
+          yAxisID: metadata.currency
         })
     }
   }
