@@ -129,6 +129,7 @@
           this.chart.options.scales.yAxes = this.stocks.tags.map(({currency}) => currency)
             .filter((value, index, self) => self.indexOf(value) === index)
             .map(currency => ({
+              id: currency,
               type: 'linear',
               scaleLabel: {
                 display: true,
@@ -136,19 +137,17 @@
               }
             }))
 
-          console.log(this.chart.options.scales.yAxes)
-          const responses_with_metadata = await Promise.all(this.stocks.tags.map(async ({text: symbol, currency}) => ({
-            response: await this.fetchPrices(symbol),
-            symbol,
-            yAxisID: this.chart.options.scales.yAxes.findIndex(({scaleLabel: {labelString}}) => labelString === currency)
-          })))
-
+          const responses_with_metadata = await Promise.all(this.stocks.tags.map(async ({text: symbol, currency}) =>
+            ({
+              response: await this.fetchPrices(symbol),
+              symbol,
+              currency
+            })))
+          
           this.chart.data.datasets = responses_with_metadata
             .map(this.parseResponse)
             .map(this.makeDataset)
-
-          console.log(this.chart)
-
+          
           this.chart.update()
         } catch (error) {
           this.$refs.errorBar.show(error)
@@ -166,15 +165,16 @@
         symbol,
         currency,
         datapoints: response.data.data.map(
-          ({date, close}) => ({x: parseISO(date), y: parseFloat(close)}))
+          ({date, close}) => ({x: parseISO(date), y: parseFloat(close)})
+        )
       }),
-      makeDataset: ({datapoints, symbol, yAxisID}, index) =>
+      makeDataset: ({datapoints, symbol, currency}, index) =>
         ({
           data: datapoints,
           fill: false,
-          label: symbol,
+          label: `${symbol} (${currency})`,
           borderColor: COLORS[index % COLORS.length],
-          yAxisID
+          yAxisID: currency
         })
     }
   }
