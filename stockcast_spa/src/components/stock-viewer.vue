@@ -29,7 +29,7 @@
   import {formatISO, parseISO, startOfYesterday, subMonths} from 'date-fns'
   import Chart from 'chart.js'
 
-  const tagPropertyFilter = ({text}) => ({text})
+  const tagPropertyFilter = ({text, currency}) => ({text, currency})
 
   const DATE_FROM_DEFAULT = subMonths(startOfYesterday(), 3)
   const DATE_TO_DEFAULT = startOfYesterday()
@@ -125,14 +125,29 @@
       async updateChart() {
         try {
           this.ongoing = true
-          const responses_with_symbols = await Promise.all(this.stocks.tags.map(async ({text: symbol}) => ({
+
+          this.chart.options.scales.yAxes = this.stocks.tags.map(({currency}) => currency)
+            .filter((value, index, self) => self.indexOf(value) === index)
+            .map(currency => ({
+              type: 'linear',
+              scaleLabel: {
+                display: true,
+                labelString: currency
+              }
+            }))
+
+          console.log(this.chart.options.scales.yAxes)
+          const responses_with_metadata = await Promise.all(this.stocks.tags.map(async ({text: symbol, currency}) => ({
             response: await this.fetchPrices(symbol),
-            symbol
+            symbol,
+            yAxisID: this.chart.options.scales.yAxes.findIndex(({scaleLabel: {labelString}}) => labelString === currency)
           })))
 
-          this.chart.data.datasets = responses_with_symbols
+          this.chart.data.datasets = responses_with_metadata
             .map(this.parseResponse)
             .map(this.makeDataset)
+
+          console.log(this.chart)
 
           this.chart.update()
         } catch (error) {
@@ -147,17 +162,19 @@
 
         return this.axios.get(`/prices/${symbol}/from/${dateFrom}/to/${dateTo}`)
       },
-      parseResponse: ({response, symbol}) => ({
+      parseResponse: ({response, symbol, currency}) => ({
         symbol,
+        currency,
         datapoints: response.data.data.map(
           ({date, close}) => ({x: parseISO(date), y: parseFloat(close)}))
       }),
-      makeDataset: ({datapoints, symbol}, index) =>
+      makeDataset: ({datapoints, symbol, yAxisID}, index) =>
         ({
           data: datapoints,
           fill: false,
           label: symbol,
           borderColor: COLORS[index % COLORS.length],
+          yAxisID
         })
     }
   }
