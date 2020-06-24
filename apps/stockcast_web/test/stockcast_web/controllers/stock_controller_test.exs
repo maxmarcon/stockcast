@@ -53,7 +53,7 @@ defmodule StockcastWeb.StockControllerTest do
     :ok
   end
 
-  test "can retrieve a stock", %{conn: conn} do
+  test "can retrieve a stock by id", %{conn: conn} do
     conn = get(conn, Routes.stock_path(conn, :show, "IEX_5339503747312D52"))
 
     assert json_response(conn, 200)["data"] == %{
@@ -70,9 +70,32 @@ defmodule StockcastWeb.StockControllerTest do
            }
   end
 
-  test "returns 404 if a stock can't be retrieved", %{conn: conn} do
+  test "can retrieve a stock by symbol", %{conn: conn} do
+    conn = get(conn, Routes.stock_path(conn, :show_by_symbol, "00XP-GY"))
+
+    assert json_response(conn, 200)["data"] == %{
+             "iex_id" => "IEX_5339503747312D52",
+             "exchange" => "RET",
+             "name" => "RaagmrW us EGoeteadirCr lDtmrie e dadel(eHU- nT saGy.) N",
+             "date" => "2020-04-26",
+             "type" => "et",
+             "region" => "DE",
+             "currency" => "EUR",
+             "symbol" => "00XP-GY",
+             "figi" => "Q5BBS02RZ0G4",
+             "cik" => nil
+           }
+  end
+
+  test "returns 404 if a stock can't be retrieved by id", %{conn: conn} do
     assert_error_sent(404, fn ->
       get(conn, Routes.stock_path(conn, :show, "DONTEXIST"))
+    end)
+  end
+
+  test "returns 404 if a stock can't be retrieved by symbol", %{conn: conn} do
+    assert_error_sent(404, fn ->
+      get(conn, Routes.stock_path(conn, :show_by_symbol, "DONTEXIST"))
     end)
   end
 

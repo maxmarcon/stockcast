@@ -11,6 +11,12 @@ defmodule StockcastWeb.StockController do
     render(conn, :show, %{stock: stock})
   end
 
+  def show_by_symbol(conn, %{"symbol" => symbol}) do
+    stock = Stocks.get_by_symbol!(symbol)
+
+    render(conn, :show, %{stock: stock})
+  end
+
   def search(conn, %{"q" => term, "limit" => limit}) do
     case Integer.parse(limit) do
       {limit, _} ->

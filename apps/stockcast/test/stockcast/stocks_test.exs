@@ -122,7 +122,7 @@ defmodule Stockcast.StocksTest do
   end
 
   describe "get/1" do
-    test "find stocks by ID", %{iex_symbols: iex_symbols} do
+    test "finds stocks by ID", %{iex_symbols: iex_symbols} do
       symbol = Enum.at(iex_symbols, 1)
 
       assert Stocks.get("IEX_4E53503759592D52") == symbol
@@ -134,15 +134,41 @@ defmodule Stockcast.StocksTest do
   end
 
   describe "get!/1" do
-    test "find stocks by ID", %{iex_symbols: iex_symbols} do
+    test "finds stocks by ID", %{iex_symbols: iex_symbols} do
       symbol = Enum.at(iex_symbols, 1)
 
-      assert Stocks.get("IEX_4E53503759592D52") == symbol
+      assert Stocks.get!("IEX_4E53503759592D52") == symbol
     end
 
     test "throws if none is found" do
       assert_raise Ecto.NoResultsError, fn ->
         Stocks.get!("DOESNOTEXIST")
+      end
+    end
+  end
+
+  describe "get_by_symbol/1" do
+    test "finds stocks by symbol", %{iex_symbols: iex_symbols} do
+      symbol = Enum.at(iex_symbols, 1)
+
+      assert Stocks.get_by_symbol("00XR-GY") == symbol
+    end
+
+    test "returns nil if none is found" do
+      assert is_nil(Stocks.get_by_symbol("DOESNOTEXIST"))
+    end
+  end
+
+  describe "get_by_symbol!/1" do
+    test "finds stocks by symbol", %{iex_symbols: iex_symbols} do
+      symbol = Enum.at(iex_symbols, 1)
+
+      assert Stocks.get_by_symbol!("00XR-GY") == symbol
+    end
+
+    test "throws if none is found" do
+      assert_raise Ecto.NoResultsError, fn ->
+        Stocks.get_by_symbol!("DOESNOTEXIST")
       end
     end
   end

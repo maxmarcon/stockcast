@@ -61,6 +61,18 @@ defmodule Stockcast.Stocks do
   @spec get(binary()) :: %IexSymbol{}
   def get!(id), do: Repo.get_by!(IexSymbol, iex_id: id)
 
+  @doc ~S"""
+  find stocks by symbol.
+  """
+  @spec get_by_symbol(binary()) :: %IexSymbol{} | nil
+  def get_by_symbol(symbol), do: Repo.get_by(IexSymbol, symbol: symbol)
+
+  @doc ~S"""
+  find stocks by symbol, throws if none found.
+  """
+  @spec get_by_symbol!(binary()) :: %IexSymbol{} | nil
+  def get_by_symbol!(symbol), do: Repo.get_by!(IexSymbol, symbol: symbol)
+
   defp iex_cloud_maybe_fetch_isins(term) do
     upcase_term = String.upcase(term)
 
