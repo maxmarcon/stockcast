@@ -32,7 +32,7 @@ describe('stockViewer', () => {
           }
         }
 
-        match = path.match(/prices\/([^\/]+)/)
+        match = path.match(/prices\/([^/]+)/)
 
         switch (match[1]) {
           case 'S1':
