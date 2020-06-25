@@ -148,7 +148,7 @@
           this.chart.update()
         } catch (error) {
           this.$refs.errorBar.show(error)
-          console.log(error)
+          console.error(error)
         } finally {
           this.updateOngoing = false
         }

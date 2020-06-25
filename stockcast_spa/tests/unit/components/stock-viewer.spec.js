@@ -19,7 +19,7 @@ describe('stockViewer', () => {
 
     axiosMock = {
       get: jest.fn(async (path) => {
-        const match = path.match(/stocks\/symbol\/(.+)/)
+        let match = path.match(/stocks\/symbol\/(.+)/)
 
         if (match) {
           return {
@@ -32,86 +32,22 @@ describe('stockViewer', () => {
           }
         }
 
-        return {
-          data: {
-            data: priceApiResponse.data
-          }
-        }
-      }).mockImplementationOnce(async (path) => {
-        const match = path.match(/stocks\/symbol\/(.+)/)
+        match = path.match(/prices\/([^\/]+)/)
 
-        if (match) {
-          return {
-            data: {
+        switch (match[1]) {
+          case 'S1':
+          case 'S2':
+            return {
               data: {
-                currency: "USD",
-                symbol: match[1]
+                data: priceApiResponse.data.slice(1)
               }
             }
-          }
-        }
-
-        return {
-          data: {
-            data: priceApiResponse.data.slice(1)
-          }
-        }
-      }).mockImplementationOnce(async (path) => {
-        const match = path.match(/stocks\/symbol\/(.+)/)
-
-        if (match) {
-          return {
-            data: {
+          default:
+            return {
               data: {
-                currency: "USD",
-                symbol: match[1]
+                data: priceApiResponse.data
               }
             }
-          }
-        }
-
-        return {
-          data: {
-            data: priceApiResponse.data.slice(1)
-          }
-        }
-      }).mockImplementationOnce(async (path) => {
-        const match = path.match(/stocks\/symbol\/(.+)/)
-
-        if (match) {
-          return {
-            data: {
-              data: {
-                currency: "USD",
-                symbol: match[1]
-              }
-            }
-          }
-        }
-
-        return {
-          data: {
-            data: priceApiResponse.data.slice(1)
-          }
-        }
-      }).mockImplementationOnce(async (path) => {
-        const match = path.match(/stocks\/symbol\/(.+)/)
-
-        if (match) {
-          return {
-            data: {
-              data: {
-                currency: "USD",
-                symbol: match[1]
-              }
-            }
-          }
-        }
-
-        return {
-          data: {
-            data: priceApiResponse.data.slice(1)
-          }
         }
       })
     }
