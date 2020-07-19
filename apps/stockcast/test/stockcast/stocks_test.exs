@@ -45,21 +45,29 @@ defmodule Stockcast.StocksTest do
     }
   ]
 
-  @isin %{
-    isin: "IE00B4L5Y983",
-    iex_id: "IEX_5043564631472D52"
-  }
+  @isins [
+    %{
+      isin: "IE00B4L5Y983",
+      iex_id: "IEX_5043564631472D52"
+    },
+    %{
+      isin: "IE00B4L5Y984",
+      iex_id: "IEX_5043564631472D52"
+    }
+  ]
 
   setup do
     Enum.each(@iex_symbols, fn iex_symbol ->
       Repo.insert!(IexSymbol.changeset(iex_symbol))
     end)
 
-    Repo.insert!(Isin.changeset(@isin))
+    Enum.each(@isins, fn isin ->
+      Repo.insert!(Isin.changeset(isin))
+    end)
 
     setup_isins_api_mock()
 
-    [iex_symbols: Repo.all(IexSymbol)]
+    [iex_symbols: Repo.all(IexSymbol) |> Repo.preload(:isins)]
   end
 
   defp setup_isins_api_mock do
@@ -117,7 +125,7 @@ defmodule Stockcast.StocksTest do
     test "triggers isin search if isin is not present", %{iex_symbols: iex_symbols} do
       symbol = Enum.at(iex_symbols, 0)
 
-      assert Stocks.search("De00B4L5Y984") == [symbol]
+      assert Stocks.search("De00B4L5Y984") == [Repo.preload(symbol, :isins, force: true)]
     end
   end
 

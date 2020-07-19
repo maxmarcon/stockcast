@@ -24,6 +24,7 @@ defmodule Stockcast.Stocks do
     term_list = String.split(term)
 
     Repo.all(from iex_cloud_search(term_list), limit: ^limit)
+    |> Repo.preload(:isins)
   end
 
   defp iex_cloud_search(term_list) do
@@ -32,8 +33,8 @@ defmodule Stockcast.Stocks do
 
     query =
       from s in IexSymbol,
-        left_join: i in IexIsin,
-        on: s.iex_id == i.iex_id,
+        distinct: true,
+        left_join: assoc(s, :isins),
         order_by: [s.symbol, s.iex_id]
 
     term_list
@@ -53,25 +54,25 @@ defmodule Stockcast.Stocks do
   find stocks by ID. At the moment only supports IexCloud IDs
   """
   @spec get(binary()) :: %IexSymbol{} | nil
-  def get(id), do: Repo.get_by(IexSymbol, iex_id: id)
+  def get(id), do: Repo.get_by(IexSymbol, iex_id: id) |> Repo.preload(:isins)
 
   @doc ~S"""
   find stocks by ID, throws if none found. At the moment only supports IexCloud IDs
   """
   @spec get(binary()) :: %IexSymbol{}
-  def get!(id), do: Repo.get_by!(IexSymbol, iex_id: id)
+  def get!(id), do: Repo.get_by!(IexSymbol, iex_id: id) |> Repo.preload(:isins)
 
   @doc ~S"""
   find stocks by symbol.
   """
   @spec get_by_symbol(binary()) :: %IexSymbol{} | nil
-  def get_by_symbol(symbol), do: Repo.get_by(IexSymbol, symbol: symbol)
+  def get_by_symbol(symbol), do: Repo.get_by(IexSymbol, symbol: symbol) |> Repo.preload(:isins)
 
   @doc ~S"""
   find stocks by symbol, throws if none found.
   """
   @spec get_by_symbol!(binary()) :: %IexSymbol{} | nil
-  def get_by_symbol!(symbol), do: Repo.get_by!(IexSymbol, symbol: symbol)
+  def get_by_symbol!(symbol), do: Repo.get_by!(IexSymbol, symbol: symbol) |> Repo.preload(:isins)
 
   defp iex_cloud_maybe_fetch_isins(term) do
     upcase_term = String.upcase(term)
