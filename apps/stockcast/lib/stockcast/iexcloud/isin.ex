@@ -8,6 +8,12 @@ defmodule Stockcast.IexCloud.Isin do
 
   @isin_format ~r/^[A-Z]{2}\w{9}\d$/
 
+  defimpl Jason.Encoder, for: Isin do
+    def encode(isin, opts) do
+      Jason.Encode.string(isin.isin, opts)
+    end
+  end
+
   schema "iexc_isins" do
     field :isin, :string
 

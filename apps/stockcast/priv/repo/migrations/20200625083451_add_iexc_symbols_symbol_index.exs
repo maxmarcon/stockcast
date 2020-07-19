@@ -4,4 +4,4 @@ defmodule Stockcast.Repo.Migrations.AddIexcSymbolsSymbolIndex do
   def change do
     create index(:iexc_symbols, :symbol)
   end
-end   
+end

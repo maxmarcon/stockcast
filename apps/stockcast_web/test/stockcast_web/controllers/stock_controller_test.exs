@@ -3,6 +3,7 @@ defmodule StockcastWeb.StockControllerTest do
 
   alias Stockcast.Repo
   alias Stockcast.IexCloud.Symbol, as: IexSymbol
+  alias Stockcast.IexCloud.Isin
 
   import StockcastWeb.TestUtils
 
@@ -45,9 +46,24 @@ defmodule StockcastWeb.StockControllerTest do
     }
   ]
 
+  @isins [
+    %{
+      isin: "IE00B4L5Y983",
+      iex_id: "IEX_5339503747312D52"
+    },
+    %{
+      isin: "IE00B4L5Y984",
+      iex_id: "IEX_5339503747312D52"
+    }
+  ]
+
   setup do
     Enum.each(@iex_symbols, fn iex_symbol ->
       Repo.insert!(IexSymbol.changeset(iex_symbol))
+    end)
+
+    Enum.each(@isins, fn isin ->
+      Repo.insert!(Isin.changeset(isin))
     end)
 
     :ok
@@ -66,7 +82,8 @@ defmodule StockcastWeb.StockControllerTest do
              "currency" => "EUR",
              "symbol" => "00XP-GY",
              "figi" => "Q5BBS02RZ0G4",
-             "cik" => nil
+             "cik" => nil,
+             "isins" => ["IE00B4L5Y983", "IE00B4L5Y984"]
            }
   end
 
@@ -83,7 +100,8 @@ defmodule StockcastWeb.StockControllerTest do
              "currency" => "EUR",
              "symbol" => "00XP-GY",
              "figi" => "Q5BBS02RZ0G4",
-             "cik" => nil
+             "cik" => nil,
+             "isins" => ["IE00B4L5Y983", "IE00B4L5Y984"]
            }
   end
 
@@ -113,7 +131,8 @@ defmodule StockcastWeb.StockControllerTest do
                "region" => "DE",
                "currency" => "EUR",
                "figi" => "Q5BBS02RZ0G4",
-               "cik" => nil
+               "cik" => nil,
+               "isins" => ["IE00B4L5Y983", "IE00B4L5Y984"]
              },
              %{
                "symbol" => "00XR-GY",
@@ -125,7 +144,8 @@ defmodule StockcastWeb.StockControllerTest do
                "region" => "DE",
                "currency" => "EUR",
                "figi" => "70GBB60WQ0R2",
-               "cik" => nil
+               "cik" => nil,
+               "isins" => []
              }
            ]
   end
@@ -144,7 +164,8 @@ defmodule StockcastWeb.StockControllerTest do
                "region" => "DE",
                "currency" => "EUR",
                "figi" => "Q5BBS02RZ0G4",
-               "cik" => nil
+               "cik" => nil,
+               "isins" => ["IE00B4L5Y983", "IE00B4L5Y984"]
              }
            ]
   end
