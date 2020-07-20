@@ -63,7 +63,7 @@ describe('stockViewer', () => {
         $router: routerMock,
         axios: axiosMock
       },
-      stubs: ['messageBar', 'stockPeriodPicker', 'b-icon']
+      stubs: ['messageBar', 'stockPeriodPicker', 'b-icon', 'loading']
     })
   })
 

@@ -4,6 +4,8 @@ import {BootstrapVue, IconsPlugin} from 'bootstrap-vue'
 import VueTagsInput from '@johmun/vue-tags-input';
 import axios from 'axios'
 import VueAxios from "vue-axios"
+import VueLoading from 'vue-loading-overlay';
+import 'vue-loading-overlay/dist/vue-loading.css';
 import './scss/main.scss'
 
 import App from '@/components/app.vue'
@@ -16,6 +18,8 @@ Vue.use(BootstrapVue)
 // Optionally install the BootstrapVue icon components plugin
 Vue.use(IconsPlugin)
 Vue.use(VueAxios, axios)
+Vue.use(VueLoading)
+Vue.component('loading', VueLoading)
 
 Vue.axios.defaults.baseURL = [process.env.VUE_APP_APIBASE, 'v1'].join('/')
 

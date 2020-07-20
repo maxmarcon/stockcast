@@ -11,18 +11,15 @@
             </stock-period-picker>
           </b-col>
           <b-col md="auto" align-self="center" class="text-center">
-            <b-icon v-if="updateOngoing"
-                    icon="arrow-clockwise"
-                    animation="spin"
-                    font-scale="2"
-                    class="mx-auto">
-            </b-icon>
           </b-col>
         </b-form-row>
       </b-form>
     </template>
-    <canvas ref="chart" id="stocks_chart">
-    </canvas>
+    <div class="vld-parent">
+      <canvas ref="chart" id="stocks_chart">
+      </canvas>
+      <loading :active="updateOngoing" :is-full-page="false"></loading>
+    </div>
   </b-card>
 </template>
 <script>
