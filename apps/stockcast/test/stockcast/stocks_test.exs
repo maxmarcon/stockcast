@@ -114,6 +114,18 @@ defmodule Stockcast.StocksTest do
       assert Stocks.search("Ie00") == [symbol]
     end
 
+    test "can find stocks by figi", %{iex_symbols: iex_symbols} do
+      symbol = Enum.at(iex_symbols, 1)
+
+      assert Stocks.search("70gBB60WQ0R2") == [symbol]
+    end
+
+    test "can find stocks by figi prefix", %{iex_symbols: iex_symbols} do
+      symbol = Enum.at(iex_symbols, 1)
+
+      assert Stocks.search("70g") == [symbol]
+    end
+
     test "can find stocks by multiple search terms separated by spaces", %{
       iex_symbols: iex_symbols
     } do

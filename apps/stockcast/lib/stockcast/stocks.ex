@@ -46,6 +46,7 @@ defmodule Stockcast.Stocks do
         or_where:
           ilike(s.symbol, ^prefix_like_exp) or
             ilike(s.name, ^infix_like_exp) or
+            ilike(s.figi, ^prefix_like_exp) or
             ilike(i.isin, ^prefix_like_exp)
     end)
   end
