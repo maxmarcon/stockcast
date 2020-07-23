@@ -24,9 +24,12 @@
           <template v-slot:autocomplete-item="{item, performAdd}">
             <div @click="performAdd(item)">
               <span>&nbsp; {{ `${item.text} (${item.currency})` }}</span>
-              <span v-if="item.isin">&nbsp; {{ '[' + item.isin + ']' }}</span>
+              <span v-if="item.isin || item.figi">&nbsp; {{ '[' + (item.isin || item.figi) + ']' }}</span>
               <span class="em small">&nbsp; {{ ellipsize(item.name, 40) }} </span>
             </div>
+          </template>
+          <template v-slot:tag-right="{tag: {isin, figi}}">
+            <span class="ml-1 small" v-if="isin || figi">{{ '[' + (isin || figi) + ']' }}</span>
           </template>
         </vue-tags-input>
       </b-form-group>
@@ -105,7 +108,18 @@
         if (result) {
           this.autocompleteItems = result.data.data.map(symbol =>
             Object.assign({text: symbol.symbol}, symbol)
-          )
+          ).map(item => {
+            const {figi, isins} = item
+            if (newTagInput.toUpperCase() !== (figi || '').toUpperCase()) {
+              delete item.figi
+            }
+            const matchingIsin = isins.find(isin => isin.toUpperCase() === newTagInput.toUpperCase())
+            if (matchingIsin) {
+              item.isin = matchingIsin
+            }
+            delete item.isins
+            return item
+          })
         }
       }
     },

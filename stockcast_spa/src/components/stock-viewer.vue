@@ -38,8 +38,25 @@
     '#FF00FF'
   ]
 
+  const tagToQueryParam = (tag) => {
+    const {text: s, figi: f, isin: i} = tag
+    if (f === undefined && i === undefined) {
+      return s
+    }
+    return {s, f, i}
+  }
+
+  const queryParamToTag = (queryParam) => {
+    if (typeof (queryParam) === 'string') {
+      return {text: queryParam}
+    }
+    const {s: text, f: figi, i: isin} = queryParam
+    return {text, figi, isin}
+  }
+
+
   export const routeToProps = (route) => {
-    const tags = route.query.s ? JSON.parse(route.query.s).map((text) => ({text})) : []
+    const tags = route.query.s ? JSON.parse(route.query.s).map(queryParamToTag) : []
     const dateFrom = route.query.df ? parseISO(route.query.df) : DATE_FROM_DEFAULT
     const dateTo = route.query.dt ? parseISO(route.query.dt) : DATE_TO_DEFAULT
 
@@ -101,7 +118,7 @@
         handler(stocks) {
           const newRoute = {name: "stocks", query: {}}
           if (stocks.tags.length > 0) {
-            newRoute.query.s = JSON.stringify(stocks.tags.map(({text}) => text))
+            newRoute.query.s = JSON.stringify(stocks.tags.map(tagToQueryParam))
           }
           if (stocks.dateFrom) {
             newRoute.query.df = formatISO(stocks.dateFrom, {representation: 'date'})
@@ -121,10 +138,11 @@
         try {
           this.updateOngoing = true
 
-          const api_responses = await Promise.all(this.stocks.tags.map(async ({text: symbol}) =>
+          const api_responses = await Promise.all(this.stocks.tags.map(async (tag) =>
             ({
-              metadata_response: await this.fetchMetadata(symbol),
-              prices_response: await this.fetchPrices(symbol)
+              tag,
+              metadata_response: await this.fetchMetadata(tag.text),
+              prices_response: await this.fetchPrices(tag.text)
             })))
 
           this.chart.data.datasets = api_responses
@@ -160,20 +178,31 @@
 
         return this.axios.get(`/prices/${symbol}/from/${dateFrom}/to/${dateTo}`)
       },
-      parseResponse: ({metadata_response, prices_response}) => ({
+      parseResponse: ({metadata_response, prices_response, tag}) => ({
         metadata: metadata_response.data.data,
         datapoints: prices_response.data.data.map(
           ({date, close}) => ({x: parseISO(date), y: parseFloat(close)})
-        )
+        ),
+        tag
       }),
-      makeDataset: ({datapoints, metadata}, index) =>
-        ({
+      makeDataset({datapoints, metadata, tag}, index) {
+        return {
           data: datapoints,
           fill: false,
-          label: `${metadata.symbol} (${metadata.currency})`,
+          label: `${metadata.symbol} (${metadata.currency})${this.labelSuffix(tag)}`,
           borderColor: COLORS[index % COLORS.length],
           yAxisID: metadata.currency
-        })
+        }
+      },
+      labelSuffix({isin, figi}) {
+        if (isin) {
+          return ` - ISIN: ${isin}`
+        }
+        if (figi) {
+          return ` - FIGI: ${figi}`
+        }
+        return ''
+      }
     }
   }
 </script>

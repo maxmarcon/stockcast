@@ -18,8 +18,8 @@ describe('stockPeriodPicker', () => {
       get: jest.fn(async () => ({
           data: {
             data: [
-              {symbol: "S1", name: "Stock 1"},
-              {symbol: "S2", name: "Stock 2"}
+              {symbol: "S1", name: "Stock 1", isins: ["ISIN1", "ISIN2"], figi: "FIGI1"},
+              {symbol: "S2", name: "Stock 2", isins: ["ISIN1", "ISIN2"], figi: "FIGI1"}
             ]
           }
         })
@@ -119,7 +119,7 @@ describe('stockPeriodPicker', () => {
     })
   })
 
-  describe('when a date-to is entered which is before than date-from', () => {
+  describe('when a date-to is entered which is before date-from', () => {
     beforeEach(() => {
       wrapper.findAllComponents(BFormDatepicker).at(1).vm.$emit('input', parseISO('2014-12-31'))
     })
@@ -153,7 +153,55 @@ describe('stockPeriodPicker', () => {
     })
   })
 
-  describe('when entering text in the stocks input field and axios returns an error', () => {
+  describe('when entering an ISIN in the stocks input field', () => {
+
+    beforeEach(() => {
+      jest.useFakeTimers()
+      wrapper.findComponent(VueTagsInput).find('input').setValue('IsIN2')
+    })
+
+    beforeEach(() => jest.runAllTimers())
+
+    it('issues a search request to the server after delay', () => {
+      expect(axiosMock.get).toHaveBeenCalledWith(
+        'stocks/search',
+        {params: expect.objectContaining({q: "IsIN2"})}
+      )
+    })
+
+    it('stores the result of the search including the matching ISIN', () => {
+      expect(wrapper.vm.autocompleteItems).toEqual([
+        {text: "S1", symbol: "S1", name: "Stock 1", isin: "ISIN2" },
+        {text: "S2", symbol: "S2", name: "Stock 2", isin: "ISIN2"}
+      ])
+    })
+  })
+
+  describe('when entering a FIGI in the stocks input field', () => {
+
+    beforeEach(() => {
+      jest.useFakeTimers()
+      wrapper.findComponent(VueTagsInput).find('input').setValue('FiGI1')
+    })
+
+    beforeEach(() => jest.runAllTimers())
+
+    it('issues a search request to the server after delay', () => {
+      expect(axiosMock.get).toHaveBeenCalledWith(
+        'stocks/search',
+        {params: expect.objectContaining({q: "FiGI1"})}
+      )
+    })
+
+    it('stores the result of the search including the matching FIGI', () => {
+      expect(wrapper.vm.autocompleteItems).toEqual([
+        {text: "S1", symbol: "S1", name: "Stock 1", figi: "FIGI1" },
+        {text: "S2", symbol: "S2", name: "Stock 2", figi: "FIGI1"}
+      ])
+    })
+  })
+
+  describe('when text is entered in the stocks input field and axios returns an error', () => {
 
     beforeEach(() => {
       axiosMock = {
