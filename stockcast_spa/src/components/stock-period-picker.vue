@@ -106,14 +106,17 @@
         }
         const result = await this.debouncedSearch(newTagInput)
         if (result) {
+          const terms = newTagInput.split(/\s+/).filter(term => term)
           this.autocompleteItems = result.data.data.map(symbol =>
             Object.assign({text: symbol.symbol}, symbol)
           ).map(item => {
             const {figi, isins} = item
-            if (newTagInput.toUpperCase() !== (figi || '').toUpperCase()) {
+            if (terms.every(term => (figi || '').toUpperCase().search(term.toUpperCase()) !== 0)) {
               delete item.figi
             }
-            const matchingIsin = isins.find(isin => isin.toUpperCase() === newTagInput.toUpperCase())
+            const matchingIsin = isins.find(isin =>
+              terms.find(term => isin.toUpperCase().search(term.toUpperCase()) === 0)
+            )
             if (matchingIsin) {
               item.isin = matchingIsin
             }
