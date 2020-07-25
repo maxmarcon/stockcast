@@ -24,12 +24,14 @@
           <template v-slot:autocomplete-item="{item, performAdd}">
             <div @click="performAdd(item)">
               <span>&nbsp; {{ `${item.text} (${item.currency})` }}</span>
-              <span v-if="item.isin || item.figi">&nbsp; {{ '[' + (item.isin || item.figi) + ']' }}</span>
+              <span v-if="item.isin">&nbsp; {{ '[ISIN:' + item.isin  + ']' }}</span>
+              <span v-else-if="item.figi">&nbsp; {{ '[FIGI:' + item.figi + ']' }}</span>
               <span class="em small">&nbsp; {{ ellipsize(item.name, 40) }} </span>
             </div>
           </template>
           <template v-slot:tag-right="{tag: {isin, figi}}">
-            <span class="ml-1 small" v-if="isin || figi">{{ '[' + (isin || figi) + ']' }}</span>
+            <span class="ml-1 small" v-if="isin">{{ '[ISIN:' + isin + ']' }}</span>
+            <span class="ml-1 small" v-else-if="figi">{{ '[FIGI:' + figi + ']' }}</span>
           </template>
         </vue-tags-input>
       </b-form-group>
