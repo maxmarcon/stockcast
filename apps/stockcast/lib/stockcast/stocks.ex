@@ -43,7 +43,7 @@ defmodule Stockcast.Stocks do
       infix_like_exp = "%#{term}%"
 
       from [s, i] in query,
-        or_where:
+        where:
           ilike(s.symbol, ^prefix_like_exp) or
             ilike(s.name, ^infix_like_exp) or
             ilike(s.figi, ^prefix_like_exp) or

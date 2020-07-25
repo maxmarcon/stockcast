@@ -129,9 +129,9 @@ defmodule Stockcast.StocksTest do
     test "can find stocks by multiple search terms separated by spaces", %{
       iex_symbols: iex_symbols
     } do
-      [_ | symbols] = iex_symbols
+      [symbol | _] = iex_symbols
 
-      assert Stocks.search("wh   wc") == symbols
+      assert Stocks.search("EGoeteadirCr   lDtmrie") == [symbol]
     end
 
     test "triggers isin search if isin is not present", %{iex_symbols: iex_symbols} do
