@@ -10,7 +10,10 @@ Stockcast uses the [IEX Cloud API](https://iexcloud.io/) to retrieve financial d
 
 You will need to [sign up with IEX Cloud](https://iexcloud.io/cloud-login#/register/) and obtain an API token (yes, they do have a rather generous free access plan).
 
-### Running locally with mix in dev mode
+### Running locally with mix in dev or sandbox mode
+
+Dev mode runs against the real IEX Cloud production API, whereas the sandbox mode runs against the IEX Cloud sandbox 
+ and doesn't consume your account's API calls. The downside being that the data is fake.
 
 Prerequisites:
 
@@ -22,10 +25,18 @@ Prerequisites:
 After having cloned the repository, do the following:
 
 * `cp secret.template.exs dev.secret.exs`
-* Uncomment the lines in `dev.secret.exs` and replace `#{YOUR_TOKEN_HERE}` with your IexCloud sandbox token
-  * Alternatively, you can use the production token if you want to but you'll have to also change the `base_url` in `dev.exs` to `https://cloud.iexapis.com/v1`
+    * Uncomment the lines in `dev.secret.exs` and replace `#{YOUR_TOKEN_HERE}` with your IexCloud production token
+* `cp secret.template.exs sandbox.secret.exs`
+    * Uncomment the lines in `dev.secret.exs` and replace `#{YOUR_TOKEN_HERE}` with your IexCloud sandbox token
 * Start the development database with: `docker-compose -f apps/stockcast/docker-compose.yaml up -d`
-* Run the migrations with: `mix migrate`
+
+The following commands will execute in the dev mode. 
+If you want to run in the sandbox mode prepend each mix command with `MIX_ENV=sandbox`
+
+* Setup the database: 
+    * `cd apps/stockcast`
+    * `mix ecto.setup`
+    * `cd ../../`
 * Run `mix fetch.symbols` to fetch the list of available financial securities from IEX Cloud. This might take a while.
   The sets of securities that will be fetched is configured in `config/config.exs` unde `Stockcast.IexCloud.Symbols` as a list of API endpoints.
   This results in a total of about 75k securities being installed.

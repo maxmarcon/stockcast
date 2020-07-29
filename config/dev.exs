@@ -32,7 +32,7 @@ config :stockcast_web,
 
 config :stockcast,
        Stockcast.IexCloud.Api,
-       base_url: "https://sandbox.iexapis.com/v1"
+       base_url: "https://cloud.iexapis.com/v1"
 
 # ## SSL Support
 #
@@ -70,4 +70,6 @@ config :phoenix, :stacktrace_depth, 20
 
 config :tesla, Tesla.Middleware.Logger, debug: false
 
-import_config "dev.secret.exs"
+if Mix.env() == :dev do
+  import_config "dev.secret.exs"
+end
