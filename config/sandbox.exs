@@ -9,5 +9,3 @@ config :stockcast,
 config :stockcast,
        Stockcast.IexCloud.Api,
        base_url: "https://sandbox.iexapis.com/v1"
-
-import_config "sandbox.secret.exs"

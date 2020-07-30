@@ -12,7 +12,7 @@ You will need to [sign up with IEX Cloud](https://iexcloud.io/cloud-login#/regis
 
 ### Running locally with mix in dev or sandbox mode
 
-Dev mode runs against the real IEX Cloud production API, whereas the sandbox mode runs against the IEX Cloud sandbox 
+*Dev mode* runs against the real IEX Cloud production API, whereas *sandbox mode* runs against the IEX Cloud sandbox 
  and doesn't consume your account's API calls. The downside being that the data is fake.
 
 Prerequisites:
@@ -30,8 +30,9 @@ After having cloned the repository, do the following:
     * Uncomment the lines in `dev.secret.exs` and replace `#{YOUR_TOKEN_HERE}` with your IexCloud sandbox token
 * Start the development database with: `docker-compose -f apps/stockcast/docker-compose.yaml up -d`
 
-The following commands will execute in the dev mode. 
-If you want to run in the sandbox mode prepend each mix command with `MIX_ENV=sandbox`
+The following commands will execute in dev mode. 
+If you want to run in sandbox mode you should set anx export the environment
+variable `MIX_ENV=sandbox`
 
 * Setup the database: 
     * `cd apps/stockcast`

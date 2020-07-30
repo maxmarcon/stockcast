@@ -70,6 +70,4 @@ config :phoenix, :stacktrace_depth, 20
 
 config :tesla, Tesla.Middleware.Logger, debug: false
 
-if Mix.env() == :dev do
-  import_config "dev.secret.exs"
-end
+import_config "#{Mix.env()}.secret.exs"
