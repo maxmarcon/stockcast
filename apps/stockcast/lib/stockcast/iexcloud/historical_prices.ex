@@ -18,14 +18,23 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
     [range: "5y", days: 365 * 5]
   ]
 
-  @spec retrieve(binary(), Date.t(), %Date{}) ::
+  @spec retrieve(binary(), Date.t(), Date.t(), integer()) ::
           {:ok, [%Price{}]} | {:error, atom()}
-  def retrieve(symbol, from, to) when is_binary(symbol) do
+  def retrieve(symbol, from, to, sampling \\ 1)
+      when is_binary(symbol) and is_integer(sampling) and
+             sampling >= 1 do
     with true <- Date.compare(from, to) in [:lt, :eq],
          :lt <- Date.compare(to, Date.utc_today()) do
       case maybe_fetch_prices(symbol, from, to) do
-        :ok -> {:ok, price_query(symbol, from, to) |> Repo.all()}
-        error -> error
+        :ok ->
+          {
+            :ok,
+            price_query(symbol, from, to, sampling)
+            |> Repo.all()
+          }
+
+        error ->
+          error
       end
     else
       _ -> {:error, :invalid_dates}
@@ -62,7 +71,10 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
   end
 
   defp prices_locally_available(symbol, from, to) do
-    wanted = Date.range(from, to) |> Enum.count(&is_weekday/1)
+    wanted =
+      Date.range(from, to)
+      |> Enum.count(&is_weekday/1)
+
     available = Repo.aggregate(price_query(symbol, from, to), :count)
 
     needed = ceil(@data_fraction_thr * wanted)
@@ -75,9 +87,12 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
   defp prices_fetchable(from) do
     days_to_fetch = Date.diff(Date.utc_today(), from)
 
-    case Enum.find(@ranges, fn [range: _, days: days] ->
-           days >= days_to_fetch
-         end) do
+    case Enum.find(
+           @ranges,
+           fn [range: _, days: days] ->
+             days >= days_to_fetch
+           end
+         ) do
       [range: range, days: _] -> {:ok, range}
       _ -> {:error, :too_old}
     end
@@ -108,7 +123,8 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
     |> Enum.map(&Map.put_new(&1, "symbol", symbol))
     |> Enum.map(&Price.changeset/1)
     |> Enum.each(
-      &Repo.insert!(&1,
+      &Repo.insert!(
+        &1,
         on_conflict: {:replace_all_except, [:inserted_at]},
         conflict_target: [:symbol, :date]
       )
@@ -117,12 +133,21 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
 
   defp is_weekday(date), do: Date.day_of_week(date) in [1, 2, 3, 4, 5]
 
-  defp price_query(symbol, from, to) do
+  defp price_query(symbol, from, to, sampling \\ 1) do
+    query =
+      from p in Price,
+        select: %{
+          id: p.id,
+          rank: over(rank(), order_by: p.date) - 1
+        },
+        where:
+          p.symbol == ^symbol and
+            p.date <= ^to and
+            p.date >= ^from
+
     from p in Price,
-      where:
-        p.symbol == ^symbol and
-          p.date <= ^to and
-          p.date >= ^from,
+      join: s in subquery(query),
+      on: p.id == s.id and fragment("? % ? = 0", s.rank, ^sampling),
       order_by: p.date
   end
 end

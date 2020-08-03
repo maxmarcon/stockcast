@@ -13,15 +13,15 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
   @far_future ~D[2025-04-16]
 
   describe "with invalid dates" do
-    test "retrieve/3 returns an error (wrong order)" do
+    test "retrieve/4 returns an error (wrong order)" do
       {:error, :invalid_dates} = Prices.retrieve(@symbol, @date_to, @date_from)
     end
 
-    test "retrieve/3 returns an error (today prices)" do
+    test "retrieve/4 returns an error (today prices)" do
       {:error, :invalid_dates} = Prices.retrieve(@symbol, @date_to, Date.utc_today())
     end
 
-    test "retrieve/3 returns an error (future prices)" do
+    test "retrieve/4 returns an error (future prices)" do
       {:error, :invalid_dates} = Prices.retrieve(@symbol, @date_to, Date.add(Date.utc_today(), 1))
     end
   end
@@ -32,10 +32,16 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
       [prices: prices]
     end
 
-    test "retrieve/3 returns them", %{prices: prices} do
+    test "retrieve/4 returns them", %{prices: prices} do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @date_from, @date_to)
 
       assert retrieved_prices == prices
+    end
+
+    test "retrieve/4 returns sampled prices", %{prices: prices} do
+      {:ok, retrieved_prices} = Prices.retrieve(@symbol, @date_from, @date_to, 2)
+
+      assert retrieved_prices == Enum.take_every(prices, 2)
     end
   end
 
@@ -53,35 +59,35 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
       :ok
     end
 
-    test "retrieve/3 fetches via the API and returns them", %{prices: prices} do
+    test "retrieve/4 fetches via the API and returns them", %{prices: prices} do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @date_from, @date_to)
 
       assert retrieved_prices |> Enum.map(&Map.drop(&1, [:id, :updated_at, :inserted_at])) ==
                prices |> Enum.map(&Map.drop(&1, [:id, :updated_at, :inserted_at]))
     end
 
-    test "retrieve/3 returns an error with changeset if some data can't be stored" do
+    test "retrieve/4 returns an error with changeset if some data can't be stored" do
       mock_price_api(:missing_date)
 
       assert {:error, %Ecto.Changeset{errors: [date: {_, [{:validation, :required}]}]}} =
                Prices.retrieve(@symbol, @date_from, @date_to)
     end
 
-    test_with_mock "retrieve/3 returns an error if the data to be fetched is too far back in time",
+    test_with_mock "retrieve/4 returns an error if the data to be fetched is too far back in time",
                    Date,
                    [:passthrough],
                    utc_today: fn -> @far_future end do
       assert {:error, :too_old} == Prices.retrieve(@symbol, @date_from, @date_to)
     end
 
-    test "retrieve/3 returns an error if symbol can't be found" do
+    test "retrieve/4 returns an error if symbol can't be found" do
       mock_price_api(:not_found)
 
       assert {:error, :unknown_symbol} ==
                Prices.retrieve(@symbol, @date_from, @date_to)
     end
 
-    test "retrieve/3 does not attempt to fetch the data from the API again if it was done recently" do
+    test "retrieve/4 does not attempt to fetch the data from the API again if it was done recently" do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @date_from, @date_to)
       assert length(retrieved_prices) == 10
 
@@ -92,7 +98,7 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
       assert length(retrieved_prices) == 8
     end
 
-    test "retrieve/3 fetches the data from the API again if enough time has elapsed since the last call" do
+    test "retrieve/4 fetches the data from the API again if enough time has elapsed since the last call" do
       {:ok, retrieved_prices} = Prices.retrieve(@symbol, @date_from, @date_to)
       assert length(retrieved_prices) == 10
 
