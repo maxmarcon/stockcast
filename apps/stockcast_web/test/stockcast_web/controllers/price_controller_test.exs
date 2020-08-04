@@ -38,6 +38,14 @@ defmodule StockcastWeb.PriceControllerTest do
     assert_json_data(json_data)
   end
 
+  test "can retrieve sampled prices", %{conn: conn} do
+    conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to, sampling: 2))
+
+    json_data = json_response(conn, 200)["data"]
+
+    assert_json_data(json_data, 5)
+  end
+
   test "returns 400 if from date is invalid", %{conn: conn} do
     conn = get(conn, Routes.price_path(conn, :index, @symbol, "invalid date", @date_to))
 
@@ -48,6 +56,13 @@ defmodule StockcastWeb.PriceControllerTest do
     conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, "invalid date"))
 
     json_error_response(conn, 400, "Invalid date format")
+  end
+
+  test "returns 400 if sampling is invalid", %{conn: conn} do
+    conn =
+      get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to, sampling: "FOO"))
+
+    json_error_response(conn, 400, "Sampling must be an integer >= 1")
   end
 
   test "returns 400 if asked for future prices", %{conn: conn} do

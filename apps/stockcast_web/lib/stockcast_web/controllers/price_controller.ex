@@ -6,15 +6,29 @@ defmodule StockcastWeb.PriceController do
   alias Stockcast.Prices
 
   @invalid_date_format "Invalid date format"
+  @invalid_sampling "Sampling must be an integer >= 1"
 
   action_fallback StockcastWeb.FallbackController
+
+  def index(conn, %{"symbol" => symbol, "from" => from, "to" => to, "sampling" => sampling}) do
+    with {:ok, from_date} <- Date.from_iso8601(from),
+         {:ok, to_date} <- Date.from_iso8601(to),
+         {sampling, _} <- Integer.parse(sampling) do
+      retrieve_prices_and_send_response(conn, symbol, from_date, to_date, sampling)
+    else
+      :error -> {:error, :bad_request, @invalid_sampling}
+      {:error, :invalid_format} -> {:error, :bad_request, @invalid_date_format}
+      _ -> {:error, :bad_request}
+    end
+  end
 
   def index(conn, %{"symbol" => symbol, "from" => from, "to" => to}) do
     with {:ok, from_date} <- Date.from_iso8601(from),
          {:ok, to_date} <- Date.from_iso8601(to) do
       retrieve_prices_and_send_response(conn, symbol, from_date, to_date)
     else
-      _ -> {:error, :bad_request, @invalid_date_format}
+      {:error, :invalid_format} -> {:error, :bad_request, @invalid_date_format}
+      _ -> {:error, :bad_request}
     end
   end
 
@@ -28,8 +42,8 @@ defmodule StockcastWeb.PriceController do
     end
   end
 
-  defp retrieve_prices_and_send_response(conn, symbol, from_date, to_date) do
-    case Prices.retrieve(symbol, from_date, to_date) do
+  defp retrieve_prices_and_send_response(conn, symbol, from_date, to_date, sampling \\ 1) do
+    case Prices.retrieve(symbol, from_date, to_date, sampling) do
       {:ok, prices} ->
         render(conn, :index, %{prices: prices})
 
