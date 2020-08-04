@@ -58,9 +58,15 @@ defmodule StockcastWeb.PriceControllerTest do
     json_error_response(conn, 400, "Invalid date format")
   end
 
-  test "returns 400 if sampling is invalid", %{conn: conn} do
+  test "returns 400 if sampling is not integer", %{conn: conn} do
     conn =
       get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to, sampling: "FOO"))
+
+    json_error_response(conn, 400, "Sampling must be an integer >= 1")
+  end
+
+  test "returns 400 if sampling is less than 1", %{conn: conn} do
+    conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to, sampling: 0))
 
     json_error_response(conn, 400, "Sampling must be an integer >= 1")
   end
