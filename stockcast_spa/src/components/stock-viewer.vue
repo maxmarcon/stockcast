@@ -23,7 +23,7 @@
   </b-card>
 </template>
 <script>
-  import {formatISO, parseISO, startOfYesterday, subMonths} from 'date-fns'
+  import {differenceInCalendarDays, formatISO, parseISO, startOfYesterday, subMonths} from 'date-fns'
   import Chart from 'chart.js'
 
   const DATE_FROM_DEFAULT = subMonths(startOfYesterday(), 3)
@@ -100,9 +100,8 @@
           scales: {
             xAxes: [{
               type: 'time',
-              scaleLabel: {
-                display: true,
-                labelString: 'Date'
+              ticks: {
+                source: 'data'
               }
             }]
           }
@@ -173,10 +172,16 @@
         return this.axios.get(`/stocks/symbol/${symbol}`)
       },
       fetchPrices(symbol) {
+        const maxDataPoints = 50
+        const days = differenceInCalendarDays(this.stocks.dateTo, this.stocks.dateFrom);
+        const sampling = Math.max(Math.round(days / maxDataPoints), 1)
+
         const dateFrom = formatISO(this.stocks.dateFrom, {representation: 'date'})
         const dateTo = formatISO(this.stocks.dateTo, {representation: 'date'})
 
-        return this.axios.get(`/prices/${symbol}/from/${dateFrom}/to/${dateTo}`)
+        return this.axios.get(`/prices/${symbol}/from/${dateFrom}/to/${dateTo}`, {
+          params: {sampling}
+        })
       },
       parseResponse: ({metadata_response, prices_response, tag}) => ({
         metadata: metadata_response.data.data,

@@ -88,8 +88,8 @@ describe('stockViewer', () => {
   })
 
   it("queries the price api", () => {
-    expect(axiosMock.get).toHaveBeenCalledWith('/prices/S1/from/2020-01-01/to/2020-03-01')
-    expect(axiosMock.get).toHaveBeenCalledWith('/prices/S2/from/2020-01-01/to/2020-03-01')
+    expect(axiosMock.get).toHaveBeenCalledWith('/prices/S1/from/2020-01-01/to/2020-03-01', expect.anything())
+    expect(axiosMock.get).toHaveBeenCalledWith('/prices/S2/from/2020-01-01/to/2020-03-01', expect.anything())
   })
 
   it('updates the chart data', () => {
@@ -127,9 +127,9 @@ describe('stockViewer', () => {
     })
 
     it("queries the prices api", () => {
-      expect(axiosMock.get).toHaveBeenCalledWith('/prices/S3/from/2019-01-01/to/2019-03-01')
-      expect(axiosMock.get).toHaveBeenCalledWith('/prices/S4/from/2019-01-01/to/2019-03-01')
-      expect(axiosMock.get).toHaveBeenCalledWith('/prices/S5/from/2019-01-01/to/2019-03-01')
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/S3/from/2019-01-01/to/2019-03-01', expect.anything())
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/S4/from/2019-01-01/to/2019-03-01', expect.anything())
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/S5/from/2019-01-01/to/2019-03-01', expect.anything())
 
     })
 
@@ -165,9 +165,9 @@ describe('stockViewer', () => {
     })
 
     it("queries the prices api", () => {
-      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C2/from/2019-01-01/to/2019-03-01')
-      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C1/from/2019-01-01/to/2019-03-01')
-      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C3/from/2019-01-01/to/2019-03-01')
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C2/from/2019-01-01/to/2019-03-01', expect.anything())
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C1/from/2019-01-01/to/2019-03-01', expect.anything())
+      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C3/from/2019-01-01/to/2019-03-01', expect.anything())
     })
 
     it('updates the chart data', () => {
