@@ -22,15 +22,6 @@ defmodule StockcastWeb.PriceController do
     end
   end
 
-  defp parse_sampling(sampling) do
-    with {sampling, _} <- Integer.parse(sampling),
-         true <- sampling >= 1 do
-      {:ok, sampling}
-    else
-      _ -> :error
-    end
-  end
-
   def index(conn, %{"symbol" => symbol, "from" => from, "to" => to}) do
     with {:ok, from_date} <- Date.from_iso8601(from),
          {:ok, to_date} <- Date.from_iso8601(to) do
@@ -48,6 +39,13 @@ defmodule StockcastWeb.PriceController do
 
       _ ->
         {:error, :bad_request, @invalid_date_format}
+    end
+  end
+
+  defp parse_sampling(sampling) do
+    case Integer.parse(sampling) do
+      {sampling, _} when sampling >= 1 -> {:ok, sampling}
+      _ -> :error
     end
   end
 
