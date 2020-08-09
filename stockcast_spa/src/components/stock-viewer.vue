@@ -15,7 +15,7 @@
         </b-form-row>
       </b-form>
     </template>
-    <div class="vld-parent">
+    <div class='vld-parent' :class="{invisible: !hasData}">
       <canvas ref="chart" id="stocks_chart">
       </canvas>
       <loading :active="updateOngoing" :is-full-page="false"></loading>
@@ -207,6 +207,11 @@
           return ` - FIGI: ${figi}`
         }
         return ''
+      }
+    },
+    computed: {
+      hasData() {
+        return this.chart && this.chart.data && this.chart.data.datasets && this.chart.data.datasets.length > 0
       }
     }
   }
