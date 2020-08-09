@@ -15,8 +15,11 @@
         </b-form-row>
       </b-form>
     </template>
-    <div class='vld-parent' :class="{invisible: !hasData}">
-      <canvas ref="chart" id="stocks_chart">
+    <div class='vld-parent'>
+      <h1 v-if="!hasData" class="text-center display-1">
+        <b-icon icon="bar-chart-fill"></b-icon>
+      </h1>
+      <canvas ref="chart" id="stocks_chart" :class="{invisible: !hasData}">
       </canvas>
       <loading :active="updateOngoing" :is-full-page="false"></loading>
     </div>
@@ -104,6 +107,17 @@
                 source: 'data'
               }
             }]
+          },
+          legend: {
+            onClick: () => null,
+            labels: {
+              generateLabels: (chart) =>
+                chart.data.datasets.map(({borderColor, label, data}) => ({
+                  text: `${label}${data.length === 0 ? ' - NO DATA' : ''}`,
+                  hidden: data.length === 0,
+                  fillStyle: borderColor
+                }))
+            }
           }
         }
       })
@@ -148,7 +162,9 @@
             .map(this.parseResponse)
             .map(this.makeDataset)
 
-          this.chart.options.scales.yAxes = this.chart.data.datasets.map(({yAxisID}) => yAxisID)
+          this.chart.options.scales.yAxes = this.chart.data.datasets
+            .filter(({data}) => data.length > 0)
+            .map(({yAxisID}) => yAxisID)
             .filter((value, index, self) => self.indexOf(value) === index)
             .map(yAxisID => ({
               id: yAxisID,
@@ -211,7 +227,10 @@
     },
     computed: {
       hasData() {
-        return this.chart && this.chart.data && this.chart.data.datasets && this.chart.data.datasets.length > 0
+        return this.chart &&
+          this.chart.data &&
+          this.chart.data.datasets &&
+          this.chart.data.datasets.length > 0
       }
     }
   }
