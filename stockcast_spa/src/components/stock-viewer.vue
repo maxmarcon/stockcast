@@ -16,7 +16,7 @@
       </b-form>
     </template>
     <div class='vld-parent'>
-      <h1 v-if="!hasData" class="text-center display-1">
+      <h1 v-if="!(hasData || updateOngoing)" class="text-center display-1">
         <b-icon icon="bar-chart-fill"></b-icon>
       </h1>
       <canvas ref="chart" id="stocks_chart" :class="{invisible: !hasData}">
