@@ -41,6 +41,8 @@
     '#FF00FF'
   ]
 
+  const GRAY = '#847878'
+
   const tagToQueryParam = (tag) => {
     const {text: s, figi: f, isin: i} = tag
     if (f === undefined && i === undefined) {
@@ -113,7 +115,7 @@
             labels: {
               generateLabels: (chart) =>
                 chart.data.datasets.map(({borderColor, label, data}) => ({
-                  text: `${label}${data.length === 0 ? ' - NO DATA' : ''}`,
+                  text: label,
                   hidden: data.length === 0,
                   fillStyle: borderColor
                 }))
@@ -211,7 +213,7 @@
           data: datapoints,
           fill: false,
           label: `${metadata.symbol} (${metadata.currency})${this.labelSuffix(tag)}`,
-          borderColor: COLORS[index % COLORS.length],
+          borderColor: datapoints.length === 0 ? GRAY : COLORS[index % COLORS.length],
           yAxisID: metadata.currency
         }
       },
