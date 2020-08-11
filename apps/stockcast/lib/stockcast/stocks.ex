@@ -16,7 +16,8 @@ defmodule Stockcast.Stocks do
 
     1. A part of the symbol name
     2. A prefix of the symbol ID (including the entire symbol)
-    3. An ISIN
+    3. An ISIN ** This has been disabled, see: https://github.com/iexg/IEX-API/issues/1496 **
+    4. A FIGI
   """
   @spec search(binary(), integer()) :: [%IexSymbol{}]
   def search(term, limit \\ 100)
@@ -28,8 +29,9 @@ defmodule Stockcast.Stocks do
   end
 
   defp iex_cloud_search(term_list) do
-    term_list
-    |> Enum.each(&iex_cloud_maybe_fetch_isins/1)
+    #    term_list
+    #    |> Enum.each(&iex_cloud_maybe_fetch_isins/1)
+    # Reason: https://github.com/iexg/IEX-API/issues/1496
 
     query =
       from s in IexSymbol,

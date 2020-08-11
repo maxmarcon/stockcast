@@ -134,6 +134,7 @@ defmodule Stockcast.StocksTest do
       assert Stocks.search("EGoeteadirCr   lDtmrie") == [symbol]
     end
 
+    @describetag skip: "https://github.com/iexg/IEX-API/issues/1496"
     test "triggers isin search if isin is not present", %{iex_symbols: iex_symbols} do
       symbol = Enum.at(iex_symbols, 0)
 

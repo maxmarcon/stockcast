@@ -19,7 +19,7 @@
           :add-only-from-autocomplete="true"
           :autocomplete-min-length="autocompleteMinLength"
           @tags-changed="tagsChanged"
-          placeholder="Search by name, ticker, or ISIN">
+          placeholder="Search by name, ticker, or FIGI">
 
           <template v-slot:autocomplete-item="{item, performAdd}">
             <div @click="performAdd(item)">

@@ -6,6 +6,7 @@
         <b-form-row>
           <b-col md="8">
             <stock-period-picker v-model="stocks"
+                                 max-tags="4"
                                  @error="$refs.errorBar.show($event)"
             >
             </stock-period-picker>
