@@ -6,7 +6,7 @@
         <b-form-row>
           <b-col md="8">
             <stock-period-picker v-model="stocks"
-                                 max-tags="4"
+                                 :max-tags=4
                                  @error="$refs.errorBar.show($event)"
             >
             </stock-period-picker>
@@ -16,14 +16,28 @@
         </b-form-row>
       </b-form>
     </template>
-    <div class='vld-parent'>
-      <h1 v-if="!(hasData || updateOngoing)" class="text-center display-1">
-        <b-icon icon="bar-chart-fill"></b-icon>
-      </h1>
-      <canvas ref="chart" id="stocks_chart" :class="{invisible: !hasData}">
-      </canvas>
+    <b-container fluid>
       <loading :active="updateOngoing" :is-full-page="false"></loading>
-    </div>
+      <b-row>
+        <b-col md="10" order-md="1">
+          <h1 v-if="!(hasData || updateOngoing)" class="text-center display-1">
+            <b-icon icon="bar-chart-fill"></b-icon>
+          </h1>
+          <canvas ref="chart" id="stocks_chart" :class="{invisible: !hasData}">
+          </canvas>
+        </b-col>
+        <b-col md="2" v-if="hasData">
+          <b-card v-for="ds in chart.data.datasets" :key="ds.label">
+            <b-card-title>
+              {{ ds.label }}
+            </b-card-title>
+            <b-card-text>
+              {{ ds.metadata.name }}
+            </b-card-text>
+          </b-card>
+        </b-col>
+      </b-row>
+    </b-container>
   </b-card>
 </template>
 <script>
@@ -213,6 +227,7 @@
         return {
           data: datapoints,
           fill: false,
+          metadata,
           label: `${metadata.symbol} (${metadata.currency})${this.labelSuffix(tag)}`,
           borderColor: datapoints.length === 0 ? GRAY : COLORS[index % COLORS.length],
           yAxisID: metadata.currency
