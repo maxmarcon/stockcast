@@ -1,5 +1,6 @@
 import stockViewer from '@/components/stock-viewer'
 import bootstrapVue from 'bootstrap-vue'
+import Vue from 'vue'
 import {createLocalVue, mount} from '@vue/test-utils'
 import {parseISO} from 'date-fns'
 import priceApiResponse from './price_api_response.json'
@@ -63,8 +64,9 @@ describe('stockViewer', () => {
         $router: routerMock,
         axios: axiosMock
       },
-      stubs: ['messageBar', 'stockPeriodPicker', 'b-icon', 'loading']
+      stubs: ['messageBar', 'stockPeriodPicker', 'b-icon']
     })
+    await Vue.nextTick()
   })
 
   it('can be mounted', () => {
@@ -85,6 +87,10 @@ describe('stockViewer', () => {
 
   it('initializes the chart object', () => {
     expect(wrapper.vm.chart).toBeTruthy()
+  })
+
+  it('renders the stock cards', () => {
+    expect(wrapper.findAll('div.container-fluid div.card').length).toEqual(2)
   })
 
   it("queries the price api", () => {

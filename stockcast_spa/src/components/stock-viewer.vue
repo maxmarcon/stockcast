@@ -17,26 +17,34 @@
       </b-form>
     </template>
     <b-container fluid>
-      <loading :active="updateOngoing" :is-full-page="false"></loading>
-      <b-row>
-        <b-col md="10" order-md="1">
-          <h1 v-if="!(hasData || updateOngoing)" class="text-center display-1">
-            <b-icon icon="bar-chart-fill"></b-icon>
-          </h1>
-          <canvas ref="chart" id="stocks_chart" :class="{invisible: !hasData}">
-          </canvas>
-        </b-col>
-        <b-col md="2" v-if="hasData">
-          <b-card v-for="ds in chart.data.datasets" :key="ds.label">
-            <b-card-title>
-              {{ ds.label }}
-            </b-card-title>
-            <b-card-text>
-              {{ ds.metadata.name }}
-            </b-card-text>
-          </b-card>
-        </b-col>
-      </b-row>
+      <b-overlay :show="updateOngoing">
+        <b-row>
+          <b-col md="9" order-md="1">
+            <h1 v-if="!(hasData || updateOngoing)" class="text-center display-1">
+              <b-icon icon="bar-chart-fill"></b-icon>
+            </h1>
+            <canvas ref="chart" id="stocks_chart" :class="{invisible: !hasData}">
+            </canvas>
+          </b-col>
+          <b-col md="3" v-if="hasData">
+            <b-card v-for="ds in chart.data.datasets" :key="ds.label"
+                    :header="ds.label"
+                    header-tag="b">
+              <b-card-text>
+                {{ ds.metadata.name }}
+              </b-card-text>
+              <b-card-text>
+                Perf: +40%
+              </b-card-text>
+
+              <b-card-text>
+                MaxTr: +700%
+              </b-card-text>
+            </b-card>
+          </b-col>
+        </b-row>
+      </b-overlay>
+
     </b-container>
   </b-card>
 </template>
