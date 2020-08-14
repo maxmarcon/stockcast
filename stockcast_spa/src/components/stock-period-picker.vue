@@ -5,7 +5,7 @@
         label-for="stocks">
         <template v-slot:label>
           Stocks:
-          <b-icon v-if="ongoing" icon="arrow-clockwise" animation="spin" font-scale="1"></b-icon>
+          <b-spinner v-if="ongoing" small></b-spinner>
         </template>
         <vue-tags-input
           autocomplete="off"
