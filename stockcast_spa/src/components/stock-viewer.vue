@@ -16,40 +16,48 @@
         </b-form-row>
       </b-form>
     </template>
+
     <b-container fluid>
       <b-overlay :show="updateOngoing">
-        <b-row>
-          <b-col md="9" order-md="1">
+        <b-row no-gutters>
+          <b-col order-md="1">
             <h1 v-if="!(hasData || updateOngoing)" class="text-center display-1">
               <b-icon icon="bar-chart-fill"></b-icon>
             </h1>
             <canvas ref="chart" id="stocks_chart" :class="{invisible: !hasData}">
             </canvas>
           </b-col>
-          <b-col md="3" v-if="hasData">
-            <b-card v-for="ds in chart.data.datasets" :key="ds.label"
+          <b-col v-if="hasData" md="2">
+            <b-card v-for="(ds, index) in chart.data.datasets" :key="ds.label"
                     :header="ds.label"
-                    header-tag="b">
-              <b-card-text>
-                {{ ds.metadata.name }}
-              </b-card-text>
-              <b-card-text>
-                Perf: +40%
-              </b-card-text>
-
-              <b-card-text>
-                MaxTr: +700%
-              </b-card-text>
+                    header-tag="b"
+                    no-body
+                    :class="{'mt-1' : index > 0}">
+              <b-card-body class="p-2">
+                <b-card-text>
+                  {{ ds.metadata.name }}
+                </b-card-text>
+                <b-card-text>
+                  <h6><b>Perf:&nbsp;</b>
+                    <b-badge :variant="ds.perf < 0 ? 'danger' : 'success'">{{ percentage(ds.perf) }}
+                    </b-badge>
+                  </h6>
+                  <h6><b>MaxTr:&nbsp;</b>
+                    <b-badge :variant="ds.maxTr < 0 ? 'danger' : 'success'">{{ percentage(ds.maxTr) }}
+                    </b-badge>
+                  </h6>
+                </b-card-text>
+              </b-card-body>
             </b-card>
           </b-col>
         </b-row>
       </b-overlay>
-
     </b-container>
   </b-card>
 </template>
 <script>
   import {differenceInCalendarDays, formatISO, parseISO, startOfYesterday, subMonths} from 'date-fns'
+  import {percentage} from "../utils/format";
   import Chart from 'chart.js'
 
   const DATE_FROM_DEFAULT = subMonths(startOfYesterday(), 3)
@@ -208,7 +216,6 @@
           this.updateOngoing = false
         }
       },
-
       fetchMetadata(symbol) {
         return this.axios.get(`/stocks/symbol/${symbol}`)
       },
@@ -234,6 +241,8 @@
       makeDataset({datapoints, metadata, tag}, index) {
         return {
           data: datapoints,
+          perf: Math.random() * 100 - 50,
+          maxTr: Math.random() * 100 - 50,
           fill: false,
           metadata,
           label: `${metadata.symbol} (${metadata.currency})${this.labelSuffix(tag)}`,
@@ -249,7 +258,8 @@
           return ` - FIGI: ${figi}`
         }
         return ''
-      }
+      },
+      percentage
     },
     computed: {
       hasData() {
