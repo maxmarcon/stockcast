@@ -36,121 +36,86 @@ defmodule Stockcast.PricesTest do
     end
   end
 
-  test "trade/3 error" do
-    assert [50, 100, 40, 25]
-           |> for_trade()
-           |> Prices.trade(:foo) == {:error, :invalid_mode}
-  end
-
-  test "trade/3 naive (1)" do
+  test "trade/1 (1)" do
     assert [50, 100, 40, 200]
            |> for_trade()
-           |> Prices.trade(:naive) == %{
-             profit: Decimal.cast(150),
+           |> Prices.trade() == %{
+             performance: Decimal.cast(200 - 50),
+             trading: Decimal.cast(50 + 160),
+             short_trading: Decimal.cast(50 + 60 + 160),
              strategy: [
-               %{
-                 date: ~D[2020-01-01],
-                 action: :buy
-               },
-               %{
-                 date: ~D[2020-01-04],
-                 action: :sell
-               }
+               {~D[2020-01-01], :buy},
+               {~D[2020-01-02], :sell},
+               {~D[2020-01-03], :buy},
+               {~D[2020-01-04], :sell}
              ]
            }
   end
 
-  test "trade/3 naive (2)" do
-    assert [50, 100, 40, 25]
+  test "trade/1 (2)" do
+    assert [50, 100]
            |> for_trade()
-           |> Prices.trade(:naive) == %{
-             profit: Decimal.cast(-25),
-             strategy: [
-               %{
-                 date: ~D[2020-01-01],
-                 action: :buy
-               },
-               %{
-                 date: ~D[2020-01-04],
-                 action: :sell
-               }
-             ]
+           |> Prices.trade() == %{
+             performance: Decimal.cast(100 - 50),
+             trading: Decimal.cast(50),
+             short_trading: Decimal.cast(50),
+             strategy: [{~D[2020-01-01], :buy}, {~D[2020-01-02], :sell}]
            }
   end
 
-  test "trede/3 perfect (1)" do
-    assert [50, 100, 40, 200]
+  test "trade/1 (3)" do
+    assert [100, 50]
            |> for_trade()
-           |> Prices.trade(:perfect) == %{
-             profit: Decimal.cast(50 + 160),
-             strategy: [
-               %{
-                 date: ~D[2020-01-01],
-                 action: :buy
-               },
-               %{
-                 date: ~D[2020-01-02],
-                 action: :sell
-               },
-               %{
-                 date: ~D[2020-01-03],
-                 action: :buy
-               },
-               %{
-                 date: ~D[2020-01-04],
-                 action: :sell
-               }
-             ]
+           |> Prices.trade() == %{
+             performance: Decimal.cast(50 - 100),
+             trading: Decimal.cast(0),
+             short_trading: Decimal.cast(50),
+             strategy: [{~D[2020-01-01], :sell}, {~D[2020-01-02], :buy}]
            }
   end
 
-  test "trede/3 perfect (2)" do
-    assert [50, 100, 40, 200]
+  test "trade/1 (4)" do
+    assert [100]
            |> for_trade()
-           |> Prices.trade(:perfect, short_selling: true) == %{
-             profit: Decimal.cast(50 + 60 + 160),
-             strategy: [
-               %{
-                 date: ~D[2020-01-01],
-                 action: :buy
-               },
-               %{
-                 date: ~D[2020-01-02],
-                 action: :sell
-               },
-               %{
-                 date: ~D[2020-01-03],
-                 action: :buy
-               },
-               %{
-                 date: ~D[2020-01-04],
-                 action: :sell
-               }
-             ]
+           |> Prices.trade() == %{
+             performance: Decimal.cast(0),
+             trading: Decimal.cast(0),
+             short_trading: Decimal.cast(0),
+             strategy: []
            }
   end
 
-  test "trede/3 perfect (3)" do
+  test "trade/1 (5)" do
+    assert []
+           |> for_trade()
+           |> Prices.trade() == %{
+             performance: Decimal.cast(0),
+             trading: Decimal.cast(0),
+             short_trading: Decimal.cast(0),
+             strategy: []
+           }
+  end
+
+  test "trade/1 perfect (6)" do
     assert [50, 100, 90, 40, 110, 200]
            |> for_trade()
-           |> Prices.trade(:perfect, short_selling: true) == %{
-             profit: Decimal.cast(50 + 60 + 160),
+           |> Prices.trade() == %{
+             trading: Decimal.cast(50 + 160),
+             short_trading: Decimal.cast(50 + 60 + 160),
+             performance: Decimal.cast(200 - 50),
              strategy: [
-               %{
-                 date: ~D[2020-01-01],
-                 action: :buy
+               {~D[2020-01-01], :buy},
+               {
+                 ~D[2020-01-02],
+                 :sell
                },
-               %{
-                 date: ~D[2020-01-02],
-                 action: :sell
+               {
+                 ~D[2020-01-04],
+                 :buy
                },
-               %{
-                 date: ~D[2020-01-04],
-                 action: :buy
-               },
-               %{
-                 date: ~D[2020-01-06],
-                 action: :sell
+               {
+                 ~D[2020-01-06],
+                 :sell
                }
              ]
            }
