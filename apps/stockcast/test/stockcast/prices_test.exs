@@ -85,6 +85,17 @@ defmodule Stockcast.PricesTest do
            }
   end
 
+  test "trade/1 (4a)" do
+    assert [100, 100]
+           |> for_trade()
+           |> Prices.trade() == %{
+             performance: Decimal.cast(0),
+             trading: Decimal.cast(0),
+             short_trading: Decimal.cast(0),
+             strategy: []
+           }
+  end
+
   test "trade/1 (5)" do
     assert []
            |> for_trade()
@@ -115,6 +126,31 @@ defmodule Stockcast.PricesTest do
                },
                {
                  ~D[2020-01-06],
+                 :sell
+               }
+             ]
+           }
+  end
+
+  test "trade/1 perfect (7)" do
+    assert [50, 50, 100, 100, 100, 90, 90, 40, 110, 200, 200]
+           |> for_trade()
+           |> Prices.trade() == %{
+             trading: Decimal.cast(50 + 160),
+             short_trading: Decimal.cast(50 + 60 + 160),
+             performance: Decimal.cast(200 - 50),
+             strategy: [
+               {~D[2020-01-01], :buy},
+               {
+                 ~D[2020-01-03],
+                 :sell
+               },
+               {
+                 ~D[2020-01-08],
+                 :buy
+               },
+               {
+                 ~D[2020-01-10],
                  :sell
                }
              ]
