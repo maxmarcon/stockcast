@@ -3,6 +3,13 @@ defmodule Stockcast.Prices do
 
   @type decimal :: Decimal.t()
 
+  @empty_trade %{
+    strategy: [],
+    trading: Decimal.new(0),
+    short_trading: Decimal.new(0),
+    performance: Decimal.new(0)
+  }
+
   @doc ~S"""
   retrieve stock prices for a particular symbol
   """
@@ -29,21 +36,12 @@ defmodule Stockcast.Prices do
     |> Enum.with_index()
     |> Enum.flat_map(&find_minima_and_maxima/1)
     |> Enum.chunk_every(2, 1)
-    |> Enum.reduce(
-      %{strategy: [], trading: Decimal.new(0), short_trading: Decimal.new(0)},
-      &update_trading/2
-    )
+    |> Enum.reduce(@empty_trade, &update_trading/2)
     |> Map.update!(:strategy, &Enum.reverse/1)
     |> Map.put(:performance, Decimal.sub(List.last(prices).price, List.first(prices).price))
   end
 
-  def trade([]),
-    do: %{
-      strategy: [],
-      trading: Decimal.new(0),
-      short_trading: Decimal.new(0),
-      performance: Decimal.new(0)
-    }
+  def trade([]), do: @empty_trade
 
   defp find_minima_and_maxima({[p1, p2, p3], i}) when i == 0 do
     [p1 | min_max(p1, p2, p3)]
