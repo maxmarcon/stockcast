@@ -28,6 +28,7 @@ defmodule Stockcast.Prices do
     |> Enum.reduce(%Performance{}, &update_trading/2)
     |> Map.update!(:strategy, &Enum.reverse/1)
     |> Map.put(:raw, Decimal.sub(List.last(prices).price, List.first(prices).price))
+    |> Map.put(:baseline, List.first(prices).price)
   end
 
   def trade([]), do: %Performance{}

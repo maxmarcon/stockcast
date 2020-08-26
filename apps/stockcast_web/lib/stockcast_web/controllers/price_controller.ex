@@ -4,6 +4,7 @@ defmodule StockcastWeb.PriceController do
   require Logger
 
   alias Stockcast.Prices
+  alias Stockcast.Performance
 
   @invalid_date_format "Invalid date format"
   @invalid_sampling "Sampling must be an integer >= 1"
@@ -52,7 +53,10 @@ defmodule StockcastWeb.PriceController do
   defp retrieve_prices_and_send_response(conn, symbol, from_date, to_date, sampling \\ 1) do
     case Prices.retrieve(symbol, from_date, to_date, sampling) do
       {:ok, prices} ->
-        render(conn, :index, %{prices: prices})
+        render(conn, :index, %{
+          prices: prices,
+          performance: Prices.trade_from_historical_prices(prices) |> Performance.relative()
+        })
 
       {:error, :invalid_dates} ->
         {:error, :bad_request, :invalid_dates}

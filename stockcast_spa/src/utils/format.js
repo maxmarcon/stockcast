@@ -1,1 +1,5 @@
-export const percentage = (value) => `${(value >= 0 ? '+' : '')}${value.toFixed(2)}%`
+export const percentage = (value) => {
+  value = value*100
+  return `${(value >= 0 ? '+' : '')}${value.toFixed(2)}%`
+}
+

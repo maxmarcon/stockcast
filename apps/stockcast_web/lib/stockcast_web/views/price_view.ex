@@ -2,8 +2,11 @@ defmodule StockcastWeb.PriceView do
   use StockcastWeb, :view
   alias StockcastWeb.PriceView
 
-  def render("index.json", %{prices: prices}) do
-    %{data: render_many(prices, PriceView, "price.json")}
+  def render("index.json", %{prices: prices, performance: performance}) do
+    %{
+      performance: performance,
+      data: render_many(prices, PriceView, "price.json")
+    }
   end
 
   def render("show.json", %{price: price}) do

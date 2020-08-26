@@ -45,6 +45,7 @@ defmodule Stockcast.PricesTest do
              raw: Decimal.cast(200 - 50),
              trading: Decimal.cast(50 + 160),
              short_trading: Decimal.cast(50 + 60 + 160),
+             baseline: Decimal.cast(50),
              strategy: [
                {~D[2020-01-01], :buy},
                {~D[2020-01-02], :sell},
@@ -61,6 +62,8 @@ defmodule Stockcast.PricesTest do
              raw: Decimal.cast(100 - 50),
              trading: Decimal.cast(50),
              short_trading: Decimal.cast(50),
+             baseline: Decimal.cast(50),
+             relative: false,
              strategy: [{~D[2020-01-01], :buy}, {~D[2020-01-02], :sell}]
            }
   end
@@ -72,7 +75,9 @@ defmodule Stockcast.PricesTest do
              raw: Decimal.cast(50 - 100),
              trading: Decimal.cast(0),
              short_trading: Decimal.cast(50),
-             strategy: [{~D[2020-01-01], :sell}, {~D[2020-01-02], :buy}]
+             baseline: Decimal.cast(100),
+             strategy: [{~D[2020-01-01], :sell}, {~D[2020-01-02], :buy}],
+             relative: false
            }
   end
 
@@ -83,6 +88,8 @@ defmodule Stockcast.PricesTest do
              raw: Decimal.cast(0),
              trading: Decimal.cast(0),
              short_trading: Decimal.cast(0),
+             baseline: Decimal.cast(100),
+             relative: false,
              strategy: []
            }
   end
@@ -94,6 +101,8 @@ defmodule Stockcast.PricesTest do
              raw: Decimal.cast(0),
              trading: Decimal.cast(0),
              short_trading: Decimal.cast(0),
+             baseline: Decimal.cast(100),
+             relative: false,
              strategy: []
            }
   end
@@ -105,6 +114,8 @@ defmodule Stockcast.PricesTest do
              raw: Decimal.cast(0),
              trading: Decimal.cast(0),
              short_trading: Decimal.cast(0),
+             baseline: nil,
+             relative: false,
              strategy: []
            }
   end
@@ -116,6 +127,8 @@ defmodule Stockcast.PricesTest do
              trading: Decimal.cast(50 + 160),
              short_trading: Decimal.cast(50 + 60 + 160),
              raw: Decimal.cast(200 - 50),
+             relative: false,
+             baseline: Decimal.cast(50),
              strategy: [
                {~D[2020-01-01], :buy},
                {
@@ -140,6 +153,8 @@ defmodule Stockcast.PricesTest do
            |> Prices.trade() == %Performance{
              trading: Decimal.cast(50 + 160),
              short_trading: Decimal.cast(50 + 60 + 160),
+             relative: false,
+             baseline: Decimal.cast(50),
              raw: Decimal.cast(200 - 50),
              strategy: [
                {~D[2020-01-01], :buy},
@@ -167,9 +182,11 @@ defmodule Stockcast.PricesTest do
              %HistoricalPrice{close: Decimal.cast(200), date: ~D[2020-01-04]}
            ]
            |> Prices.trade_from_historical_prices() == %Performance{
+             relative: false,
              raw: Decimal.cast(200 - 50),
              trading: Decimal.cast(50 + 160),
              short_trading: Decimal.cast(50 + 60 + 160),
+             baseline: Decimal.cast(50),
              strategy: [
                {~D[2020-01-01], :buy},
                {~D[2020-01-02], :sell},

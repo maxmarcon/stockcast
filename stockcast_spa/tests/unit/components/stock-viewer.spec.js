@@ -28,7 +28,8 @@ describe('stockViewer', () => {
               data: {
                 currency: "USD",
                 symbol: match[1]
-              }
+              },
+              performance: {}
             }
           }
         }
@@ -40,7 +41,8 @@ describe('stockViewer', () => {
           case 'S2':
             return {
               data: {
-                data: priceApiResponse.data.slice(1)
+                data: priceApiResponse.data.slice(1),
+                performance: {}
               }
             }
           default:

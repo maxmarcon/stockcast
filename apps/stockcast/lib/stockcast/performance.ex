@@ -1,41 +1,52 @@
 defmodule Stockcast.Performance do
   alias __MODULE__
-  alias Stockcast.IexCloud.HistoricalPrice
 
   @decimal_zero Decimal.new(0)
   @type t :: %Performance{}
 
-  defstruct raw: @decimal_zero,
+  @derive {Jason.Encoder, except: [:strategy]}
+  defstruct baseline: nil,
+            relative: false,
+            raw: @decimal_zero,
             trading: @decimal_zero,
             short_trading: @decimal_zero,
             strategy: []
 
   @spec relative(Performance.t()) :: Performance.t()
   @doc ~S'''
-  iex> Stockcast.Performance.relative(%Stockcast.Performance{raw: Decimal.cast(10), trading: Decimal.cast(5), short_trading: Decimal.cast(15)})
-  %Stockcast.Performance{raw: Decimal.cast(10), trading: Decimal.cast(0.5), short_trading: Decimal.cast(1.5)}
+  iex> Stockcast.Performance.relative(%Stockcast.Performance{relative: false, baseline: Decimal.cast(5), raw: Decimal.cast(10), trading: Decimal.cast(5), short_trading: Decimal.cast(15)})
+  %Stockcast.Performance{relative: true, baseline: Decimal.cast(5), raw: Decimal.cast(2), trading: Decimal.cast(1), short_trading: Decimal.cast(3)}
 
-  iex> Stockcast.Performance.relative(%Stockcast.Performance{raw: Decimal.cast(0), trading: Decimal.cast(5), short_trading: Decimal.cast(15)})
-  %Stockcast.Performance{raw: Decimal.cast(0), trading: Decimal.cast(0), short_trading: Decimal.cast(0)}
+  iex> Stockcast.Performance.relative(%Stockcast.Performance{relative: true, baseline: Decimal.cast(5), raw: Decimal.cast(10), trading: Decimal.cast(5), short_trading: Decimal.cast(15)})
+  %Stockcast.Performance{relative: true, baseline: Decimal.cast(5), raw: Decimal.cast(10), trading: Decimal.cast(5), short_trading: Decimal.cast(15)}
+
+  iex> Stockcast.Performance.relative(%Stockcast.Performance{relative: false, baseline: nil, raw: Decimal.cast(10), trading: Decimal.cast(5), short_trading: Decimal.cast(15)})
+  %Stockcast.Performance{relative: false, baseline: nil, raw: Decimal.cast(10), trading: Decimal.cast(5), short_trading: Decimal.cast(15)}
+
+  iex> Stockcast.Performance.relative(%Stockcast.Performance{relative: false, baseline: Decimal.cast(0), raw: Decimal.cast(10), trading: Decimal.cast(5), short_trading: Decimal.cast(15)})
+  %Stockcast.Performance{relative: false, baseline: Decimal.cast(0), raw: Decimal.cast(10), trading: Decimal.cast(5), short_trading: Decimal.cast(15)}
   '''
-  def relative(
-        performance = %Performance{raw: raw, trading: trading, short_trading: short_trading}
-      )
-      when raw == @decimal_zero do
-    %{performance | trading: @decimal_zero, short_trading: @decimal_zero}
-  end
+  def relative(%Performance{baseline: nil} = performance), do: performance
+
+  def relative(%Performance{baseline: @decimal_zero} = performance), do: performance
 
   def relative(
-        performance = %Performance{raw: raw_perf, trading: trading, short_trading: short_trading}
+        performance = %Performance{
+          baseline: baseline,
+          relative: false,
+          raw: raw,
+          trading: trading,
+          short_trading: short_trading
+        }
       ) do
     %{
       performance
-      | trading: Decimal.div(trading, raw_perf),
-        short_trading: Decimal.div(short_trading, raw_perf)
+      | relative: true,
+        raw: Decimal.div(raw, baseline),
+        trading: Decimal.div(trading, baseline),
+        short_trading: Decimal.div(short_trading, baseline)
     }
   end
 
-  @spec from_historical_prices([HistoricalPrice.t()]) :: Performance.t()
-  def from_historical_prices(prices) do
-  end
+  def relative(%Performance{relative: true} = performance), do: performance
 end

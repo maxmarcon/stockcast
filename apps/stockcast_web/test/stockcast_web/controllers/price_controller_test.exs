@@ -30,6 +30,18 @@ defmodule StockcastWeb.PriceControllerTest do
     assert_json_data(json_data)
   end
 
+  test "retrieves performance with the prices", %{conn: conn} do
+    conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
+
+    json = json_response(conn, 200)
+
+    assert_json_data(json["data"])
+    assert Map.has_key?(json["performance"], "raw")
+    assert Map.has_key?(json["performance"], "trading")
+    assert Map.has_key?(json["performance"], "short_trading")
+    refute Map.has_key?(json["performance"], "strategy")
+  end
+
   test "can retrieve prices if to date is omitted", %{conn: conn} do
     conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from))
 
