@@ -1,14 +1,9 @@
 defmodule Stockcast.Prices do
   alias Stockcast.IexCloud.HistoricalPrices, as: IexPrices
+  alias Stockcast.Performance
+  alias Stockcast.IexCloud.HistoricalPrice
 
   @type decimal :: Decimal.t()
-
-  @empty_trade %{
-    strategy: [],
-    trading: Decimal.new(0),
-    short_trading: Decimal.new(0),
-    performance: Decimal.new(0)
-  }
 
   @doc ~S"""
   retrieve stock prices for a particular symbol
@@ -20,28 +15,29 @@ defmodule Stockcast.Prices do
       do: IexPrices.retrieve(symbol, from, to, sampling)
 
   @doc ~S"""
-      trades with prices over time
+      trades with prices over time, returns performance of stocks
   """
-  @spec trade([%{date: Date.t(), price: decimal()}]) ::
-          %{
-            performance: decimal(),
-            trading: decimal(),
-            short_trading: decimal(),
-            strategy: [{Date.t(), :sell | :buy}]
-          }
+  @spec trade([%{date: Date.t(), price: decimal()}]) :: Performance.t()
   def trade(prices) when is_list(prices) and length(prices) > 0 do
     prices
-    |> Enum.dedup_by(&Decimal.to_string(&1.price))
-    |> Enum.chunk_every(3, 1)
-    |> Enum.with_index()
-    |> Enum.flat_map(&find_minima_and_maxima/1)
-    |> Enum.chunk_every(2, 1)
-    |> Enum.reduce(@empty_trade, &update_trading/2)
+    |> Stream.dedup_by(&Decimal.to_string(&1.price))
+    |> Stream.chunk_every(3, 1)
+    |> Stream.with_index()
+    |> Stream.flat_map(&find_minima_and_maxima/1)
+    |> Stream.chunk_every(2, 1)
+    |> Enum.reduce(%Performance{}, &update_trading/2)
     |> Map.update!(:strategy, &Enum.reverse/1)
-    |> Map.put(:performance, Decimal.sub(List.last(prices).price, List.first(prices).price))
+    |> Map.put(:raw, Decimal.sub(List.last(prices).price, List.first(prices).price))
   end
 
-  def trade([]), do: @empty_trade
+  def trade([]), do: %Performance{}
+
+  @spec trade_from_historical_prices([HistoricalPrice.t()]) :: Performance.t()
+  def trade_from_historical_prices(historical_prices) do
+    historical_prices
+    |> Enum.map(fn %{close: price, date: date} -> %{price: price, date: date} end)
+    |> trade
+  end
 
   defp find_minima_and_maxima({[p1, p2, p3], i}) when i == 0 do
     [p1 | min_max(p1, p2, p3)]

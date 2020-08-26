@@ -5,6 +5,8 @@ defmodule Stockcast.PricesTest do
   import Stockcast.TestUtils
 
   alias Stockcast.Prices
+  alias Stockcast.Performance
+  alias Stockcast.IexCloud.HistoricalPrice
 
   @symbol "00XP-GY"
   @date_from ~D[2020-04-02]
@@ -39,8 +41,8 @@ defmodule Stockcast.PricesTest do
   test "trade/1 (1)" do
     assert [50, 100, 40, 200]
            |> for_trade()
-           |> Prices.trade() == %{
-             performance: Decimal.cast(200 - 50),
+           |> Prices.trade() == %Performance{
+             raw: Decimal.cast(200 - 50),
              trading: Decimal.cast(50 + 160),
              short_trading: Decimal.cast(50 + 60 + 160),
              strategy: [
@@ -55,8 +57,8 @@ defmodule Stockcast.PricesTest do
   test "trade/1 (2)" do
     assert [50, 100]
            |> for_trade()
-           |> Prices.trade() == %{
-             performance: Decimal.cast(100 - 50),
+           |> Prices.trade() == %Performance{
+             raw: Decimal.cast(100 - 50),
              trading: Decimal.cast(50),
              short_trading: Decimal.cast(50),
              strategy: [{~D[2020-01-01], :buy}, {~D[2020-01-02], :sell}]
@@ -66,8 +68,8 @@ defmodule Stockcast.PricesTest do
   test "trade/1 (3)" do
     assert [100, 50]
            |> for_trade()
-           |> Prices.trade() == %{
-             performance: Decimal.cast(50 - 100),
+           |> Prices.trade() == %Performance{
+             raw: Decimal.cast(50 - 100),
              trading: Decimal.cast(0),
              short_trading: Decimal.cast(50),
              strategy: [{~D[2020-01-01], :sell}, {~D[2020-01-02], :buy}]
@@ -77,8 +79,8 @@ defmodule Stockcast.PricesTest do
   test "trade/1 (4)" do
     assert [100]
            |> for_trade()
-           |> Prices.trade() == %{
-             performance: Decimal.cast(0),
+           |> Prices.trade() == %Performance{
+             raw: Decimal.cast(0),
              trading: Decimal.cast(0),
              short_trading: Decimal.cast(0),
              strategy: []
@@ -88,8 +90,8 @@ defmodule Stockcast.PricesTest do
   test "trade/1 (4a)" do
     assert [100, 100]
            |> for_trade()
-           |> Prices.trade() == %{
-             performance: Decimal.cast(0),
+           |> Prices.trade() == %Performance{
+             raw: Decimal.cast(0),
              trading: Decimal.cast(0),
              short_trading: Decimal.cast(0),
              strategy: []
@@ -99,21 +101,21 @@ defmodule Stockcast.PricesTest do
   test "trade/1 (5)" do
     assert []
            |> for_trade()
-           |> Prices.trade() == %{
-             performance: Decimal.cast(0),
+           |> Prices.trade() == %Performance{
+             raw: Decimal.cast(0),
              trading: Decimal.cast(0),
              short_trading: Decimal.cast(0),
              strategy: []
            }
   end
 
-  test "trade/1 perfect (6)" do
+  test "trade/1 (6)" do
     assert [50, 100, 90, 40, 110, 200]
            |> for_trade()
-           |> Prices.trade() == %{
+           |> Prices.trade() == %Performance{
              trading: Decimal.cast(50 + 160),
              short_trading: Decimal.cast(50 + 60 + 160),
-             performance: Decimal.cast(200 - 50),
+             raw: Decimal.cast(200 - 50),
              strategy: [
                {~D[2020-01-01], :buy},
                {
@@ -132,13 +134,13 @@ defmodule Stockcast.PricesTest do
            }
   end
 
-  test "trade/1 perfect (7)" do
+  test "trade/1 (7)" do
     assert [50, 50, 100, 100, 100, 90, 90, 40, 110, 200, 200]
            |> for_trade()
-           |> Prices.trade() == %{
+           |> Prices.trade() == %Performance{
              trading: Decimal.cast(50 + 160),
              short_trading: Decimal.cast(50 + 60 + 160),
-             performance: Decimal.cast(200 - 50),
+             raw: Decimal.cast(200 - 50),
              strategy: [
                {~D[2020-01-01], :buy},
                {
@@ -153,6 +155,26 @@ defmodule Stockcast.PricesTest do
                  ~D[2020-01-10],
                  :sell
                }
+             ]
+           }
+  end
+
+  test "trade_from_historical_prices/1 (1)" do
+    assert [
+             %HistoricalPrice{close: Decimal.cast(50), date: ~D[2020-01-01]},
+             %HistoricalPrice{close: Decimal.cast(100), date: ~D[2020-01-02]},
+             %HistoricalPrice{close: Decimal.cast(40), date: ~D[2020-01-03]},
+             %HistoricalPrice{close: Decimal.cast(200), date: ~D[2020-01-04]}
+           ]
+           |> Prices.trade_from_historical_prices() == %Performance{
+             raw: Decimal.cast(200 - 50),
+             trading: Decimal.cast(50 + 160),
+             short_trading: Decimal.cast(50 + 60 + 160),
+             strategy: [
+               {~D[2020-01-01], :buy},
+               {~D[2020-01-02], :sell},
+               {~D[2020-01-03], :buy},
+               {~D[2020-01-04], :sell}
              ]
            }
   end
