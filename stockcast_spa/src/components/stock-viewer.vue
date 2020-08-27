@@ -17,7 +17,7 @@
       </b-form>
     </template>
 
-    <b-container fluid>
+    <b-container fluid >
       <b-overlay :show="updateOngoing">
         <b-row no-gutters>
           <b-col order-md="1">
@@ -29,28 +29,29 @@
           </b-col>
           <b-col v-if="hasData" md="2">
             <b-card v-for="(ds, index) in nonEmptyDatasets" :key="ds.label"
-                    :header="ds.label"
-                    header-tag="b"
                     no-body
                     :class="{'mt-1' : index > 0}">
+              <b-card-header header-bg-variant="info">
+                <b :style="{color: ds.borderColor}">{{ ds.label }}</b>
+              </b-card-header>
               <b-card-body class="p-2">
                 <b-card-text>
                   {{ ds.metadata.name }}
                 </b-card-text>
                 <b-card-text>
                   <h6><b>Perf:&nbsp;</b>
-                    <b-badge :variant="ds.performance.raw < 0 ? 'danger' : 'success'">{{
+                    <b-badge pill :variant="ds.performance.raw < 0 ? 'danger' : 'success'">{{
                         percentage(ds.performance.raw)
                       }}
                     </b-badge>
                   </h6>
                   <h6><b>Trading:&nbsp;</b>
-                    <b-badge :variant="ds.performance.trading < 0 ? 'danger' : 'success'">
+                    <b-badge pill :variant="ds.performance.trading < 0 ? 'danger' : 'success'">
                       {{ percentage(ds.performance.trading) }}
                     </b-badge>
                   </h6>
-                  <h6><b>Short tr.:&nbsp;</b>
-                    <b-badge :variant="ds.performance.short_trading < 0 ? 'danger' : 'success'">
+                  <h6><b>Short:&nbsp;</b>
+                    <b-badge pill :variant="ds.performance.short_trading < 0 ? 'danger' : 'success'">
                       {{ percentage(ds.performance.short_trading) }}
                     </b-badge>
                   </h6>
@@ -144,10 +145,7 @@ export default {
       options: {
         scales: {
           xAxes: [{
-            type: 'time',
-            ticks: {
-              source: 'data'
-            }
+            type: 'time'
           }]
         },
         legend: {
@@ -255,7 +253,8 @@ export default {
         metadata,
         label: `${metadata.symbol} (${metadata.currency})${this.labelSuffix(tag)}`,
         borderColor: datapoints.length === 0 ? GRAY : COLORS[index % COLORS.length],
-        yAxisID: metadata.currency
+        yAxisID: metadata.currency,
+        fill: false
       }
     },
     labelSuffix({isin, figi}) {
