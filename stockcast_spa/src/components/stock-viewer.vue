@@ -31,8 +31,8 @@
             <b-card v-for="(ds, index) in nonEmptyDatasets" :key="ds.label"
                     no-body
                     :class="{'mt-1' : index > 0}">
-              <b-card-header header-bg-variant="info">
-                <b :style="{color: ds.borderColor}">{{ ds.label }}</b>
+              <b-card-header :header-bg-variant="ds.variant" header-tag="b">
+                {{ ds.label }}
               </b-card-header>
               <b-card-body class="p-2">
                 <b-card-text>
@@ -69,6 +69,7 @@
 import {differenceInCalendarDays, formatISO, parseISO, startOfYesterday, subMonths} from 'date-fns'
 import {percentage} from "../utils/format";
 import Chart from 'chart.js'
+import VARIANTS from '@/scss/main.scss'
 
 const DATE_FROM_DEFAULT = subMonths(startOfYesterday(), 3)
 const DATE_TO_DEFAULT = startOfYesterday()
@@ -81,8 +82,6 @@ const COLORS = [
   '#00FFFF',
   '#FF00FF'
 ]
-
-const GRAY = '#847878'
 
 const tagToQueryParam = (tag) => {
   const {text: s, figi: f, isin: i} = tag
@@ -247,12 +246,14 @@ export default {
       tag
     }),
     makeDataset({datapoints, performance, metadata, tag}, index) {
+      const variant = Object.keys(VARIANTS).filter(variant => variant !== 'secondary')[index % COLORS.length]
       return {
         data: datapoints,
         performance,
         metadata,
         label: `${metadata.symbol} (${metadata.currency})${this.labelSuffix(tag)}`,
-        borderColor: datapoints.length === 0 ? GRAY : COLORS[index % COLORS.length],
+        borderColor: datapoints.length === 0 ? VARIANTS['secondary'] : VARIANTS[variant],
+        variant,
         yAxisID: metadata.currency,
         fill: false
       }
