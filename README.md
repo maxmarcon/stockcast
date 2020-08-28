@@ -1,12 +1,34 @@
-# Stockcast
+**This application is still WIP**. However, it can be already installed and run.
+
+<!--ts-->
+   * [About](#about)
+   * [Usage](#usage)
+   * [Technical details](#technical-details)
+      * [Data source](#data-source)
+      * [Installation and setup](#installation-and-setup)
+         * [Running locally with mix in dev or sandbox mode](#running-locally-with-mix-in-dev-or-sandbox-mode)
+         * [Running with docker](#running-with-docker)
+         * [Testing](#testing)
+
+<!-- Added by: max, at: Fri Aug 28 11:17:25 CEST 2020 -->
+
+<!--te-->
+
+# About
 
 Visualize, analyze and predict stock prices
+
+# Usage
+
+_**Coming soon!**_
+
+# Technical details
 
 ## Data source
 
 Stockcast uses the [IEX Cloud API](https://iexcloud.io/) to retrieve financial data.
 
-## Installation and Set-up
+## Installation and setup
 
 You will need to [sign up with IEX Cloud](https://iexcloud.io/cloud-login#/register/) and obtain an API token (yes, they do have a rather generous free access plan).
 
@@ -63,7 +85,7 @@ After having cloned the repository, do the following:
 * Be patient...
 * After a while, your application will be available at `http://localhost:4002`
 
-## Testing
+### Testing
 
 If you want to see some unit tests running, do the following:
 
