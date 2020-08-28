@@ -17,10 +17,10 @@
       </b-form>
     </template>
 
-    <b-container fluid >
+    <b-container fluid>
       <b-overlay :show="updateOngoing">
         <b-row no-gutters>
-          <b-col order-md="1">
+          <b-col order-md="1" md>
             <h1 v-if="!(hasData || updateOngoing)" class="text-center display-1">
               <b-icon icon="bar-chart-fill"></b-icon>
             </h1>
@@ -69,19 +69,11 @@
 import {differenceInCalendarDays, formatISO, parseISO, startOfYesterday, subMonths} from 'date-fns'
 import {percentage} from "../utils/format";
 import Chart from 'chart.js'
-import VARIANTS from '@/scss/main.scss'
+import VARIANT_COLORS from '@/scss/main.scss'
 
 const DATE_FROM_DEFAULT = subMonths(startOfYesterday(), 3)
 const DATE_TO_DEFAULT = startOfYesterday()
-
-const COLORS = [
-  '#FF0000',
-  '#00FF00',
-  '#0000FF',
-  '#FFFF00',
-  '#00FFFF',
-  '#FF00FF'
-]
+const VARIANTS = Object.keys(VARIANT_COLORS).filter(variant => variant !== 'secondary')
 
 const tagToQueryParam = (tag) => {
   const {text: s, figi: f, isin: i} = tag
@@ -246,13 +238,16 @@ export default {
       tag
     }),
     makeDataset({datapoints, performance, metadata, tag}, index) {
-      const variant = Object.keys(VARIANTS).filter(variant => variant !== 'secondary')[index % COLORS.length]
+      const variant = datapoints.length === 0
+        ? 'secondary'
+        : VARIANTS[index % VARIANTS.length]
       return {
         data: datapoints,
         performance,
         metadata,
         label: `${metadata.symbol} (${metadata.currency})${this.labelSuffix(tag)}`,
-        borderColor: datapoints.length === 0 ? VARIANTS['secondary'] : VARIANTS[variant],
+        borderColor: VARIANT_COLORS[variant],
+        backgroundColor: VARIANT_COLORS[variant],
         variant,
         yAxisID: metadata.currency,
         fill: false
