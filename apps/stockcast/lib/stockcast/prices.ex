@@ -68,7 +68,7 @@ defmodule Stockcast.Prices do
     if Decimal.cmp(p1, p2) == :gt do
       %{
         state
-        | strategy: [{d1, :sell} | strategy],
+        | strategy: [%{date: d1, price: p1, action: :sell} | strategy],
           short_trading: Decimal.add(short_trading, Decimal.sub(p1, p2))
       }
     else
@@ -76,7 +76,7 @@ defmodule Stockcast.Prices do
 
       %{
         state
-        | strategy: [{d1, :buy} | strategy],
+        | strategy: [%{date: d1, price: p1, action: :buy} | strategy],
           trading: Decimal.add(trading, profit),
           short_trading: Decimal.add(short_trading, profit)
       }
@@ -84,16 +84,16 @@ defmodule Stockcast.Prices do
   end
 
   defp update_trading(
-         [%{date: d}],
-         %{strategy: [{_, :sell} | _] = strategy} = state
+         [%{date: d, price: p}],
+         %{strategy: [%{action: :sell} | _] = strategy} = state
        ) do
-    %{state | strategy: [{d, :buy} | strategy]}
+    %{state | strategy: [%{date: d, price: p, action: :buy} | strategy]}
   end
 
   defp update_trading(
-         [%{date: d}],
-         %{strategy: [{_, :buy} | _] = strategy} = state
+         [%{date: d, price: p}],
+         %{strategy: [%{action: :buy} | _] = strategy} = state
        ) do
-    %{state | strategy: [{d, :sell} | strategy]}
+    %{state | strategy: [%{date: d, price: p, action: :sell} | strategy]}
   end
 end

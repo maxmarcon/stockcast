@@ -47,10 +47,10 @@ defmodule Stockcast.PricesTest do
              short_trading: Decimal.cast(50 + 60 + 160),
              baseline: Decimal.cast(50),
              strategy: [
-               {~D[2020-01-01], :buy},
-               {~D[2020-01-02], :sell},
-               {~D[2020-01-03], :buy},
-               {~D[2020-01-04], :sell}
+               %{date: ~D[2020-01-01], price: Decimal.cast(50), action: :buy},
+               %{date: ~D[2020-01-02], price: Decimal.cast(100), action: :sell},
+               %{date: ~D[2020-01-03], price: Decimal.cast(40), action: :buy},
+               %{date: ~D[2020-01-04], price: Decimal.cast(200), action: :sell}
              ]
            }
   end
@@ -64,7 +64,10 @@ defmodule Stockcast.PricesTest do
              short_trading: Decimal.cast(50),
              baseline: Decimal.cast(50),
              relative: false,
-             strategy: [{~D[2020-01-01], :buy}, {~D[2020-01-02], :sell}]
+             strategy: [
+               %{date: ~D[2020-01-01], price: Decimal.cast(50), action: :buy},
+               %{date: ~D[2020-01-02], price: Decimal.cast(100), action: :sell}
+             ]
            }
   end
 
@@ -76,7 +79,10 @@ defmodule Stockcast.PricesTest do
              trading: Decimal.cast(0),
              short_trading: Decimal.cast(50),
              baseline: Decimal.cast(100),
-             strategy: [{~D[2020-01-01], :sell}, {~D[2020-01-02], :buy}],
+             strategy: [
+               %{date: ~D[2020-01-01], price: Decimal.cast(100), action: :sell},
+               %{date: ~D[2020-01-02], price: Decimal.cast(50), action: :buy}
+             ],
              relative: false
            }
   end
@@ -130,19 +136,10 @@ defmodule Stockcast.PricesTest do
              relative: false,
              baseline: Decimal.cast(50),
              strategy: [
-               {~D[2020-01-01], :buy},
-               {
-                 ~D[2020-01-02],
-                 :sell
-               },
-               {
-                 ~D[2020-01-04],
-                 :buy
-               },
-               {
-                 ~D[2020-01-06],
-                 :sell
-               }
+               %{date: ~D[2020-01-01], price: Decimal.cast(50), action: :buy},
+               %{date: ~D[2020-01-02], price: Decimal.cast(100), action: :sell},
+               %{date: ~D[2020-01-04], price: Decimal.cast(40), action: :buy},
+               %{date: ~D[2020-01-06], price: Decimal.cast(200), action: :sell}
              ]
            }
   end
@@ -157,19 +154,10 @@ defmodule Stockcast.PricesTest do
              baseline: Decimal.cast(50),
              raw: Decimal.cast(200 - 50),
              strategy: [
-               {~D[2020-01-01], :buy},
-               {
-                 ~D[2020-01-03],
-                 :sell
-               },
-               {
-                 ~D[2020-01-08],
-                 :buy
-               },
-               {
-                 ~D[2020-01-10],
-                 :sell
-               }
+               %{date: ~D[2020-01-01], price: Decimal.cast(50), action: :buy},
+               %{date: ~D[2020-01-03], price: Decimal.cast(100), action: :sell},
+               %{date: ~D[2020-01-08], price: Decimal.cast(40), action: :buy},
+               %{date: ~D[2020-01-10], price: Decimal.cast(200), action: :sell}
              ]
            }
   end
@@ -188,10 +176,10 @@ defmodule Stockcast.PricesTest do
              short_trading: Decimal.cast(50 + 60 + 160),
              baseline: Decimal.cast(50),
              strategy: [
-               {~D[2020-01-01], :buy},
-               {~D[2020-01-02], :sell},
-               {~D[2020-01-03], :buy},
-               {~D[2020-01-04], :sell}
+               %{date: ~D[2020-01-01], price: Decimal.cast(50), action: :buy},
+               %{date: ~D[2020-01-02], price: Decimal.cast(100), action: :sell},
+               %{date: ~D[2020-01-03], price: Decimal.cast(40), action: :buy},
+               %{date: ~D[2020-01-04], price: Decimal.cast(200), action: :sell}
              ]
            }
   end
