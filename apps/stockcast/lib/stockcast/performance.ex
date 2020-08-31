@@ -4,7 +4,7 @@ defmodule Stockcast.Performance do
   @decimal_zero Decimal.new(0)
   @type t :: %Performance{}
 
-  @derive {Jason.Encoder, except: [:strategy]}
+  @derive Jason.Encoder
   defstruct baseline: nil,
             relative: false,
             raw: @decimal_zero,

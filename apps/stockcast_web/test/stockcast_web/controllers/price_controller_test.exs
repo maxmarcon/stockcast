@@ -25,9 +25,10 @@ defmodule StockcastWeb.PriceControllerTest do
   test "can retrieve prices", %{conn: conn} do
     conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
-    json_data = json_response(conn, 200)["data"]
+    json = json_response(conn, 200)
 
-    assert_json_data(json_data)
+    assert_prices(json["prices"])
+    assert_performance(json["performance"])
   end
 
   test "retrieves performance with the prices", %{conn: conn} do
@@ -35,27 +36,26 @@ defmodule StockcastWeb.PriceControllerTest do
 
     json = json_response(conn, 200)
 
-    assert_json_data(json["data"])
-    assert Map.has_key?(json["performance"], "raw")
-    assert Map.has_key?(json["performance"], "trading")
-    assert Map.has_key?(json["performance"], "short_trading")
-    refute Map.has_key?(json["performance"], "strategy")
+    assert_prices(json["prices"])
+    assert_performance(json["performance"])
   end
 
   test "can retrieve prices if to date is omitted", %{conn: conn} do
     conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from))
 
-    json_data = json_response(conn, 200)["data"]
+    json = json_response(conn, 200)
 
-    assert_json_data(json_data)
+    assert_prices(json["prices"])
+    assert_performance(json["performance"])
   end
 
   test "can retrieve sampled prices", %{conn: conn} do
     conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to, sampling: 2))
 
-    json_data = json_response(conn, 200)["data"]
+    json = json_response(conn, 200)
 
-    assert_json_data(json_data, 5)
+    assert_prices(json["prices"], 5)
+    assert_performance(json["performance"])
   end
 
   test "returns 400 if from date is invalid", %{conn: conn} do
@@ -150,9 +150,9 @@ defmodule StockcastWeb.PriceControllerTest do
 
       conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
-      json_data = json_response(conn, 200)["data"]
+      json_data = json_response(conn, 200)["prices"]
 
-      assert_json_data(json_data, 8)
+      assert_prices(json_data, 8)
     end
 
     test "returns 404 if symbol can't be found", %{conn: conn} do
@@ -164,10 +164,24 @@ defmodule StockcastWeb.PriceControllerTest do
     end
   end
 
-  defp assert_json_data(data, length \\ 10) do
-    assert length(data) == length
+  defp assert_performance(performance) do
+    assert Map.has_key?(performance, "raw")
+    assert Map.has_key?(performance, "trading")
+    assert Map.has_key?(performance, "short_trading")
+    assert is_list(performance["strategy"])
 
-    data
+    Enum.each(performance["strategy"], fn strategy ->
+      assert Map.has_key?(strategy, "date")
+      assert Map.has_key?(strategy, "price")
+      assert Map.has_key?(strategy, "action")
+      assert strategy["action"] in ["sell", "buy"]
+    end)
+  end
+
+  defp assert_prices(prices, length \\ 10) do
+    assert length(prices) == length
+
+    prices
     |> Enum.with_index()
     |> Enum.each(fn {price, index} ->
       assert price["symbol"] == @symbol

@@ -232,7 +232,7 @@ export default {
     parseResponse: ({metadata_response, prices_response, tag}) => ({
       metadata: metadata_response.data.data,
       performance: prices_response.data.performance,
-      datapoints: prices_response.data.data.map(
+      datapoints: prices_response.data.prices.map(
         ({date, close}) => ({x: parseISO(date), y: parseFloat(close)})
       ),
       tag

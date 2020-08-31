@@ -5,12 +5,12 @@ defmodule StockcastWeb.PriceView do
   def render("index.json", %{prices: prices, performance: performance}) do
     %{
       performance: performance,
-      data: render_many(prices, PriceView, "price.json")
+      prices: render_many(prices, PriceView, "price.json")
     }
   end
 
   def render("show.json", %{price: price}) do
-    %{data: render_one(price, PriceView, "price.json")}
+    render_one(price, PriceView, "price.json")
   end
 
   def render("price.json", %{price: price}) do
