@@ -40,15 +40,19 @@ describe('stockViewer', () => {
           case 'S2':
             return {
               data: {
-                prices: priceApiResponse.data.slice(1),
-                performance: {}
+                data: {
+                  prices: priceApiResponse.data.slice(1),
+                  performance: {}
+                }
               }
             }
           default:
             return {
               data: {
-                prices: priceApiResponse.data,
-                performance: {}
+                data: {
+                  prices: priceApiResponse.data,
+                  performance: {}
+                }
               }
             }
         }

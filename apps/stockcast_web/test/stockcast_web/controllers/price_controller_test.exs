@@ -25,7 +25,7 @@ defmodule StockcastWeb.PriceControllerTest do
   test "can retrieve prices", %{conn: conn} do
     conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
-    json = json_response(conn, 200)
+    json = json_response(conn, 200)["data"]
 
     assert_prices(json["prices"])
     assert_performance(json["performance"])
@@ -34,7 +34,7 @@ defmodule StockcastWeb.PriceControllerTest do
   test "retrieves performance with the prices", %{conn: conn} do
     conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
-    json = json_response(conn, 200)
+    json = json_response(conn, 200)["data"]
 
     assert_prices(json["prices"])
     assert_performance(json["performance"])
@@ -43,7 +43,7 @@ defmodule StockcastWeb.PriceControllerTest do
   test "can retrieve prices if to date is omitted", %{conn: conn} do
     conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from))
 
-    json = json_response(conn, 200)
+    json = json_response(conn, 200)["data"]
 
     assert_prices(json["prices"])
     assert_performance(json["performance"])
@@ -52,7 +52,7 @@ defmodule StockcastWeb.PriceControllerTest do
   test "can retrieve sampled prices", %{conn: conn} do
     conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to, sampling: 2))
 
-    json = json_response(conn, 200)
+    json = json_response(conn, 200)["data"]
 
     assert_prices(json["prices"], 5)
     assert_performance(json["performance"])
@@ -144,13 +144,13 @@ defmodule StockcastWeb.PriceControllerTest do
     test "returns stale prices if prices have been fetched recently", %{conn: conn} do
       conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
-      json_response(conn, 200)
+      json_response(conn, 200)["data"]
 
       delete_some_prices()
 
       conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
-      json_data = json_response(conn, 200)["prices"]
+      json_data = json_response(conn, 200)["data"]["prices"]
 
       assert_prices(json_data, 8)
     end
