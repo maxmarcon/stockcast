@@ -1,0 +1,8 @@
+<b-alert :show="dismissCountDown"
+         fade
+         :dismissible="seconds <= 0"
+         :variant="variant"
+         @dismissed="dismissCountDown = false"
+         @dismiss-count-down="countDownChanged">
+    {{ errorMsg }}
+</b-alert>
