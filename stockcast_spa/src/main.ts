@@ -9,7 +9,7 @@ import './scss/main.scss'
 import App from '@/components/app.vue'
 import StockViewer from '@/components/stock-viewer.vue'
 import StockPeriodPicker from '@/components/stock-period-picker.vue'
-import {routeToProps as stockViewerRouteToProps} from "./components/stock-viewer";
+import {routeToStockPeriod as stockViewerRouteToProps} from "./components/stock-viewer";
 import MessageBar from '@/components/message-bar.vue'
 // Install BootstrapVue
 Vue.use(BootstrapVue)

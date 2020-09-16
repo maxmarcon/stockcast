@@ -215,7 +215,7 @@ export default {
       }
     },
     fetchMetadata(symbol) {
-      return this.axios.get(`/stocks/symbol/${symbol}`)
+      return this.axios.get<SymbolResponse>(`/stocks/symbol/${symbol}`)
     },
     fetchPrices(symbol) {
       const maxDataPoints = 50

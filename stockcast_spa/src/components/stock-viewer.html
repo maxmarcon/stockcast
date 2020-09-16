@@ -1,0 +1,65 @@
+<b-card>
+    <template slot="header">
+        <message-bar id="errorBar" ref="errorBar" variant="danger" :seconds=10></message-bar>
+        <b-form>
+            <b-form-row>
+                <b-col md="8">
+                    <stock-period-picker v-model="stockPeriod"
+                                         :max-tags=4
+                                         @error="$refs.errorBar.show($event)"
+                    >
+                    </stock-period-picker>
+                </b-col>
+                <b-col md="auto" align-self="center" class="text-center">
+                </b-col>
+            </b-form-row>
+        </b-form>
+    </template>
+
+    <b-container fluid>
+        <b-overlay :show="updateOngoing">
+            <b-row no-gutters>
+                <b-col order-md="1" md>
+                    <h1 v-if="!(hasData || updateOngoing)" class="text-center display-1">
+                        <b-icon icon="bar-chart-fill"></b-icon>
+                    </h1>
+                    <canvas ref="chartCanvas" id="stocks_chart" :class="{invisible: !hasData}">
+                    </canvas>
+                </b-col>
+                <b-col v-if="hasData" md="2">
+                    <b-card v-for="(ds, index) in nonEmptyDatasets" :key="ds.label"
+                            no-body
+                            :class="{'mt-1' : index > 0}">
+                        <b-card-header :header-bg-variant="ds.variant" header-tag="b">
+                            {{ ds.label }}
+                        </b-card-header>
+                        <b-card-body class="p-2">
+                            <b-card-text>
+                                {{ ds.metadata.name }}
+                            </b-card-text>
+                            <b-card-text>
+                                <h6><b>Perf:&nbsp;</b>
+                                    <b-badge pill :variant="ds.performance.raw < 0 ? 'danger' : 'success'">{{
+                                            percentage(ds.performance.raw)
+                                        }}
+                                    </b-badge>
+                                </h6>
+                                <h6><b>Trading:&nbsp;</b>
+                                    <b-badge pill :variant="ds.performance.trading < 0 ? 'danger' : 'success'">
+                                        {{ percentage(ds.performance.trading) }}
+                                    </b-badge>
+                                </h6>
+                                <h6><b>Short:&nbsp;</b>
+                                    <b-badge pill :variant="ds.performance.short_trading < 0 ? 'danger' : 'success'">
+                                        {{ percentage(ds.performance.short_trading) }}
+                                    </b-badge>
+                                </h6>
+
+                            </b-card-text>
+                        </b-card-body>
+                    </b-card>
+                </b-col>
+            </b-row>
+        </b-overlay>
+    </b-container>
+</b-card>

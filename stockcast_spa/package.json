@@ -27,6 +27,7 @@
     "vue-router": "^3.2.0"
   },
   "devDependencies": {
+    "@types/chart.js": "^2.9.24",
     "@types/ellipsize": "^0.1.0",
     "@types/jest": "^24.0.19",
     "@typescript-eslint/eslint-plugin": "^2.26.0",

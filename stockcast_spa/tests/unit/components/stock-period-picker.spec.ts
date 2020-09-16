@@ -34,52 +34,52 @@ const S2 = {
 describe('Stock', () => {
 
     it('can be created from symbol', () => {
-        const stock: Stock = new Stock(S1)
+        const stock: Stock = Stock.fromSymbol(S1)
 
-        expect(stock).toEqual({
+        expect(stock).toEqual(expect.objectContaining({
             symbol: "S1",
             name: "Stock",
             currency: "EUR"
-        })
+        }))
 
         expect(stock.text).toEqual("S1")
     })
 
     it('can be created from symbol and search terms', () => {
-        const stock: Stock = new Stock(S1, ["ABC", "2020"])
+        const stock: Stock = Stock.fromSymbol(S1, ["ABC", "2020"])
 
-        expect(stock).toEqual({
+        expect(stock).toEqual(expect.objectContaining({
             symbol: "S1",
             name: "Stock",
             currency: "EUR"
-        })
+        }))
 
         expect(stock.text).toEqual("S1")
     })
 
 
     it('can be created from symbol and search terms matching an isin', () => {
-        const stock: Stock = new Stock(S1, ["ABC", "EN20"])
+        const stock: Stock = Stock.fromSymbol(S1, ["ABC", "EN20"])
 
-        expect(stock).toEqual({
+        expect(stock).toEqual(objectContaining({
             symbol: "S1",
             name: "Stock",
             currency: "EUR",
             isin: "EN2020"
-        })
+        }))
 
         expect(stock.text).toEqual("S1")
     })
 
     it('can be created from symbol and search terms matching figi', () => {
-        const stock: Stock = new Stock(S1, ["FI"])
+        const stock: Stock = Stock.fromSymbol(S1, ["FI"])
 
-        expect(stock).toEqual({
+        expect(stock).toEqual(objectContaining({
             symbol: "S1",
             name: "Stock",
             currency: "EUR",
             figi: "FIGI1"
-        })
+        }))
 
         expect(stock.text).toEqual("S1")
     })
@@ -104,7 +104,7 @@ describe('StockPeriodPicker', () => {
             localVue,
             propsData: {
                 value: {
-                    stocks: [new Stock(S1)],
+                    stocks: [Stock.fromSymbol(S1)],
                     dateFrom: parseISO('2015-01-01'),
                     dateTo: parseISO('2015-03-01')
                 },
