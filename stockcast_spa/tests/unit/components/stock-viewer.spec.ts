@@ -1,4 +1,3 @@
-import stockViewer from '@/components/stock-viewer.ts'
 import StockViewer from '@/components/stock-viewer.ts'
 import bootstrapVue from 'bootstrap-vue'
 import Vue from 'vue'
@@ -9,7 +8,6 @@ import priceApiResponse from './price_api_response.json'
 import {HistoricalPrice} from "@/utils/prices";
 import {Route} from "vue-router";
 import {Stock} from "@/components/stock-period-picker";
-import objectContaining = jasmine.objectContaining;
 
 const localVue = createLocalVue()
 localVue.use(bootstrapVue)
@@ -65,7 +63,7 @@ describe('stockViewer', () => {
             })
         }
 
-        wrapper = mount(stockViewer, {
+        wrapper = mount(StockViewer, {
             propsData: {
                 initialStockPeriod: {
                     stocks: [new Stock('S1'), new Stock('S2')],
@@ -92,11 +90,11 @@ describe('stockViewer', () => {
     })
 
     it('initializes the stocks with tags and dates', () => {
-        expect(wrapper.vm.stockPeriod).toEqual(objectContaining({
-            stocks: [new Stock('S1'), new Stock( 'S2')],
+        expect(wrapper.vm.stockPeriod).toEqual({
+            stocks: [new Stock('S1'), new Stock('S2')],
             dateFrom: parseISO('2020-01-01'),
             dateTo: parseISO('2020-03-01')
-        }))
+        })
     })
 
     it('initializes the chart object', () => {
@@ -135,7 +133,11 @@ describe('stockViewer', () => {
 
         beforeEach(async () => {
             wrapper.find('stockperiodpicker-stub').vm.$emit('input', {
-                tags: [{text: "S3", isin: "ISIN3"}, {text: "S4", figi: "FIGI4"}, {text: "S5"}],
+                stocks: [
+                    new Stock("S3", "S3", "USD", "ISIN3"),
+                    new Stock("S4", "S4", "EUR", undefined, "FIGI4"),
+                    new Stock("S5")
+                ],
                 dateFrom: parseISO('2019-01-01'),
                 dateTo: parseISO('2019-03-01')
             })
@@ -176,7 +178,7 @@ describe('stockViewer', () => {
 
     describe('when the route is updated', () => {
         beforeEach(async () => {
-            wrapper.vm.$options.beforeRouteUpdate!.call(wrapper.vm, {
+            wrapper.vm.beforeRouteUpdate({
                 query: {
                     s: JSON.stringify(['C1', {s: 'C2', i: 'ISIN2'}, {s: 'C3', f: 'FIGI3'}]),
                     df: '2019-01-01',
@@ -187,7 +189,11 @@ describe('stockViewer', () => {
 
         it('updates the stocks', () => {
             expect(wrapper.vm.stockPeriod).toEqual({
-                tags: [{text: 'C1'}, {text: 'C2', isin: 'ISIN2'}, {text: 'C3', figi: 'FIGI3'}],
+                stocks: [
+                    new Stock('C1'),
+                    new Stock('C2', undefined, undefined, 'ISIN2'),
+                    new Stock('C3', undefined, undefined, undefined, 'FIGI3')
+                ],
                 dateFrom: parseISO('2019-01-01'),
                 dateTo: parseISO('2019-03-01')
             })

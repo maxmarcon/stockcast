@@ -112,8 +112,8 @@ export default class StockPeriodPicker extends Vue {
     }
 
     @Emit('input')
-    tagsChanged(tags: Stock[]): StockPeriod {
-        this.value.stocks = tags
+    tagsChanged(stocks: Stock[]): StockPeriod {
+        this.value.stocks = stocks
         return this.value
     }
 

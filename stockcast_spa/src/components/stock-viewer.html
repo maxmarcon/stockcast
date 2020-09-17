@@ -6,7 +6,7 @@
                 <b-col md="8">
                     <stock-period-picker v-model="stockPeriod"
                                          :max-tags=4
-                                         @error="$refs.errorBar.show($event)"
+                                         @error="errorBar.show($event)"
                     >
                     </stock-period-picker>
                 </b-col>
@@ -23,7 +23,7 @@
                     <h1 v-if="!(hasData || updateOngoing)" class="text-center display-1">
                         <b-icon icon="bar-chart-fill"></b-icon>
                     </h1>
-                    <canvas ref="chartCanvas" id="stocks_chart" :class="{invisible: !hasData}">
+                    <canvas ref="chartCanvas" :class="{invisible: !hasData}">
                     </canvas>
                 </b-col>
                 <b-col v-if="hasData" md="2">

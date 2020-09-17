@@ -26,4 +26,4 @@ export default class MessageBar extends Vue {
         this.errorMsg = errorMsg;
         this.dismissCountDown = (this.seconds > 0 ? this.seconds : true);
     }
-};
+}

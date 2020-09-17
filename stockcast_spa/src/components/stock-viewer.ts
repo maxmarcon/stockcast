@@ -13,7 +13,7 @@ import {Symbol, SymbolResponse} from "@/utils/symbol";
 import {AxiosResponse} from "axios";
 import {HistoricalPrice, Performance, PriceResponse} from "@/utils/prices";
 import MessageBar from "@/components/message-bar";
-import Chart from 'chart.js'
+import Chart, {ChartDataSets} from 'chart.js'
 
 const DATE_FROM_DEFAULT = subMonths(startOfYesterday(), 3)
 const DATE_TO_DEFAULT = startOfYesterday()
@@ -76,7 +76,11 @@ export default class StockViewer extends Vue {
     })
     initialStockPeriod!: StockPeriod
 
-    stockPeriod!: StockPeriod
+    stockPeriod: StockPeriod = {
+        stocks: [],
+        dateFrom: DATE_FROM_DEFAULT,
+        dateTo: DATE_TO_DEFAULT
+    }
 
     updateOngoing: boolean = false
 
@@ -123,6 +127,7 @@ export default class StockViewer extends Vue {
         this.stockPeriod = routeToStockPeriod(to)
         next()
     }
+
 
     @Watch("stockPeriod", {deep: true})
     watchStockPeriod(newStockPeriod: StockPeriod) {
@@ -241,11 +246,11 @@ export default class StockViewer extends Vue {
         return ''
     }
 
-    get nonEmptyDatasets(): boolean {
-        return (this.chart.data.datasets || []).find(({data = []}) => data.length > 0) !== null
+    get nonEmptyDatasets(): ChartDataSets[] {
+        return (this.chart.data.datasets || []).filter(({data = []}) => data.length > 0)
     }
 
     get hasData(): boolean {
-        return (this.chart?.data.datasets || []).length > 0
+        return this.chart && (this.chart.data.datasets || []).length > 0
     }
 }
