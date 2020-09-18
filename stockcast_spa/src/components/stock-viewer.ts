@@ -1,5 +1,4 @@
 import {differenceInCalendarDays, formatISO, parseISO, startOfYesterday, subMonths} from 'date-fns'
-
 // @ts-ignore
 import VARIANT_COLORS from '@/scss/main.scss'
 import Component from "vue-class-component";
@@ -14,6 +13,7 @@ import {AxiosResponse} from "axios";
 import {HistoricalPrice, Performance, PriceResponse} from "@/utils/prices";
 import MessageBar from "@/components/message-bar";
 import Chart, {ChartDataSets} from 'chart.js'
+import {percentage} from '@/utils/format.ts'
 
 const DATE_FROM_DEFAULT = subMonths(startOfYesterday(), 3)
 const DATE_TO_DEFAULT = startOfYesterday()
@@ -47,7 +47,6 @@ const queryParamToStock = (queryParam: QueryParam): Stock => {
     return new Stock(symbol, undefined, undefined, isin, figi)
 }
 
-
 export const routeToStockPeriod = (route: Route): StockPeriod => {
     const stocks = route.query.s ? JSON.parse(route.query.s as string).map(queryParamToStock) : []
     const dateFrom = route.query.df ? parseISO(route.query.df as string) : DATE_FROM_DEFAULT
@@ -60,7 +59,7 @@ export const routeToStockPeriod = (route: Route): StockPeriod => {
     }
 }
 
-@Component({template})
+@Component({template, methods: {percentage}})
 export default class StockViewer extends Vue {
 
     @Prop({
@@ -250,7 +249,7 @@ export default class StockViewer extends Vue {
         return (this.chart.data.datasets || []).filter(({data = []}) => data.length > 0)
     }
 
-    get hasData(): boolean {
+    hasData(): boolean {
         return this.chart && (this.chart.data.datasets || []).length > 0
     }
 }
