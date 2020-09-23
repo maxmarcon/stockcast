@@ -3,9 +3,6 @@ import { Route } from 'vue-router'
 import { parseISO, startOfYesterday, subMonths } from 'date-fns'
 
 export class Stock {
-  get text () {
-    return this.symbol
-  }
 
   static fromSymbol (symbolObject: RawStockData, terms: string[] = []) {
     const symbol = symbolObject.symbol
@@ -26,11 +23,15 @@ export class Stock {
     return new Stock(symbol, name, currency)
   }
 
+  readonly text: string
+
   constructor (readonly symbol: string,
                 readonly name?: string,
                 readonly currency?: string,
                 readonly isin?: string,
-                readonly figi?: string) {}
+                readonly figi?: string) {
+    this.text = symbol
+  }
 }
 
 export type StockPeriod = {

@@ -20,7 +20,7 @@
     <b-container fluid>
       <b-overlay :show="updateOngoing">
         <b-row no-gutters>
-          <b-col order-md="1" md="*">
+          <b-col order-md="1" md="10">
             <h1 v-if="!(hasData() || updateOngoing)" class="text-center display-1">
               <b-icon icon="bar-chart-fill"></b-icon>
             </h1>
@@ -79,7 +79,7 @@ import {
 } from '@/utils/stock'
 import { Prop, Ref, Watch } from 'vue-property-decorator'
 import { Location, Route } from 'vue-router'
-import { RawStockData, SymbolResponse } from '../utils/rawStockData'
+import { RawStockData, SymbolResponse } from '@/utils/rawStockData'
 import { AxiosResponse } from 'axios'
 import { HistoricalPrice, Performance, PriceResponse } from '@/utils/prices'
 import MessageBar from '@/components/message-bar.vue'
@@ -202,8 +202,8 @@ export default class StockViewer extends Vue {
       this.chart.data.datasets = apiResponses
         .map(this.parseResponse)
         .map(this.makeDataset)
-
-      this.chart.options.scales.yAxes = this.chart.data.datasets
+      // eslint-disable-next-line
+      this.chart.options.scales!.yAxes = this.chart.data.datasets
         .filter(({ data = [] }) => data.length > 0)
         .map(({ yAxisID }) => yAxisID)
         .filter((value, index, self) => self.indexOf(value) === index)

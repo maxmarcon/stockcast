@@ -110,6 +110,7 @@ describe('StockPeriodPicker', () => {
   })
 
   it('initializes the tagged stock input', () => {
+    const ti = wrapper.findComponent(VueTagsInput);
     expect(wrapper.findComponent(VueTagsInput).vm.$props.tags).toEqual([expect.objectContaining({ text: 'S1' })])
     expect(wrapper.findComponent(VueTagsInput).vm.$props.maxTags).toEqual(10)
   })

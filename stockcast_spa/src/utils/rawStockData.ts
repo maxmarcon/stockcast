@@ -8,6 +8,6 @@ export interface RawStockData {
     isins: string[];
 }
 
-export type SearchResponse = BackendEnvelope<symbol[]>
+export type SearchResponse = BackendEnvelope<RawStockData[]>
 
-export type SymbolResponse = BackendEnvelope<symbol>
+export type SymbolResponse = BackendEnvelope<RawStockData>
