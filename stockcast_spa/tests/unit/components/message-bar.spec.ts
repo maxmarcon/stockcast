@@ -1,11 +1,10 @@
-import MessageBar from '@/components/message-bar.ts'
+import MessageBar from '@/components/message-bar.vue'
 import BootstrapVue from 'bootstrap-vue'
 
-import {createLocalVue, shallowMount, Wrapper} from '@vue/test-utils'
+import { createLocalVue, shallowMount, Wrapper } from '@vue/test-utils'
 
-const localVue = createLocalVue();
+const localVue = createLocalVue()
 localVue.use(BootstrapVue)
-
 
 const MESSAGE = "I'm a message"
 const VARIANT = 'danger'
@@ -15,17 +14,13 @@ let wrapper: Wrapper<MessageBar>
 let alert: Wrapper<any>
 
 describe('messageBar', () => {
-
   it('can be mounted', () => {
-
-    wrapper = shallowMount(MessageBar, {localVue})
+    wrapper = shallowMount(MessageBar, { localVue })
     expect(wrapper.exists()).toBeTruthy
   })
 
   describe('without countdown', () => {
-
     beforeEach(async () => {
-
       wrapper = shallowMount(MessageBar, {
         localVue,
         propsData: {
@@ -34,7 +29,7 @@ describe('messageBar', () => {
         }
       });
 
-      wrapper.vm.show(MESSAGE)
+      (wrapper.vm as any).show(MESSAGE)
     })
 
     it('shows a permanent dismissable message', () => {
@@ -48,9 +43,7 @@ describe('messageBar', () => {
   })
 
   describe('with countdown', () => {
-
     beforeEach(async () => {
-
       wrapper = shallowMount(MessageBar, {
         localVue,
         propsData: {
@@ -59,7 +52,7 @@ describe('messageBar', () => {
         }
       });
 
-      wrapper.vm.show(MESSAGE)
+      (wrapper.vm as any).show(MESSAGE)
     })
 
     it('shows a message with countdown', () => {

@@ -1,16 +1,15 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import {BootstrapVue, IconsPlugin} from 'bootstrap-vue'
-// @ts-ignore
-import VueTagsInput from '@johmun/vue-tags-input';
+import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
+import VueTagsInput from '@johmun/vue-tags-input'
 import axios from 'axios'
-import VueAxios from "vue-axios"
+import VueAxios from 'vue-axios'
 import './scss/main.scss'
 
 import App from '@/components/app.vue'
 import StockViewer from '@/components/stock-viewer.vue'
 import StockPeriodPicker from '@/components/stock-period-picker.vue'
-import {routeToStockPeriod} from "./components/stock-viewer";
+import { routeToStockPeriod } from '@/utils/stock'
 import MessageBar from '@/components/message-bar.vue'
 // Install BootstrapVue
 Vue.use(BootstrapVue)
@@ -32,14 +31,16 @@ const router = new VueRouter({
   mode: 'history',
   routes: [
     {
-      name: 'stocks', path: '/stocks', component: StockViewer,
+      name: 'stocks',
+      path: '/stocks',
+      component: StockViewer,
       props: routeToStockPeriod
     },
-    {path: '*', redirect: {name: 'stocks'}}
+    { path: '*', redirect: { name: 'stocks' } }
   ]
 })
 
 new Vue({
   router,
-  render: h => h(App)
+  render: (h: any) => h(App)
 }).$mount('#app')

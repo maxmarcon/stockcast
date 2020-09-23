@@ -1,3 +1,3 @@
 export default interface BackendEnvelope<T> {
-    data: T
+    data: T;
 }
