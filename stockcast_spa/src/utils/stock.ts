@@ -1,10 +1,10 @@
-import { RawStockData } from './rawStockData'
-import { Route } from 'vue-router'
-import { parseISO, startOfYesterday, subMonths } from 'date-fns'
+import {RawStockData} from './rawStockData'
+import {Route} from 'vue-router'
+import {parseISO, startOfYesterday, subMonths} from 'date-fns'
 
 export class Stock {
 
-  static fromSymbol (symbolObject: RawStockData, terms: string[] = []) {
+  static fromSymbol(symbolObject: RawStockData, terms: string[] = []) {
     const symbol = symbolObject.symbol
     const name = symbolObject.name
     const currency = symbolObject.currency
@@ -14,7 +14,7 @@ export class Stock {
     }
     const matchingIsin = terms && symbolObject.isins.find(isin => terms.find(
       term => isin.toUpperCase().search(term.toUpperCase()) === 0
-    )
+      )
     )
     if (matchingIsin) {
       const isin = matchingIsin
@@ -25,32 +25,32 @@ export class Stock {
 
   readonly text: string
 
-  constructor (readonly symbol: string,
-                readonly name?: string,
-                readonly currency?: string,
-                readonly isin?: string,
-                readonly figi?: string) {
+  constructor(readonly symbol: string,
+              readonly name?: string,
+              readonly currency?: string,
+              readonly isin?: string,
+              readonly figi?: string) {
     this.text = symbol
   }
 }
 
 export type StockPeriod = {
-    stocks: Stock[];
-    dateFrom: Date;
-    dateTo: Date;
+  stocks: Stock[];
+  dateFrom: Date;
+  dateTo: Date;
 }
 
 export type StockQueryParam = {
-    s: string;
-    f?: string;
-    i?: string;
+  s: string;
+  f?: string;
+  i?: string;
 } | string
 
 const queryParamToStock = (queryParam: StockQueryParam): Stock => {
   if (typeof (queryParam) === 'string') {
     return new Stock(queryParam)
   }
-  const { s: symbol, f: figi, i: isin } = queryParam
+  const {s: symbol, f: figi, i: isin} = queryParam
   return new Stock(symbol, undefined, undefined, isin, figi)
 }
 

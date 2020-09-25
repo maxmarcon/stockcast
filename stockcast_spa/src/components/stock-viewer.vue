@@ -28,7 +28,7 @@
             </canvas>
           </b-col>
           <b-col v-if="hasData()" md="2">
-            <b-card v-for="(ds, index) in nonEmptyDatasets" :key="ds.label"
+            <b-card v-for="(ds, index) in nonEmptyDatasets()" :key="ds.label"
                     no-body
                     :class="{'mt-1' : index > 0}">
               <b-card-header :header-bg-variant="ds.variant" header-tag="b">
@@ -287,7 +287,7 @@ export default class StockViewer extends Vue {
     return ''
   }
 
-  get nonEmptyDatasets (): ChartDataSets[] {
+  nonEmptyDatasets (): ChartDataSets[] {
     return (this.chart.data.datasets || []).filter(({ data = [] }) => data.length > 0)
   }
 

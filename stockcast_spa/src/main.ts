@@ -34,7 +34,9 @@ const router = new VueRouter({
       name: 'stocks',
       path: '/stocks',
       component: StockViewer,
-      props: routeToStockPeriod
+      props: route => ({
+        initialStockPeriod: routeToStockPeriod(route)
+      })
     },
     { path: '*', redirect: { name: 'stocks' } }
   ]

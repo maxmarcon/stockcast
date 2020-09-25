@@ -84,7 +84,7 @@ export default class StockPeriodPicker extends Vue {
       dateTo: null
     }),
     validator: (value) => value.stocks instanceof Array &&
-      value.stocks.every((stock: any) => stock instanceof Stock) &&
+      value.stocks.every((stock: any) => stock.text) &&
       (value.dateFrom == null || value.dateFrom instanceof Date) &&
       (value.dateTo == null || value.dateTo instanceof Date)
   })
