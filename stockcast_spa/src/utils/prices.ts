@@ -30,7 +30,7 @@ export interface Performance {
 
 export interface Trading {
     date: string | Date;
-    price: number;
+    price: string;
     action: 'sell' | 'buy';
 }
 
