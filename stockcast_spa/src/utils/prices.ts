@@ -35,7 +35,7 @@ export interface Trading {
 }
 
 export interface Prices {
-    prices: HistoricalPrice[];
+    historicalPrices: HistoricalPrice[];
     performance: Performance;
 }
 

@@ -1,10 +1,10 @@
-import {RawStockData} from './rawStockData'
+import {StockMetadata} from './stockMetadata'
 import {Route} from 'vue-router'
 import {parseISO, startOfYesterday, subMonths} from 'date-fns'
 
 export class Stock {
 
-  static fromSymbol(symbolObject: RawStockData, terms: string[] = []) {
+  static fromSymbol(symbolObject: StockMetadata, terms: string[] = []) {
     const symbol = symbolObject.symbol
     const name = symbolObject.name
     const currency = symbolObject.currency

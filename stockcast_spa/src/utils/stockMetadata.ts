@@ -1,6 +1,6 @@
 import BackendEnvelope from '@/utils/backend-envelope.ts'
 
-export interface RawStockData {
+export interface StockMetadata {
     symbol: string;
     name: string;
     currency: string;
@@ -8,6 +8,6 @@ export interface RawStockData {
     isins: string[];
 }
 
-export type SearchResponse = BackendEnvelope<RawStockData[]>
+export type SearchResponse = BackendEnvelope<StockMetadata[]>
 
-export type SymbolResponse = BackendEnvelope<RawStockData>
+export type SymbolResponse = BackendEnvelope<StockMetadata>

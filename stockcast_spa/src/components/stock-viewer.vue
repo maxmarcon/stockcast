@@ -28,7 +28,7 @@
             </canvas>
           </b-col>
           <b-col v-if="hasData()" md="2">
-            <b-card v-for="(ds, index) in nonEmptyDatasets()" :key="ds.label"
+            <b-card v-for="(ds, index) in nonEmptyStockData()" :key="ds.label"
                     no-body
                     :class="{'mt-1' : index > 0}">
               <b-card-header :header-bg-variant="ds.variant" header-tag="b">
@@ -79,13 +79,14 @@ import {
 } from '@/utils/stock'
 import {Prop, Ref, Watch} from 'vue-property-decorator'
 import {Location, Route} from 'vue-router'
-import {RawStockData, SymbolResponse} from '@/utils/rawStockData'
+import {StockMetadata, SymbolResponse} from '@/utils/stockMetadata'
 import {AxiosResponse} from 'axios'
-import {HistoricalPrice, Performance, PriceResponse, Trading} from '@/utils/prices'
+import {HistoricalPrice, Performance, PriceResponse} from '@/utils/prices'
 import MessageBar from '@/components/message-bar.vue'
 import Chart, {ChartDataSets} from 'chart.js'
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import {percentage} from '@/utils/format.ts'
+import {StockData} from "@/utils/stockData";
 
 const VARIANTS = Object.keys(VARIANT_COLORS).filter(variant => variant !== 'secondary')
 
@@ -124,6 +125,8 @@ export default class StockViewer extends Vue {
     dateFrom: DATE_FROM_DEFAULT,
     dateTo: DATE_TO_DEFAULT
   }
+
+  stockData: StockData[] = []
 
   updateOngoing = false
 
@@ -201,9 +204,12 @@ export default class StockViewer extends Vue {
           pricesResponse: await this.fetchPrices(stock.text)
         })))
 
-      this.chart.data.datasets = apiResponses
+      this.stockData = apiResponses
         .map(this.parseResponse)
-        .flatMap(this.makeDataset)
+
+
+      this.chart.data.datasets = this.stockData
+        .map(this.makeDataset)
       // eslint-disable-next-line
       this.chart.options.scales!.yAxes = this.chart.data.datasets
         .filter(({data = []}) => data.length > 0)
@@ -218,7 +224,7 @@ export default class StockViewer extends Vue {
           }
         }))
 
-      this.chart.update()
+        this.chart.update()
     } catch (error) {
       this.errorBar.show(error)
       console.error(error)
@@ -247,24 +253,21 @@ export default class StockViewer extends Vue {
     metadataResponse: AxiosResponse<SymbolResponse>;
     pricesResponse: AxiosResponse<PriceResponse>;
     stock: Stock;
-  }) => ({
+  }): StockData => ({
     metadata: metadataResponse.data.data,
-    performance: pricesResponse.data.data.performance,
-    prices: pricesResponse.data.data.prices,
+    prices: {
+      historicalPrices: pricesResponse.data.data.historicalPrices,
+      performance: pricesResponse.data.data.performance,
+    },
     stock
   })
 
-  makeDataset({prices, performance, metadata, stock}: {
-    prices: HistoricalPrice[];
-    performance: Performance;
-    metadata: RawStockData;
-    stock: Stock;
-  }, index: number): any {
-    const variant = prices.length === 0
+  makeDataset({prices: {historicalPrices, performance}, metadata, stock}: StockData, index: number): any {
+    const variant = historicalPrices.length === 0
       ? 'secondary'
       : VARIANTS[index % VARIANTS.length]
-    return [{
-      data: prices.map(
+    return {
+      data: historicalPrices.map(
         ({date, close}) => ({x: typeof (date) === 'string' ? parseISO(date) : date, y: parseFloat(close)})
       ),
       performance,
@@ -281,13 +284,14 @@ export default class StockViewer extends Vue {
           title: null
         }
       }
-    }, {
+    }
+    /*, {
       type: 'scatter',
       data: performance.strategy.map(({date, price, action}) => ({x: date, y: price, action})),
       datalabels: {
         formatter: (value: any) => value.action[0].toUpperCase()
       }
-    }]
+    }]*/
   }
 
   labelSuffix({isin, figi}: Stock): string {
@@ -300,12 +304,12 @@ export default class StockViewer extends Vue {
     return ''
   }
 
-  nonEmptyDatasets(): ChartDataSets[] {
-    return (this.chart.data.datasets || []).filter(({data = [], metadata}) => data.length > 0 && metadata)
+  nonEmptyStockData(): StockData[] {
+    return this.stockData.filter(({prices: {historicalPrices}}) => historicalPrices.length > 0)
   }
 
   hasData(): boolean {
-    return this.chart && (this.chart.data.datasets || []).length > 0
+    return this.nonEmptyStockData().length > 0
   }
 }
 </script>
