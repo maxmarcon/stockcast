@@ -21,38 +21,39 @@
       <b-overlay :show="updateOngoing">
         <b-row no-gutters>
           <b-col order-md="1" md="10">
-            <h1 v-if="!(hasData() || updateOngoing)" class="text-center display-1">
+            <h1 v-if="!(hasData || updateOngoing)" class="text-center display-1">
               <b-icon icon="bar-chart-fill"></b-icon>
             </h1>
-            <canvas ref="chartCanvas" :class="{invisible: !hasData()}">
+            <canvas ref="chartCanvas" :class="{invisible: !hasData}">
             </canvas>
           </b-col>
-          <b-col v-if="hasData()" md="2">
-            <b-card v-for="(ds, index) in nonEmptyStockData()" :key="ds.label"
+          <b-col v-if="hasData" md="2">
+            <b-card v-for="({prices: {performance}, label, metadata, variant}, index) in nonEmptyStockBags"
+                    :key="label"
                     no-body
                     :class="{'mt-1' : index > 0}">
-              <b-card-header :header-bg-variant="ds.variant" header-tag="b">
-                {{ ds.label }}
+              <b-card-header :header-bg-variant="variant" header-tag="b">
+                {{ label }}
               </b-card-header>
               <b-card-body class="p-2">
                 <b-card-text>
-                  {{ ds.metadata.name }}
+                  {{ metadata.name }}
                 </b-card-text>
                 <b-card-text>
                   <h6><b>Perf:&nbsp;</b>
-                    <b-badge pill :variant="ds.performance.raw < 0 ? 'danger' : 'success'">{{
-                        percentage(ds.performance.raw)
+                    <b-badge pill :variant="performance.raw < 0 ? 'danger' : 'success'">{{
+                        percentage(performance.raw)
                       }}
                     </b-badge>
                   </h6>
                   <h6><b>Trading:&nbsp;</b>
-                    <b-badge pill :variant="ds.performance.trading < 0 ? 'danger' : 'success'">
-                      {{ percentage(ds.performance.trading) }}
+                    <b-badge pill :variant="performance.trading < 0 ? 'danger' : 'success'">
+                      {{ percentage(performance.trading) }}
                     </b-badge>
                   </h6>
                   <h6><b>Short:&nbsp;</b>
-                    <b-badge pill :variant="ds.performance.short_trading < 0 ? 'danger' : 'success'">
-                      {{ percentage(ds.performance.short_trading) }}
+                    <b-badge pill :variant="performance.short_trading < 0 ? 'danger' : 'success'">
+                      {{ percentage(performance.short_trading) }}
                     </b-badge>
                   </h6>
                 </b-card-text>
@@ -79,14 +80,15 @@ import {
 } from '@/utils/stock'
 import {Prop, Ref, Watch} from 'vue-property-decorator'
 import {Location, Route} from 'vue-router'
-import {StockMetadata, SymbolResponse} from '@/utils/stockMetadata'
+import {SymbolResponse} from '@/utils/stockMetadata'
 import {AxiosResponse} from 'axios'
-import {HistoricalPrice, Performance, PriceResponse} from '@/utils/prices'
+import {PriceResponse} from '@/utils/prices'
 import MessageBar from '@/components/message-bar.vue'
-import Chart, {ChartDataSets} from 'chart.js'
+import Chart from 'chart.js'
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import {percentage} from '@/utils/format.ts'
-import {StockData} from "@/utils/stockData";
+import {StockBag} from "@/utils/stockBag";
+
 
 const VARIANTS = Object.keys(VARIANT_COLORS).filter(variant => variant !== 'secondary')
 
@@ -126,7 +128,7 @@ export default class StockViewer extends Vue {
     dateTo: DATE_TO_DEFAULT
   }
 
-  stockData: StockData[] = []
+  stockData: StockBag[] = []
 
   updateOngoing = false
 
@@ -207,7 +209,6 @@ export default class StockViewer extends Vue {
       this.stockData = apiResponses
         .map(this.parseResponse)
 
-
       this.chart.data.datasets = this.stockData
         .map(this.makeDataset)
       // eslint-disable-next-line
@@ -224,7 +225,7 @@ export default class StockViewer extends Vue {
           }
         }))
 
-        this.chart.update()
+      this.chart.update()
     } catch (error) {
       this.errorBar.show(error)
       console.error(error)
@@ -253,26 +254,33 @@ export default class StockViewer extends Vue {
     metadataResponse: AxiosResponse<SymbolResponse>;
     pricesResponse: AxiosResponse<PriceResponse>;
     stock: Stock;
-  }): StockData => ({
-    metadata: metadataResponse.data.data,
-    prices: {
-      historicalPrices: pricesResponse.data.data.historicalPrices,
-      performance: pricesResponse.data.data.performance,
-    },
-    stock
-  })
+  }, index: number): StockBag => {
 
-  makeDataset({prices: {historicalPrices, performance}, metadata, stock}: StockData, index: number): any {
-    const variant = historicalPrices.length === 0
-      ? 'secondary'
-      : VARIANTS[index % VARIANTS.length]
+    const prices = pricesResponse.data.data.prices
+    const metadata = metadataResponse.data.data
     return {
-      data: historicalPrices.map(
+      metadata,
+      prices: {
+        prices,
+        performance: pricesResponse.data.data.performance,
+      },
+      label: `${metadata.symbol} (${metadata.currency})${this.labelSuffix(stock)}`,
+      stock,
+      variant: prices.length === 0
+        ? 'secondary'
+        : VARIANTS[index % VARIANTS.length]
+    }
+  }
+
+  makeDataset({prices: {prices, performance}, metadata, variant, label}: StockBag): any {
+
+    return {
+      data: prices.map(
         ({date, close}) => ({x: typeof (date) === 'string' ? parseISO(date) : date, y: parseFloat(close)})
       ),
       performance,
       metadata,
-      label: `${metadata.symbol} (${metadata.currency})${this.labelSuffix(stock)}`,
+      label,
       borderColor: VARIANT_COLORS[variant],
       backgroundColor: VARIANT_COLORS[variant],
       variant,
@@ -304,12 +312,12 @@ export default class StockViewer extends Vue {
     return ''
   }
 
-  nonEmptyStockData(): StockData[] {
-    return this.stockData.filter(({prices: {historicalPrices}}) => historicalPrices.length > 0)
+  get nonEmptyStockBags(): StockBag[] {
+    return this.stockData.filter(({prices: {prices}}) => prices.length > 0)
   }
 
-  hasData(): boolean {
-    return this.nonEmptyStockData().length > 0
+  get hasData(): boolean {
+    return this.nonEmptyStockBags.length > 0
   }
 }
 </script>
