@@ -9,4 +9,5 @@ export interface StockBag {
   stock: Stock;
   variant: string;
   label: string;
+  tradingMode: boolean;
 }

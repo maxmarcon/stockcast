@@ -21,21 +21,23 @@
       <b-overlay :show="updateOngoing">
         <b-row no-gutters>
           <b-col order-md="1" md="10">
-            <h1 v-if="!(hasData || updateOngoing)" class="text-center display-1">
+            <h1 v-if="!(hasDataToShow || updateOngoing)" class="text-center display-1">
               <b-icon icon="bar-chart-fill"></b-icon>
             </h1>
-            <canvas ref="chartCanvas" :class="{invisible: !hasData}">
+            <canvas ref="chartCanvas" :class="{invisible: !hasDataToShow}">
             </canvas>
           </b-col>
-          <b-col v-if="hasData" md="2">
-            <b-card v-for="({prices: {performance}, label, metadata, variant}, index) in nonEmptyStockBags"
-                    :key="label"
-                    no-body
-                    :class="{'mt-1' : index > 0}">
+          <b-col v-if="hasDataToShow" md="2">
+            <b-card
+              v-for="({prices: {performance}, label, metadata, variant, stock: {symbol}}, index) in nonEmptyStockBags"
+              :key="label"
+              no-body
+              :class="{'mt-1' : index > 0}">
               <b-card-header :header-bg-variant="variant" header-tag="b">
                 {{ label }}
               </b-card-header>
               <b-card-body class="p-2">
+                <b-form-checkbox switch @change="tradingMode(symbol, $event)">Trading</b-form-checkbox>
                 <b-card-text>
                   {{ metadata.name }}
                 </b-card-text>
@@ -128,7 +130,7 @@ export default class StockViewer extends Vue {
     dateTo: DATE_TO_DEFAULT
   }
 
-  stockData: StockBag[] = []
+  stockBags: {[key: string]: StockBag} = {}
 
   updateOngoing = false
 
@@ -192,12 +194,18 @@ export default class StockViewer extends Vue {
     }
     this.$router.push(newRoute).catch(err => err)
 
-    this.updateChart()
+    this.updateStockBags()
   }
 
-  async updateChart(): Promise<void> {
+  async updateStockBags(): Promise<void> {
     try {
       this.updateOngoing = true
+
+      for (const existingSymbol of Object.keys(this.stockBags)) {
+        if (!this.stockPeriod.stocks.find(({symbol}) => symbol === existingSymbol)) {
+          this.$delete(this.stockBags, existingSymbol)
+        }
+      }
 
       const apiResponses = await Promise.all(this.stockPeriod.stocks.map(async (stock) =>
         ({
@@ -206,26 +214,18 @@ export default class StockViewer extends Vue {
           pricesResponse: await this.fetchPrices(stock.text)
         })))
 
-      this.stockData = apiResponses
-        .map(this.parseResponse)
-
-      this.chart.data.datasets = this.stockData
-        .map(this.makeDataset)
-      // eslint-disable-next-line
-      this.chart.options.scales!.yAxes = this.chart.data.datasets
-        .filter(({data = []}) => data.length > 0)
-        .map(({yAxisID}) => yAxisID)
-        .filter((value, index, self) => self.indexOf(value) === index)
-        .map(yAxisID => ({
-          id: yAxisID,
-          type: 'linear',
-          scaleLabel: {
-            display: true,
-            labelString: yAxisID
+      apiResponses.map(this.parseResponse)
+        .forEach(stockBag => {
+          const symbol = stockBag.stock.symbol
+          if (this.stockBags[symbol]) {
+            this.stockBags[symbol].prices = stockBag.prices
+            this.stockBags[symbol].metadata = stockBag.metadata
+          } else {
+            this.$set(this.stockBags, symbol, stockBag)
           }
-        }))
+        })
 
-      this.chart.update()
+      this.updateDatasets()
     } catch (error) {
       this.errorBar.show(error)
       console.error(error)
@@ -268,38 +268,61 @@ export default class StockViewer extends Vue {
       stock,
       variant: prices.length === 0
         ? 'secondary'
-        : VARIANTS[index % VARIANTS.length]
+        : VARIANTS[index % VARIANTS.length],
+      tradingMode: false
     }
   }
 
-  makeDataset({prices: {prices, performance}, metadata, variant, label}: StockBag): any {
+  makeDataset({prices: {prices, performance}, metadata, variant, label, tradingMode}: StockBag): any {
 
-    return {
-      data: prices.map(
-        ({date, close}) => ({x: typeof (date) === 'string' ? parseISO(date) : date, y: parseFloat(close)})
-      ),
-      performance,
-      metadata,
-      label,
-      borderColor: VARIANT_COLORS[variant],
-      backgroundColor: VARIANT_COLORS[variant],
-      variant,
-      yAxisID: metadata.currency,
-      fill: false,
-      datalabels: {
-        labels: {
-          value: null,
-          title: null
+    if (tradingMode) {
+      return {
+        type: 'scatter',
+        data: performance.strategy.map(({date, price, action}) => ({x: date, y: price, action})),
+        datalabels: {
+          formatter: (value: any) => value.action[0].toUpperCase()
+        }
+      }
+    } else {
+      return {
+        data: prices.map(
+          ({date, close}) => ({x: typeof (date) === 'string' ? parseISO(date) : date, y: parseFloat(close)})
+        ),
+        performance,
+        metadata,
+        label,
+        borderColor: VARIANT_COLORS[variant],
+        backgroundColor: VARIANT_COLORS[variant],
+        variant,
+        yAxisID: metadata.currency,
+        fill: false,
+        datalabels: {
+          labels: {
+            value: null,
+            title: null
+          }
         }
       }
     }
-    /*, {
-      type: 'scatter',
-      data: performance.strategy.map(({date, price, action}) => ({x: date, y: price, action})),
-      datalabels: {
-        formatter: (value: any) => value.action[0].toUpperCase()
-      }
-    }]*/
+  }
+
+  updateDatasets() {
+    this.chart.data.datasets = Object.values(this.stockBags).map(this.makeDataset)
+    // eslint-disable-next-line
+    this.chart.options.scales!.yAxes = this.chart.data.datasets
+      .filter(({data = []}) => data.length > 0)
+      .map(({yAxisID}) => yAxisID)
+      .filter((value, index, self) => self.indexOf(value) === index)
+      .map(yAxisID => ({
+        id: yAxisID,
+        type: 'linear',
+        scaleLabel: {
+          display: true,
+          labelString: yAxisID
+        }
+      }))
+
+    this.chart.update()
   }
 
   labelSuffix({isin, figi}: Stock): string {
@@ -312,11 +335,16 @@ export default class StockViewer extends Vue {
     return ''
   }
 
-  get nonEmptyStockBags(): StockBag[] {
-    return this.stockData.filter(({prices: {prices}}) => prices.length > 0)
+  tradingMode(symbol: string, mode: boolean): void {
+    this.stockBags[symbol].tradingMode = mode
+    this.updateDatasets()
   }
 
-  get hasData(): boolean {
+  get nonEmptyStockBags(): StockBag[] {
+    return Object.values(this.stockBags).filter(({prices: {prices}}) => prices.length > 0)
+  }
+
+  get hasDataToShow(): boolean {
     return this.nonEmptyStockBags.length > 0
   }
 }
