@@ -17,22 +17,25 @@ defmodule Stockcast.PricesTest do
     [prices: prices]
   end
 
-  test "retrieve/4 returns prices", %{prices: prices} do
-    {:ok, retrieved_prices} = Prices.retrieve(@symbol, @date_from, @date_to)
+  test "retrieve_historical_prices/4 returns prices", %{prices: prices} do
+    {:ok, retrieved_prices} = Prices.retrieve_historical_prices(@symbol, @date_from, @date_to)
 
     assert retrieved_prices == prices
   end
 
-  test "retrieve/4 returns sampled", %{prices: prices} do
-    {:ok, retrieved_prices} = Prices.retrieve(@symbol, @date_from, @date_to, 2)
+  test "retrieve_historical_prices/4 returns sampled", %{prices: prices} do
+    {:ok, retrieved_prices} = Prices.retrieve_historical_prices(@symbol, @date_from, @date_to, 2)
 
     assert retrieved_prices == Enum.take_every(prices, 2)
   end
 
   describe "when to date is omitted" do
-    test_with_mock "retrieve/4 uses yesterday", %{prices: prices}, Date, [:passthrough],
-      utc_today: fn -> ~D[2020-04-16] end do
-      {:ok, retrieved_prices} = Prices.retrieve(@symbol, @date_from)
+    test_with_mock "retrieve_historical_prices/4 uses yesterday",
+                   %{prices: prices},
+                   Date,
+                   [:passthrough],
+                   utc_today: fn -> ~D[2020-04-16] end do
+      {:ok, retrieved_prices} = Prices.retrieve_historical_prices(@symbol, @date_from)
 
       assert retrieved_prices == prices
     end

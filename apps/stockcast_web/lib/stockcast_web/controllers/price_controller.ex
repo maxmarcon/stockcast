@@ -51,7 +51,7 @@ defmodule StockcastWeb.PriceController do
   end
 
   defp retrieve_prices_and_send_response(conn, symbol, from_date, to_date, sampling \\ 1) do
-    case Prices.retrieve(symbol, from_date, to_date) do
+    case Prices.retrieve_historical_prices(symbol, from_date, to_date) do
       {:ok, prices} ->
         render(conn, :index, %{
           prices: prices |> Enum.take_every(sampling),

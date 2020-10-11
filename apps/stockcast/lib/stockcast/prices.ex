@@ -1,18 +1,23 @@
 defmodule Stockcast.Prices do
-  alias Stockcast.IexCloud.HistoricalPrices, as: IexPrices
+  alias Stockcast.IexCloud.HistoricalPrices, as: IexHistoricalPrices
   alias Stockcast.Performance
   alias Stockcast.IexCloud.HistoricalPrice
 
   @type decimal :: Decimal.t()
 
   @doc ~S"""
-  retrieve stock prices for a particular symbol
+  retrieve historical stock prices for a particular symbol
   """
-  @spec retrieve(binary(), Date.t(), %Date{}) ::
+  @spec retrieve_historical_prices(binary(), Date.t(), %Date{}) ::
           {:ok, [%{}]} | {:error, atom()}
-  def retrieve(symbol, from, to \\ Date.add(Date.utc_today(), -1), sampling \\ 1)
+  def retrieve_historical_prices(
+        symbol,
+        from,
+        to \\ Date.add(Date.utc_today(), -1),
+        sampling \\ 1
+      )
       when is_binary(symbol) and is_integer(sampling) and sampling >= 1,
-      do: IexPrices.retrieve(symbol, from, to, sampling)
+      do: IexHistoricalPrices.retrieve(symbol, from, to, sampling)
 
   @doc ~S"""
       trades with prices over time, returns performance of stocks
