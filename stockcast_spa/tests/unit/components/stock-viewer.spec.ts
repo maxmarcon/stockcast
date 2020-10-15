@@ -170,47 +170,47 @@ describe('stockViewer', () => {
     })
   })
 
-  describe('when the route is updated', () => {
-    beforeEach(async () => {
-      (wrapper.vm as any).beforeRouteUpdate({
-        query: {
-          s: JSON.stringify(['C1', { s: 'C2', i: 'ISIN2' }, { s: 'C3', f: 'FIGI3' }]),
-          df: '2019-01-01',
-          dt: '2019-03-01'
-        }
-      } as unknown as Route, {} as Route, jest.fn())
-    })
-
-    it('updates the stocks', () => {
-      expect((wrapper.vm as any).stockPeriod).toEqual({
-        stocks: [
-          new Stock('C1'),
-          new Stock('C2', undefined, undefined, 'ISIN2'),
-          new Stock('C3', undefined, undefined, undefined, 'FIGI3')
-        ],
-        dateFrom: parseISO('2019-01-01'),
-        dateTo: parseISO('2019-03-01')
-      })
-    })
-
-    it('queries the prices api', () => {
-      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C2/from/2019-01-01/to/2019-03-01', expect.anything())
-      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C1/from/2019-01-01/to/2019-03-01', expect.anything())
-      expect(axiosMock.get).toHaveBeenCalledWith('/prices/C3/from/2019-01-01/to/2019-03-01', expect.anything())
-    })
-
-    it('updates the chart data', () => {
-      expect((wrapper.vm as any).chart.data.datasets.length).toBe(3)
-      expect((wrapper.vm as any).chart.data.datasets[0].label).toBe('C1 (USD)')
-      expect((wrapper.vm as any).chart.data.datasets[1].label).toBe('C2 (USD) - ISIN: ISIN2')
-      expect((wrapper.vm as any).chart.data.datasets[2].label).toBe('C3 (USD) - FIGI: FIGI3')
-      const parsedData = priceApiResponse.data.map(({ date, close }: HistoricalPrice) => ({
-        x: parseISO(date as string),
-        y: parseFloat(close)
-      }))
-      expect((wrapper.vm as any).chart.data.datasets[0].data).toEqual(parsedData)
-      expect((wrapper.vm as any).chart.data.datasets[1].data).toEqual(parsedData)
-      expect((wrapper.vm as any).chart.data.datasets[2].data).toEqual(parsedData)
-    })
-  })
+  // describe('when the route is updated', () => {
+  //   beforeEach(async () => {
+  //     (wrapper.vm as any).beforeRouteUpdate({
+  //       query: {
+  //         s: JSON.stringify(['C1', { s: 'C2', i: 'ISIN2' }, { s: 'C3', f: 'FIGI3' }]),
+  //         df: '2019-01-01',
+  //         dt: '2019-03-01'
+  //       }
+  //     } as unknown as Route, {} as Route, jest.fn())
+  //   })
+  //
+  //   it('updates the stocks', () => {
+  //     expect((wrapper.vm as any).stockPeriod).toEqual({
+  //       stocks: [
+  //         new Stock('C1'),
+  //         new Stock('C2', undefined, undefined, 'ISIN2'),
+  //         new Stock('C3', undefined, undefined, undefined, 'FIGI3')
+  //       ],
+  //       dateFrom: parseISO('2019-01-01'),
+  //       dateTo: parseISO('2019-03-01')
+  //     })
+  //   })
+  //
+  //   it('queries the prices api', () => {
+  //     expect(axiosMock.get).toHaveBeenCalledWith('/prices/C2/from/2019-01-01/to/2019-03-01', expect.anything())
+  //     expect(axiosMock.get).toHaveBeenCalledWith('/prices/C1/from/2019-01-01/to/2019-03-01', expect.anything())
+  //     expect(axiosMock.get).toHaveBeenCalledWith('/prices/C3/from/2019-01-01/to/2019-03-01', expect.anything())
+  //   })
+  //
+  //   it('updates the chart data', () => {
+  //     expect((wrapper.vm as any).chart.data.datasets.length).toBe(3)
+  //     expect((wrapper.vm as any).chart.data.datasets[0].label).toBe('C1 (USD)')
+  //     expect((wrapper.vm as any).chart.data.datasets[1].label).toBe('C2 (USD) - ISIN: ISIN2')
+  //     expect((wrapper.vm as any).chart.data.datasets[2].label).toBe('C3 (USD) - FIGI: FIGI3')
+  //     const parsedData = priceApiResponse.data.map(({ date, close }: HistoricalPrice) => ({
+  //       x: parseISO(date as string),
+  //       y: parseFloat(close)
+  //     }))
+  //     expect((wrapper.vm as any).chart.data.datasets[0].data).toEqual(parsedData)
+  //     expect((wrapper.vm as any).chart.data.datasets[1].data).toEqual(parsedData)
+  //     expect((wrapper.vm as any).chart.data.datasets[2].data).toEqual(parsedData)
+  //   })
+  // })
 })

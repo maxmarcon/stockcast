@@ -68,20 +68,13 @@
   </b-card>
 </template>
 <script lang="ts">
-import {differenceInCalendarDays, formatISO, parseISO} from 'date-fns'
+import {differenceInCalendarDays, formatISO, isSameDay, parseISO} from 'date-fns'
 import VARIANT_COLORS from '@/scss/main.scss'
 import Component from 'vue-class-component'
 import Vue, {PropType} from 'vue'
-import {
-  DATE_FROM_DEFAULT,
-  DATE_TO_DEFAULT,
-  routeToStockPeriod,
-  Stock,
-  StockPeriod,
-  StockQueryParam as QueryParam
-} from '@/utils/stock'
+import {DATE_FROM_DEFAULT, DATE_TO_DEFAULT, Stock, StockPeriod, StockQueryParam as QueryParam} from '@/utils/stock'
 import {Prop, Ref, Watch} from 'vue-property-decorator'
-import {Location, Route} from 'vue-router'
+import {Location} from 'vue-router'
 import {SymbolResponse} from '@/utils/stockMetadata'
 import {AxiosResponse} from 'axios'
 import {PriceResponse} from '@/utils/prices'
@@ -130,9 +123,13 @@ export default class StockViewer extends Vue {
     dateTo: DATE_TO_DEFAULT
   }
 
-  stockBags: {[key: string]: StockBag} = {}
+  stockBags: { [key: string]: StockBag } = {}
 
   updateOngoing = false
+
+  dateFrom: Date | null = null
+
+  dateTo: Date | null = null
 
   @Ref()
   readonly chartCanvas!: HTMLCanvasElement
@@ -174,40 +171,53 @@ export default class StockViewer extends Vue {
     })
   }
 
-  beforeRouteUpdate(to: Route, from: Route, next: () => void) {
-    this.stockPeriod = routeToStockPeriod(to)
-    next()
-  }
+  //
+  // beforeRouteUpdate(to: Route, from: Route, next: () => void) {
+  //   this.stockPeriod = routeToStockPeriod(to)
+  //   next()
+  // }
 
   @Watch('stockPeriod', {deep: true})
-  watchStockPeriod(newStockPeriod: StockPeriod) {
+  watchStockPeriod(stockPeriod: StockPeriod) {
     const newRoute: Location = {name: 'stocks'}
     newRoute.query = {}
-    if (newStockPeriod.stocks.length > 0) {
-      newRoute.query.s = JSON.stringify(newStockPeriod.stocks.map(stockToQueryParam))
+    if (stockPeriod.stocks.length > 0) {
+      newRoute.query.s = JSON.stringify(stockPeriod.stocks.map(stockToQueryParam))
     }
-    if (newStockPeriod.dateFrom) {
-      newRoute.query.df = formatISO(newStockPeriod.dateFrom, {representation: 'date'})
+    if (stockPeriod.dateFrom) {
+      newRoute.query.df = formatISO(stockPeriod.dateFrom, {representation: 'date'})
     }
-    if (newStockPeriod.dateTo) {
-      newRoute.query.dt = formatISO(newStockPeriod.dateTo, {representation: 'date'})
+    if (stockPeriod.dateTo) {
+      newRoute.query.dt = formatISO(stockPeriod.dateTo, {representation: 'date'})
     }
     this.$router.push(newRoute).catch(err => err)
 
-    this.updateStockBags()
+    const newTimePeriod = this.dateFrom == null || !isSameDay(this.dateFrom, stockPeriod.dateFrom) ||
+      this.dateTo == null || !isSameDay(this.dateTo, stockPeriod.dateTo)
+
+    this.dateFrom = stockPeriod.dateFrom
+    this.dateTo = stockPeriod.dateTo
+
+    this.updateStockBags(newTimePeriod)
   }
 
-  async updateStockBags(): Promise<void> {
+  async updateStockBags(newTimePeriod: boolean): Promise<void> {
     try {
       this.updateOngoing = true
 
-      for (const existingSymbol of Object.keys(this.stockBags)) {
-        if (!this.stockPeriod.stocks.find(({symbol}) => symbol === existingSymbol)) {
-          this.$delete(this.stockBags, existingSymbol)
+      if (newTimePeriod) {
+        this.stockBags = {}
+      } else {
+        for (const existingSymbol in this.stockBags) {
+          if (!this.stockPeriod.stocks.find(({symbol}) => symbol === existingSymbol)) {
+            this.$delete(this.stockBags, existingSymbol)
+          }
         }
       }
 
-      const apiResponses = await Promise.all(this.stockPeriod.stocks.map(async (stock) =>
+      const missingStocks = this.stockPeriod.stocks.filter(({symbol}) => !(symbol in this.stockBags))
+
+      const apiResponses = await Promise.all(missingStocks.map(async (stock) =>
         ({
           stock,
           metadataResponse: await this.fetchMetadata(stock.text),
@@ -215,15 +225,26 @@ export default class StockViewer extends Vue {
         })))
 
       apiResponses.map(this.parseResponse)
-        .forEach(stockBag => {
-          const symbol = stockBag.stock.symbol
-          if (this.stockBags[symbol]) {
-            this.stockBags[symbol].prices = stockBag.prices
-            this.stockBags[symbol].metadata = stockBag.metadata
-          } else {
-            this.$set(this.stockBags, symbol, stockBag)
+        .forEach(stockBag => this.$set(this.stockBags, stockBag.stock.symbol, stockBag))
+
+      const usedVariants = Object.values(this.stockBags)
+        .map(({variant}) => variant)
+        .filter(variant => variant)
+      Object.values(this.stockBags).forEach((stockBag, index) => {
+        if (!stockBag.variant) {
+          if (stockBag.prices.prices.length === 0) {
+            stockBag.variant = 'secondary'
+            return
           }
-        })
+          const nextVariant = VARIANTS.find(variant => !(usedVariants.includes(variant)))
+          if (nextVariant) {
+            usedVariants.push(nextVariant)
+            stockBag.variant = nextVariant
+          } else {
+            stockBag.variant = VARIANTS[index % VARIANTS.length]
+          }
+        }
+      })
 
       this.updateDatasets()
     } catch (error) {
@@ -254,7 +275,7 @@ export default class StockViewer extends Vue {
     metadataResponse: AxiosResponse<SymbolResponse>;
     pricesResponse: AxiosResponse<PriceResponse>;
     stock: Stock;
-  }, index: number): StockBag => {
+  }): StockBag => {
 
     const prices = pricesResponse.data.data.prices
     const metadata = metadataResponse.data.data
@@ -266,9 +287,6 @@ export default class StockViewer extends Vue {
       },
       label: `${metadata.symbol} (${metadata.currency})${this.labelSuffix(stock)}`,
       stock,
-      variant: prices.length === 0
-        ? 'secondary'
-        : VARIANTS[index % VARIANTS.length],
       tradingMode: false
     }
   }
