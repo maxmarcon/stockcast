@@ -7,7 +7,7 @@ export interface StockBag {
   metadata: StockMetadata;
   prices: Prices;
   stock: Stock;
-  variant?: string;
+  variant: string;
   label: string;
   tradingMode: boolean;
 }

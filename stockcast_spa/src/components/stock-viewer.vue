@@ -27,14 +27,18 @@
             <canvas ref="chartCanvas" :class="{invisible: !hasDataToShow}">
             </canvas>
           </b-col>
-          <b-col v-if="hasDataToShow" md="2">
+          <b-col v-if="hasDataToShow" md="2" class="mt-2 mt-md-0">
             <b-card
               v-for="({prices: {performance}, label, metadata, variant, stock: {symbol}}, index) in nonEmptyStockBags"
               :key="label"
               no-body
               :class="{'mt-1' : index > 0}">
-              <b-card-header :header-bg-variant="variant" header-tag="b">
-                {{ label }}
+              <b-card-header :header-bg-variant="variant" header-tag="div"
+                             header-class="d-flex justify-content-between">
+                <b>{{ label }}</b>
+                <b-button size="sm" :variant="variant" @click="removeStock(symbol)" :name="symbol">
+                  <b-icon icon="x"></b-icon>
+                </b-button>
               </b-card-header>
               <b-card-body class="p-2">
                 <b-form-checkbox switch @change="tradingMode(symbol, $event)">Trading</b-form-checkbox>
@@ -72,9 +76,16 @@ import {differenceInCalendarDays, formatISO, isSameDay, parseISO} from 'date-fns
 import VARIANT_COLORS from '@/scss/main.scss'
 import Component from 'vue-class-component'
 import Vue, {PropType} from 'vue'
-import {DATE_FROM_DEFAULT, DATE_TO_DEFAULT, Stock, StockPeriod, StockQueryParam as QueryParam} from '@/utils/stock'
+import {
+  DATE_FROM_DEFAULT,
+  DATE_TO_DEFAULT,
+  routeToStockPeriod,
+  Stock,
+  StockPeriod,
+  StockQueryParam as QueryParam
+} from '@/utils/stock'
 import {Prop, Ref, Watch} from 'vue-property-decorator'
-import {Location} from 'vue-router'
+import {Location, Route} from 'vue-router'
 import {SymbolResponse} from '@/utils/stockMetadata'
 import {AxiosResponse} from 'axios'
 import {PriceResponse} from '@/utils/prices'
@@ -86,6 +97,7 @@ import {StockBag} from "@/utils/stockBag";
 
 
 const VARIANTS = Object.keys(VARIANT_COLORS).filter(variant => variant !== 'secondary')
+const DEFAULT_VARIANT = 'secondary';
 
 const stockToQueryParam = (stock: Stock): QueryParam => {
   const {text: s, figi: f, isin: i} = stock
@@ -171,11 +183,10 @@ export default class StockViewer extends Vue {
     })
   }
 
-  //
-  // beforeRouteUpdate(to: Route, from: Route, next: () => void) {
-  //   this.stockPeriod = routeToStockPeriod(to)
-  //   next()
-  // }
+  beforeRouteUpdate(to: Route, from: Route, next: () => void) {
+    this.stockPeriod = routeToStockPeriod(to)
+    next()
+  }
 
   @Watch('stockPeriod', {deep: true})
   watchStockPeriod(stockPeriod: StockPeriod) {
@@ -231,9 +242,8 @@ export default class StockViewer extends Vue {
         .map(({variant}) => variant)
         .filter(variant => variant)
       Object.values(this.stockBags).forEach((stockBag, index) => {
-        if (!stockBag.variant) {
+        if (stockBag.variant === DEFAULT_VARIANT) {
           if (stockBag.prices.prices.length === 0) {
-            stockBag.variant = 'secondary'
             return
           }
           const nextVariant = VARIANTS.find(variant => !(usedVariants.includes(variant)))
@@ -287,6 +297,7 @@ export default class StockViewer extends Vue {
       },
       label: `${metadata.symbol} (${metadata.currency})${this.labelSuffix(stock)}`,
       stock,
+      variant: DEFAULT_VARIANT,
       tradingMode: false
     }
   }
@@ -356,6 +367,13 @@ export default class StockViewer extends Vue {
   tradingMode(symbol: string, mode: boolean): void {
     this.stockBags[symbol].tradingMode = mode
     this.updateDatasets()
+  }
+
+  removeStock(symbol: string): void {
+    const index = this.stockPeriod.stocks.findIndex(({symbol: s}) => s === symbol)
+    if (index > -1) {
+      this.stockPeriod.stocks.splice(index, 1)
+    }
   }
 
   get nonEmptyStockBags(): StockBag[] {
