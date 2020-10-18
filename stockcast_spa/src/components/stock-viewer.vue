@@ -41,24 +41,24 @@
                 </b-button>
               </b-card-header>
               <b-card-body class="p-2">
-                <b-form-checkbox switch @change="tradingMode(symbol, $event)">Trading</b-form-checkbox>
+                <b-form-checkbox switch @change="tradingMode(symbol, $event)" v-b-tooltip.v-info title="Toggle trading view">Trading</b-form-checkbox>
                 <b-card-text>
                   {{ metadata.name }}
                 </b-card-text>
                 <b-card-text>
                   <h6><b>Perf:&nbsp;</b>
-                    <b-badge pill :variant="performance.raw < 0 ? 'danger' : 'success'">{{
+                    <b-badge pill :variant="performance.raw < 0 ? 'danger' : 'success'" v-b-tooltip.v-info title="Raw performance">{{
                         percentage(performance.raw)
                       }}
                     </b-badge>
                   </h6>
                   <h6><b>Trading:&nbsp;</b>
-                    <b-badge pill :variant="performance.trading < 0 ? 'danger' : 'success'">
+                    <b-badge pill :variant="performance.trading < 0 ? 'danger' : 'success'" v-b-tooltip.v-info title="Performance when making perfect trading choices">
                       {{ percentage(performance.trading) }}
                     </b-badge>
                   </h6>
                   <h6><b>Short:&nbsp;</b>
-                    <b-badge pill :variant="performance.short_trading < 0 ? 'danger' : 'success'">
+                    <b-badge pill :variant="performance.short_trading < 0 ? 'danger' : 'success'" v-b-tooltip.v-info title="Performance when making perfect trading choices and short selling">
                       {{ percentage(performance.short_trading) }}
                     </b-badge>
                   </h6>
