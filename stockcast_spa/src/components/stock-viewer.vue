@@ -28,7 +28,7 @@
             </canvas>
           </b-col>
           <b-col v-if="hasDataToShow" md="2" class="mt-2 mt-md-0">
-            <b-card
+            <b-card :name="symbol"
               v-for="({prices: {performance}, label, metadata, variant, stock: {symbol}}, index) in nonEmptyStockBags"
               :key="label"
               no-body
@@ -36,7 +36,7 @@
               <b-card-header :header-bg-variant="variant" header-tag="div"
                              header-class="d-flex justify-content-between">
                 <b>{{ label }}</b>
-                <b-button size="sm" :variant="variant" @click="removeStock(symbol)" :name="symbol">
+                <b-button size="sm" :variant="variant" @click="removeStock(symbol)" name="remove">
                   <b-icon icon="x"></b-icon>
                 </b-button>
               </b-card-header>

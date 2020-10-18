@@ -172,7 +172,7 @@ describe('stockViewer', () => {
 
   describe('when a stock is deleted', () => {
     beforeEach(() => {
-      wrapper.find(`.card-header > button[name="S1"]`).trigger('click')
+      wrapper.find(`.card[name="S1"] button[name="remove"]`).trigger('click')
     })
 
     it('removes the stock', () => {
