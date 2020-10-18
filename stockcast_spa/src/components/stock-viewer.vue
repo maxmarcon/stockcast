@@ -303,35 +303,38 @@ export default class StockViewer extends Vue {
   }
 
   makeDataset({prices: {prices, performance}, metadata, variant, label, tradingMode}: StockBag): any {
+    const commonProps = {
+      label,
+      borderColor: VARIANT_COLORS[variant],
+      backgroundColor: VARIANT_COLORS[variant],
+      yAxisID: metadata.currency,
+      fill: false,
+      cubicInterpolationMode: 'monotone'
+    }
 
     if (tradingMode) {
-      return {
-        type: 'scatter',
+      return Object.assign(commonProps, {
         data: performance.strategy.map(({date, price, action}) => ({x: date, y: price, action})),
         datalabels: {
+          anchor: 'end',
+          align: 'top',
           formatter: (value: any) => value.action[0].toUpperCase()
-        }
-      }
+        },
+        lineTension: 0,
+        label: commonProps.label + " - TRADING"
+      })
     } else {
-      return {
+      return Object.assign(commonProps, {
         data: prices.map(
           ({date, close}) => ({x: typeof (date) === 'string' ? parseISO(date) : date, y: parseFloat(close)})
         ),
-        performance,
-        metadata,
-        label,
-        borderColor: VARIANT_COLORS[variant],
-        backgroundColor: VARIANT_COLORS[variant],
-        variant,
-        yAxisID: metadata.currency,
-        fill: false,
         datalabels: {
           labels: {
             value: null,
             title: null
           }
         }
-      }
+      })
     }
   }
 
