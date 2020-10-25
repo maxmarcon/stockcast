@@ -46,14 +46,38 @@ defmodule Stockcast.PricesTest do
            |> for_trade()
            |> Prices.trade() == %Performance{
              raw: Decimal.cast(200 - 50),
-             trading: Decimal.cast(50 + 160),
-             short_trading: Decimal.cast(50 + 60 + 160),
+             trading: Decimal.cast(-50 + 100 - 40 + 200),
+             short_trading: Decimal.cast(-50 + 200 - 40 + 200),
              baseline: Decimal.cast(50),
              strategy: [
-               %{date: ~D[2020-01-01], price: Decimal.cast(50), action: :buy},
-               %{date: ~D[2020-01-02], price: Decimal.cast(100), action: :sell},
-               %{date: ~D[2020-01-03], price: Decimal.cast(40), action: :buy},
-               %{date: ~D[2020-01-04], price: Decimal.cast(200), action: :sell}
+               %{
+                 date: ~D[2020-01-01],
+                 price: Decimal.cast(50),
+                 action: :buy,
+                 balance: Decimal.cast(-50),
+                 balance_short: Decimal.cast(-50)
+               },
+               %{
+                 date: ~D[2020-01-02],
+                 price: Decimal.cast(100),
+                 action: :sell,
+                 balance: Decimal.cast(-50 + 100),
+                 balance_short: Decimal.cast(-50 + 200)
+               },
+               %{
+                 date: ~D[2020-01-03],
+                 price: Decimal.cast(40),
+                 action: :buy,
+                 balance: Decimal.cast(-50 + 100 - 40),
+                 balance_short: Decimal.cast(-50 + 200 - 40)
+               },
+               %{
+                 date: ~D[2020-01-04],
+                 price: Decimal.cast(200),
+                 action: :sell,
+                 balance: Decimal.cast(-50 + 100 - 40 + 200),
+                 balance_short: Decimal.cast(-50 + 200 - 40 + 200)
+               }
              ]
            }
   end

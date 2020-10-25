@@ -3,6 +3,8 @@ defmodule Stockcast.Prices do
   alias Stockcast.Performance
   alias Stockcast.IexCloud.HistoricalPrice
 
+  import Decimal
+
   @type decimal :: Decimal.t()
 
   @doc ~S"""
@@ -24,16 +26,23 @@ defmodule Stockcast.Prices do
   """
   @spec trade([%{date: Date.t(), price: decimal()}]) :: Performance.t()
   def trade(prices) when is_list(prices) and length(prices) > 0 do
-    prices
-    |> Stream.dedup_by(&Decimal.to_string(&1.price))
-    |> Stream.chunk_every(3, 1)
-    |> Stream.with_index()
-    |> Stream.flat_map(&find_minima_and_maxima/1)
-    |> Stream.chunk_every(2, 1)
-    |> Enum.reduce(%Performance{}, &update_trading/2)
-    |> Map.update!(:strategy, &Enum.reverse/1)
-    |> Map.put(:raw, Decimal.sub(List.last(prices).price, List.first(prices).price))
-    |> Map.put(:baseline, List.first(prices).price)
+    strategy =
+      prices
+      |> Stream.dedup_by(&Decimal.to_string(&1.price))
+      |> Stream.chunk_every(3, 1)
+      |> Stream.with_index()
+      |> Stream.flat_map(&find_minima_and_maxima/1)
+      |> Stream.chunk_every(2, 1)
+      |> Enum.reduce([], &update_strategy/2)
+      |> Enum.reverse()
+
+    %Performance{
+      trading: List.last(strategy).balance,
+      short_trading: List.last(strategy).balance_short,
+      baseline: List.first(prices).price,
+      raw: Decimal.sub(List.last(prices).price, List.first(prices).price),
+      strategy: strategy
+    }
   end
 
   def trade([]), do: %Performance{}
@@ -66,39 +75,107 @@ defmodule Stockcast.Prices do
     end
   end
 
-  defp update_trading(
-         [%{price: p1, date: d1}, %{price: p2, date: _}],
-         %{strategy: strategy, trading: trading, short_trading: short_trading} = state
-       ) do
-    if Decimal.cmp(p1, p2) == :gt do
-      %{
-        state
-        | strategy: [%{date: d1, price: p1, action: :sell} | strategy],
-          short_trading: Decimal.add(short_trading, Decimal.sub(p1, p2))
-      }
-    else
-      profit = Decimal.sub(p2, p1)
+  defp sell(
+         price,
+         date,
+         strategy,
+         last \\ false
+       )
 
+  defp sell(
+         price,
+         date,
+         strategy = [%{balance: balance, balance_short: balance_short} | _],
+         last
+       ) do
+    [
       %{
-        state
-        | strategy: [%{date: d1, price: p1, action: :buy} | strategy],
-          trading: Decimal.add(trading, profit),
-          short_trading: Decimal.add(short_trading, profit)
+        date: date,
+        price: price,
+        action: :sell,
+        balance: add(balance, price),
+        balance_short:
+          add(
+            balance_short,
+            mult(
+              if last do
+                1
+              else
+                2
+              end,
+              price
+            )
+          )
       }
+      | strategy
+    ]
+  end
+
+  defp sell(price, date, [], _last) do
+    [
+      %{
+        date: date,
+        price: price,
+        action: :sell,
+        balance: Decimal.cast(0),
+        balance_short: add(0, price)
+      }
+    ]
+  end
+
+  defp buy(price, date, strategy, last \\ false)
+
+  defp buy(price, date, strategy = [%{balance: balance, balance_short: balance_short} | _], false) do
+    [
+      %{
+        date: date,
+        price: price,
+        action: :buy,
+        balance: sub(balance, price),
+        balance_short: sub(balance_short, price)
+      }
+      | strategy
+    ]
+  end
+
+  defp buy(price, date, [], false) do
+    [
+      %{
+        date: date,
+        price: price,
+        action: :buy,
+        balance: sub(0, price),
+        balance_short: sub(0, price)
+      }
+    ]
+  end
+
+  defp buy(_price, _date, strategy, true) do
+    strategy
+  end
+
+  defp update_strategy(
+         [%{price: p1, date: d1}, %{price: p2, date: _}],
+         strategy
+       ) do
+    if cmp(p1, p2) == :gt do
+      sell(p1, d1, strategy)
+    else
+      buy(p1, d1, strategy)
     end
   end
 
-  defp update_trading(
+  defp update_strategy(
          [%{date: d, price: p}],
-         %{strategy: [%{action: :sell} | _] = strategy} = state
+         [%{action: :sell} | _] = strategy
        ) do
-    %{state | strategy: [%{date: d, price: p, action: :buy} | strategy]}
+    buy(p, d, strategy, true)
   end
 
-  defp update_trading(
+  defp update_strategy(
          [%{date: d, price: p}],
-         %{strategy: [%{action: :buy} | _] = strategy} = state
+         [%{action: :buy} | _] = strategy
        ) do
-    %{state | strategy: [%{date: d, price: p, action: :sell} | strategy]}
+    sell(p, d, strategy, true)
   end
 end
