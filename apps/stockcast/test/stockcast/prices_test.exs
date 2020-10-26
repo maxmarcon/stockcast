@@ -87,13 +87,25 @@ defmodule Stockcast.PricesTest do
            |> for_trade()
            |> Prices.trade() == %Performance{
              raw: Decimal.cast(100 - 50),
-             trading: Decimal.cast(50),
-             short_trading: Decimal.cast(50),
+             trading: Decimal.cast(-50 + 100),
+             short_trading: Decimal.cast(-50 + 100),
              baseline: Decimal.cast(50),
              relative: false,
              strategy: [
-               %{date: ~D[2020-01-01], price: Decimal.cast(50), action: :buy},
-               %{date: ~D[2020-01-02], price: Decimal.cast(100), action: :sell}
+               %{
+                 date: ~D[2020-01-01],
+                 price: Decimal.cast(50),
+                 action: :buy,
+                 balance: Decimal.cast(-50),
+                 balance_short: Decimal.cast(-50)
+               },
+               %{
+                 date: ~D[2020-01-02],
+                 price: Decimal.cast(100),
+                 action: :sell,
+                 balance: Decimal.cast(-50 + 100),
+                 balance_short: Decimal.cast(-50 + 100)
+               }
              ]
            }
   end
@@ -104,11 +116,23 @@ defmodule Stockcast.PricesTest do
            |> Prices.trade() == %Performance{
              raw: Decimal.cast(50 - 100),
              trading: Decimal.cast(0),
-             short_trading: Decimal.cast(50),
+             short_trading: Decimal.cast(100 - 50),
              baseline: Decimal.cast(100),
              strategy: [
-               %{date: ~D[2020-01-01], price: Decimal.cast(100), action: :sell},
-               %{date: ~D[2020-01-02], price: Decimal.cast(50), action: :buy}
+               %{
+                 date: ~D[2020-01-01],
+                 price: Decimal.cast(100),
+                 action: :sell,
+                 balance: Decimal.cast(0),
+                 balance_short: Decimal.cast(100)
+               },
+               %{
+                 date: ~D[2020-01-02],
+                 price: Decimal.cast(50),
+                 action: :buy,
+                 balance: Decimal.cast(0),
+                 balance_short: Decimal.cast(100 - 50)
+               }
              ],
              relative: false
            }
@@ -157,16 +181,40 @@ defmodule Stockcast.PricesTest do
     assert [50, 100, 90, 40, 110, 200]
            |> for_trade()
            |> Prices.trade() == %Performance{
-             trading: Decimal.cast(50 + 160),
-             short_trading: Decimal.cast(50 + 60 + 160),
+             trading: Decimal.cast(-50 + 100 - 40 + 200),
+             short_trading: Decimal.cast(-50 + 200 - 40 + 200),
              raw: Decimal.cast(200 - 50),
              relative: false,
              baseline: Decimal.cast(50),
              strategy: [
-               %{date: ~D[2020-01-01], price: Decimal.cast(50), action: :buy},
-               %{date: ~D[2020-01-02], price: Decimal.cast(100), action: :sell},
-               %{date: ~D[2020-01-04], price: Decimal.cast(40), action: :buy},
-               %{date: ~D[2020-01-06], price: Decimal.cast(200), action: :sell}
+               %{
+                 date: ~D[2020-01-01],
+                 price: Decimal.cast(50),
+                 action: :buy,
+                 balance: Decimal.cast(-50),
+                 balance_short: Decimal.cast(-50)
+               },
+               %{
+                 date: ~D[2020-01-02],
+                 price: Decimal.cast(100),
+                 action: :sell,
+                 balance: Decimal.cast(-50 + 100),
+                 balance_short: Decimal.cast(-50 + 200)
+               },
+               %{
+                 date: ~D[2020-01-04],
+                 price: Decimal.cast(40),
+                 action: :buy,
+                 balance: Decimal.cast(-50 + 100 - 40),
+                 balance_short: Decimal.cast(-50 + 200 - 40)
+               },
+               %{
+                 date: ~D[2020-01-06],
+                 price: Decimal.cast(200),
+                 action: :sell,
+                 balance: Decimal.cast(-50 + 100 - 40 + 200),
+                 balance_short: Decimal.cast(-50 + 200 - 40 + 200)
+               }
              ]
            }
   end
@@ -175,16 +223,40 @@ defmodule Stockcast.PricesTest do
     assert [50, 50, 100, 100, 100, 90, 90, 40, 110, 200, 200]
            |> for_trade()
            |> Prices.trade() == %Performance{
-             trading: Decimal.cast(50 + 160),
-             short_trading: Decimal.cast(50 + 60 + 160),
+             trading: Decimal.cast(-50 + 100 - 40 + 200),
+             short_trading: Decimal.cast(-50 + 200 - 40 + 200),
              relative: false,
              baseline: Decimal.cast(50),
              raw: Decimal.cast(200 - 50),
              strategy: [
-               %{date: ~D[2020-01-01], price: Decimal.cast(50), action: :buy},
-               %{date: ~D[2020-01-03], price: Decimal.cast(100), action: :sell},
-               %{date: ~D[2020-01-08], price: Decimal.cast(40), action: :buy},
-               %{date: ~D[2020-01-10], price: Decimal.cast(200), action: :sell}
+               %{
+                 date: ~D[2020-01-01],
+                 price: Decimal.cast(50),
+                 action: :buy,
+                 balance: Decimal.cast(-50),
+                 balance_short: Decimal.cast(-50)
+               },
+               %{
+                 date: ~D[2020-01-03],
+                 price: Decimal.cast(100),
+                 action: :sell,
+                 balance: Decimal.cast(-50 + 100),
+                 balance_short: Decimal.cast(-50 + 200)
+               },
+               %{
+                 date: ~D[2020-01-08],
+                 price: Decimal.cast(40),
+                 action: :buy,
+                 balance: Decimal.cast(-50 + 100 - 40),
+                 balance_short: Decimal.cast(-50 + 200 - 40)
+               },
+               %{
+                 date: ~D[2020-01-10],
+                 price: Decimal.cast(200),
+                 action: :sell,
+                 balance: Decimal.cast(-50 + 100 - 40 + 200),
+                 balance_short: Decimal.cast(-50 + 200 - 40 + 200)
+               }
              ]
            }
   end
@@ -197,16 +269,39 @@ defmodule Stockcast.PricesTest do
              %HistoricalPrice{close: Decimal.cast(200), date: ~D[2020-01-04]}
            ]
            |> Prices.trade_from_historical_prices() == %Performance{
-             relative: false,
              raw: Decimal.cast(200 - 50),
-             trading: Decimal.cast(50 + 160),
-             short_trading: Decimal.cast(50 + 60 + 160),
+             trading: Decimal.cast(-50 + 100 - 40 + 200),
+             short_trading: Decimal.cast(-50 + 200 - 40 + 200),
              baseline: Decimal.cast(50),
              strategy: [
-               %{date: ~D[2020-01-01], price: Decimal.cast(50), action: :buy},
-               %{date: ~D[2020-01-02], price: Decimal.cast(100), action: :sell},
-               %{date: ~D[2020-01-03], price: Decimal.cast(40), action: :buy},
-               %{date: ~D[2020-01-04], price: Decimal.cast(200), action: :sell}
+               %{
+                 date: ~D[2020-01-01],
+                 price: Decimal.cast(50),
+                 action: :buy,
+                 balance: Decimal.cast(-50),
+                 balance_short: Decimal.cast(-50)
+               },
+               %{
+                 date: ~D[2020-01-02],
+                 price: Decimal.cast(100),
+                 action: :sell,
+                 balance: Decimal.cast(-50 + 100),
+                 balance_short: Decimal.cast(-50 + 200)
+               },
+               %{
+                 date: ~D[2020-01-03],
+                 price: Decimal.cast(40),
+                 action: :buy,
+                 balance: Decimal.cast(-50 + 100 - 40),
+                 balance_short: Decimal.cast(-50 + 200 - 40)
+               },
+               %{
+                 date: ~D[2020-01-04],
+                 price: Decimal.cast(200),
+                 action: :sell,
+                 balance: Decimal.cast(-50 + 100 - 40 + 200),
+                 balance_short: Decimal.cast(-50 + 200 - 40 + 200)
+               }
              ]
            }
   end

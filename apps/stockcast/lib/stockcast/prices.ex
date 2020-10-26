@@ -34,14 +34,16 @@ defmodule Stockcast.Prices do
       |> Stream.flat_map(&find_minima_and_maxima/1)
       |> Stream.chunk_every(2, 1)
       |> Enum.reduce([], &update_strategy/2)
-      |> Enum.reverse()
+
+    last_action =
+      List.first(strategy) || %{balance: Decimal.cast(0), balance_short: Decimal.cast(0)}
 
     %Performance{
-      trading: List.last(strategy).balance,
-      short_trading: List.last(strategy).balance_short,
+      trading: last_action.balance,
+      short_trading: last_action.balance_short,
       baseline: List.first(prices).price,
       raw: Decimal.sub(List.last(prices).price, List.first(prices).price),
-      strategy: strategy
+      strategy: Enum.reverse(strategy)
     }
   end
 
@@ -86,7 +88,7 @@ defmodule Stockcast.Prices do
          price,
          date,
          strategy = [%{balance: balance, balance_short: balance_short} | _],
-         last
+         true
        ) do
     [
       %{
@@ -97,14 +99,29 @@ defmodule Stockcast.Prices do
         balance_short:
           add(
             balance_short,
-            mult(
-              if last do
-                1
-              else
-                2
-              end,
-              price
-            )
+            price
+          )
+      }
+      | strategy
+    ]
+  end
+
+  defp sell(
+         price,
+         date,
+         strategy = [%{balance: balance, balance_short: balance_short} | _],
+         false
+       ) do
+    [
+      %{
+        date: date,
+        price: price,
+        action: :sell,
+        balance: add(balance, price),
+        balance_short:
+          add(
+            balance_short,
+            mult(2, price)
           )
       }
       | strategy
@@ -138,6 +155,19 @@ defmodule Stockcast.Prices do
     ]
   end
 
+  defp buy(price, date, strategy = [%{balance: balance, balance_short: balance_short} | _], true) do
+    [
+      %{
+        date: date,
+        price: price,
+        action: :buy,
+        balance: balance,
+        balance_short: sub(balance_short, price)
+      }
+      | strategy
+    ]
+  end
+
   defp buy(price, date, [], false) do
     [
       %{
@@ -148,10 +178,6 @@ defmodule Stockcast.Prices do
         balance_short: sub(0, price)
       }
     ]
-  end
-
-  defp buy(_price, _date, strategy, true) do
-    strategy
   end
 
   defp update_strategy(
@@ -168,14 +194,12 @@ defmodule Stockcast.Prices do
   defp update_strategy(
          [%{date: d, price: p}],
          [%{action: :sell} | _] = strategy
-       ) do
-    buy(p, d, strategy, true)
-  end
+       ),
+       do: buy(p, d, strategy, true)
 
   defp update_strategy(
          [%{date: d, price: p}],
          [%{action: :buy} | _] = strategy
-       ) do
-    sell(p, d, strategy, true)
-  end
+       ),
+       do: sell(p, d, strategy, true)
 end
