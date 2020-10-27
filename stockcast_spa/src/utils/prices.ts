@@ -32,6 +32,8 @@ export interface Trading {
     date: string | Date;
     price: string;
     action: 'sell' | 'buy';
+    balance: string;
+    balance_short: string;
 }
 
 export interface Prices {

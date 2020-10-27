@@ -29,10 +29,10 @@
           </b-col>
           <b-col v-if="hasDataToShow" md="2" class="mt-2 mt-md-0">
             <b-card :name="symbol"
-              v-for="({prices: {performance}, label, metadata, variant, stock: {symbol}}, index) in nonEmptyStockBags"
-              :key="label"
-              no-body
-              :class="{'mt-1' : index > 0}">
+                    v-for="({prices: {performance}, label, metadata, variant, stock: {symbol}}, index) in nonEmptyStockBags"
+                    :key="label"
+                    no-body
+                    :class="{'mt-1' : index > 0}">
               <b-card-header :header-bg-variant="variant" header-tag="div"
                              header-class="d-flex justify-content-between">
                 <b>{{ label }}</b>
@@ -41,24 +41,30 @@
                 </b-button>
               </b-card-header>
               <b-card-body class="p-2">
-                <b-form-checkbox switch @change="tradingMode(symbol, $event)" v-b-tooltip.v-info title="Toggle trading view">Trading</b-form-checkbox>
+                <b-form-checkbox switch @change="tradingMode(symbol, $event)" v-b-tooltip.v-info.hover
+                                 title="Toggle trading view">Trading
+                </b-form-checkbox>
                 <b-card-text>
                   {{ metadata.name }}
                 </b-card-text>
                 <b-card-text>
                   <h6><b>Perf:&nbsp;</b>
-                    <b-badge pill :variant="performance.raw < 0 ? 'danger' : 'success'" v-b-tooltip.v-info title="Raw performance">{{
+                    <b-badge pill :variant="performance.raw < 0 ? 'danger' : 'success'" v-b-tooltip.v-info.hover
+                             title="Raw performance">{{
                         percentage(performance.raw)
                       }}
                     </b-badge>
                   </h6>
                   <h6><b>Trading:&nbsp;</b>
-                    <b-badge pill :variant="performance.trading < 0 ? 'danger' : 'success'" v-b-tooltip.v-info title="Performance when making perfect trading choices">
+                    <b-badge pill :variant="performance.trading < 0 ? 'danger' : 'success'" v-b-tooltip.v-info.hover
+                             title="Performance when making perfect trading choices">
                       {{ percentage(performance.trading) }}
                     </b-badge>
                   </h6>
                   <h6><b>Short:&nbsp;</b>
-                    <b-badge pill :variant="performance.short_trading < 0 ? 'danger' : 'success'" v-b-tooltip.v-info title="Performance when making perfect trading choices and short selling">
+                    <b-badge pill :variant="performance.short_trading < 0 ? 'danger' : 'success'"
+                             v-b-tooltip.v-info.hover
+                             title="Performance when making perfect trading choices and short selling">
                       {{ percentage(performance.short_trading) }}
                     </b-badge>
                   </h6>
@@ -91,7 +97,6 @@ import {AxiosResponse} from 'axios'
 import {PriceResponse} from '@/utils/prices'
 import MessageBar from '@/components/message-bar.vue'
 import Chart from 'chart.js'
-import ChartDataLabels from 'chartjs-plugin-datalabels';
 import {percentage} from '@/utils/format.ts'
 import {StockBag} from "@/utils/stockBag";
 
@@ -158,7 +163,6 @@ export default class StockViewer extends Vue {
   mounted() {
     this.chart = new Chart(this.chartCanvas, {
       type: 'line',
-      plugins: [ChartDataLabels],
       data: {
         datasets: []
       },
@@ -177,6 +181,29 @@ export default class StockViewer extends Vue {
                 hidden: data.length === 0,
                 fillStyle: borderColor as string
               }))
+          }
+        },
+        tooltips: {
+          callbacks: {
+            afterBody: ([{datasetIndex, index}], data) => {
+              if (datasetIndex !== undefined && data.datasets && index !== undefined) {
+                const dataset = data.datasets[datasetIndex] as any
+                if (dataset.tradingMode && dataset.data) {
+                  return `Action: ${dataset.data[index].action}`
+                }
+              }
+              return ''
+            },
+            footer: ([{datasetIndex, index}], data) => {
+              if (datasetIndex !== undefined && data.datasets && index !== undefined) {
+                const dataset = data.datasets[datasetIndex] as any
+                if (dataset.tradingMode && dataset.data) {
+                  return `Balance: ${dataset.data[index].balance}`
+                    + `\nBalance short: ${dataset.data[index].balanceShort}`
+                }
+              }
+              return ''
+            }
           }
         }
       }
@@ -309,17 +336,19 @@ export default class StockViewer extends Vue {
       backgroundColor: VARIANT_COLORS[variant],
       yAxisID: metadata.currency,
       fill: false,
-      cubicInterpolationMode: 'monotone'
+      cubicInterpolationMode: 'monotone',
+      tradingMode
     }
 
     if (tradingMode) {
       return Object.assign(commonProps, {
-        data: performance.strategy.map(({date, price, action}) => ({x: date, y: price, action})),
-        datalabels: {
-          anchor: 'end',
-          align: 'top',
-          formatter: (value: any) => value.action[0].toUpperCase()
-        },
+        data: performance.strategy.map(({date, price, action, balance, balance_short: balanceShort}) => ({
+          x: date,
+          y: price,
+          action,
+          balance,
+          balanceShort
+        })),
         lineTension: 0,
         label: commonProps.label + " - TRADING"
       })
@@ -327,13 +356,7 @@ export default class StockViewer extends Vue {
       return Object.assign(commonProps, {
         data: prices.map(
           ({date, close}) => ({x: typeof (date) === 'string' ? parseISO(date) : date, y: parseFloat(close)})
-        ),
-        datalabels: {
-          labels: {
-            value: null,
-            title: null
-          }
-        }
+        )
       })
     }
   }
