@@ -27,7 +27,8 @@
             <canvas ref="chartCanvas" :class="{invisible: !hasDataToShow}">
             </canvas>
           </b-col>
-          <b-col v-if="hasDataToShow" md="2" class="mt-2 mt-md-0">
+          <b-col v-if="hasDataToShow" md="2" class="p-md-2 border border-secondary rounded mt-2 mt-md-0"
+                 style="height: 80vh; overflow-y: scroll;">
             <b-card :name="symbol"
                     v-for="({prices: {performance}, label, metadata, variant, stock: {symbol}}, index) in nonEmptyStockBags"
                     :key="label"
@@ -336,7 +337,6 @@ export default class StockViewer extends Vue {
       backgroundColor: VARIANT_COLORS[variant],
       yAxisID: metadata.currency,
       fill: false,
-      cubicInterpolationMode: 'monotone',
       tradingMode
     }
 
@@ -349,6 +349,7 @@ export default class StockViewer extends Vue {
           balance,
           balanceShort
         })),
+        borderDash: [5, 3],
         lineTension: 0,
         label: commonProps.label + " - TRADING"
       })
@@ -356,7 +357,8 @@ export default class StockViewer extends Vue {
       return Object.assign(commonProps, {
         data: prices.map(
           ({date, close}) => ({x: typeof (date) === 'string' ? parseISO(date) : date, y: parseFloat(close)})
-        )
+        ),
+        cubicInterpolationMode: 'monotone'
       })
     }
   }
