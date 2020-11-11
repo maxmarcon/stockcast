@@ -1,6 +1,6 @@
 [![Build status](https://circleci.com/gh/maxmarcon/stockcast.svg?style=shield)](https://app.circleci.com/pipelines/github/maxmarcon/stockcast)
 
-**This application is still WIP**. However, it can be already installed and run.
+**This application is still WIP**. However, it can be already installed and run
 
 <!--ts-->
    * [About](#about)
@@ -27,11 +27,11 @@ Visualize, analyze and predict stock prices
 
 ## Search and display stock prices and performance
 
-Search for stocks in the search bar and plot their prices on the chart in a given time period.
+Search for stocks in the search bar and plot their prices on the chart in a given time period
 
 ![search](search.png)
 
-You can include up to 4 different stocks.
+You can include up to 4 different stocks
 
 ![stocks](stocks.png)
 
@@ -61,7 +61,7 @@ Coming soon!
 
 ## Data source
 
-Stockcast uses the [IEX Cloud API](https://iexcloud.io/) to retrieve financial data.
+Stockcast uses the [IEX Cloud API](https://iexcloud.io/) to retrieve financial data
 
 ## Installation and setup
 
