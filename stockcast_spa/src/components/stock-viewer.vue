@@ -28,7 +28,7 @@
             </canvas>
           </b-col>
           <b-col v-if="hasDataToShow" md="2" class="p-md-2 border border-secondary rounded mt-2 mt-md-0"
-                 style="height: 80vh; overflow-y: scroll;">
+                 style="height: 70vh; overflow-y: scroll;">
             <b-card :name="symbol"
                     v-for="({prices: {performance}, label, metadata, variant, stock: {symbol}}, index) in nonEmptyStockBags"
                     :key="label"
