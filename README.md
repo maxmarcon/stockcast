@@ -1,6 +1,6 @@
 [![Build status](https://circleci.com/gh/maxmarcon/stockcast.svg?style=shield)](https://app.circleci.com/pipelines/github/maxmarcon/stockcast)
 
-**This application is still WIP**. However, it can be already installed and run
+**This application is still WIP**. However, it can already be installed and run
 
 <!--ts-->
    * [About](#about)
