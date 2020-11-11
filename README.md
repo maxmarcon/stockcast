@@ -35,14 +35,14 @@ You can include up to 4 different stocks.
 
 ![stocks](stocks.png)
 
-The cards on the left side display some information about the stock performance. Three values are shown:
+The cards on the left side display some information about the stock performance. This includes three values:
 
-* *Perf*: This is simply the change in the stock's price between the beginning and the end of the time period. In other words, this 
-is how much money can be made (or lost) by buying the stock at the beginning of the time period and reselleing it at the end.
-* *Trading*: This is the maximum performance that can be achieved (i.e. money that can be made) by trading in the
+* **_Perf_**: This is simply the change in the stock's price between the beginning and the end of the time period. In other words, this 
+is how much money can be made (or lost) by buying the stock at the beginning of the time period and reselling it at the end
+* **_Trading_**: This is the maximum performance that can be achieved (i.e. money that can be made) by trading in the
 time period with perfect knowledge of future prices
-* *Short*: This is the maximum performance that can be achieved by trading in the
-time period with perfect knowledge of future prices and being able to [short the stock](https://en.wikipedia.org/wiki/Short_(finance))
+* **_Short_**: This is the maximum performance that can be achieved by trading in the
+time period with perfect knowledge of future prices and the ability to [short the stock](https://en.wikipedia.org/wiki/Short_(finance))
 
 ## Trading view
 
@@ -51,7 +51,7 @@ Switching to trading mode in any of the cards turns on the trading view for the 
 ![trading](trading.png)
 
 In trading mode, the chart displays the detailed optimal trading strategy for that stock. Hovering on any stock's data point on the chart will show what the optimal action for that day is
-(e.g. to *sell* or to *buy* the stock), as well as the balance that results from that action, both for normal and short trading.
+(e.g. to *sell* or to *buy* the stock), as well as the balance that results from that action, both for simple and short trading
 
 ## Stock prices prediction
 
@@ -65,12 +65,12 @@ Stockcast uses the [IEX Cloud API](https://iexcloud.io/) to retrieve financial d
 
 ## Installation and setup
 
-You will need to [sign up with IEX Cloud](https://iexcloud.io/cloud-login#/register/) and obtain an API token (yes, they do have a rather generous free access plan).
+You will need to [sign up with IEX Cloud](https://iexcloud.io/cloud-login#/register/) and obtain an API token (yes, they do have a rather generous free access plan)
 
 ### Running locally with mix in dev or sandbox mode
 
 **Dev mode** runs against the real IEX Cloud production API, whereas **sandbox mode** runs against the IEX Cloud sandbox 
- and doesn't consume your account's API calls, the downside being that the data is fake.
+ and doesn't consume your account's API calls, the downside being that the data is fake
 
 Prerequisites:
 
@@ -132,4 +132,4 @@ For the backend tests, and:
 * `cd stockcast_spa`
 * `yarn test`
 
-For the front-end tests.
+For the front-end tests
