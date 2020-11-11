@@ -5,6 +5,9 @@
 <!--ts-->
    * [About](#about)
    * [Usage](#usage)
+      * [Search and display stock prices and performance](#search-and-display-stock-prices-and-performance)
+      * [Trading view](#trading-view)
+      * [Stock prices prediction](#stock-prices-prediction)
    * [Technical details](#technical-details)
       * [Data source](#data-source)
       * [Installation and setup](#installation-and-setup)
@@ -12,7 +15,7 @@
          * [Running with docker](#running-with-docker)
          * [Testing](#testing)
 
-<!-- Added by: max, at: Fri Aug 28 11:17:25 CEST 2020 -->
+<!-- Added by: max, at: Wed Nov 11 21:08:24 CET 2020 -->
 
 <!--te-->
 
@@ -22,7 +25,37 @@ Visualize, analyze and predict stock prices
 
 # Usage
 
-_**Coming soon!**_
+## Search and display stock prices and performance
+
+Search for stocks in the search bar and plot their prices on the chart in a given time period.
+
+![search](search.png)
+
+You can include up to 4 different stocks.
+
+![stocks](stocks.png)
+
+The cards on the left side display some information about the stock performance. Three values are shown:
+
+* *Perf*: This is simply the change in the stock's price between the beginning and the end of the time period. In other words, this 
+is how much money can be made (or lost) by buying the stock at the beginning of the time period and reselleing it at the end.
+* *Trading*: This is the maximum performance that can be achieved (i.e. money that can be made) by trading in the
+time period with perfect knowledge of future prices
+* *Short*: This is the maximum performance that can be achieved by trading in the
+time period with perfect knowledge of future prices and being able to [short the stock](https://en.wikipedia.org/wiki/Short_(finance))
+
+## Trading view
+
+Switching to trading mode in any of the cards turns on the trading view for the stock
+
+![trading](trading.png)
+
+In trading mode, the chart displays the detailed optimal trading strategy for that stock. Hovering on any stock's data point on the chart will show what the optimal action for that day is
+(e.g. to *sell* or to *buy* the stock), as well as the balance that results from that action, both for normal and short trading.
+
+## Stock prices prediction
+
+Coming soon!
 
 # Technical details
 
