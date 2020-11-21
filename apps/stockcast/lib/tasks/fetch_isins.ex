@@ -16,13 +16,13 @@ defmodule Mix.Tasks.Fetch.Isins do
 
   @impl Mix.Task
   def run(args) do
+    Mix.Task.run("app.start", [])
+
     {_, isins, _} = OptionParser.parse(args, strict: [])
 
     if length(isins) == 0 do
       fail("you need to specify at least an ISIN to fetch")
     end
-
-    Application.ensure_all_started(:stockcast)
 
     start_time = Time.utc_now()
 

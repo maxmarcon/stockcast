@@ -42,6 +42,7 @@ defmodule Stockcast.MixProject do
       {:tesla, "~> 1.3.0"},
       {:decimal, "~> 1.0"},
       {:cachex, "~> 3.2"},
+      {:csv, "~> 2.4"},
       {:junit_formatter, "~> 3.0", only: [:test]},
       {:mock, "~> 0.3.0", only: [:test]}
     ]

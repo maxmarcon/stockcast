@@ -7,7 +7,7 @@
 # all use the same configuration file. If you want different
 # configurations or dependencies per app, it is best to
 # move said applications out of the umbrella.
-use Mix.Config
+import Config
 
 # Configure Mix tasks and generators
 config :stockcast,
@@ -56,7 +56,8 @@ config :stockcast_web,
 config :logger,
        :console,
        format: "$time $metadata[$level] $message\n",
-       metadata: [:request_id]
+       metadata: [:request_id],
+       device: :standard_error
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason

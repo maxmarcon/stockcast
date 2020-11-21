@@ -18,9 +18,9 @@ defmodule Mix.Tasks.Fetch.Symbols do
 
   @impl Mix.Task
   def run(args) do
-    {_, symbol_paths_from_args, _} = OptionParser.parse(args, strict: [])
+    Mix.Task.run("app.start", [])
 
-    Application.ensure_all_started(:stockcast)
+    {_, symbol_paths_from_args, _} = OptionParser.parse(args, strict: [])
 
     start_time = Time.utc_now()
 

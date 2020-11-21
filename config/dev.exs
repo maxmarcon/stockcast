@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :cors_plug,
   origin: "*"
