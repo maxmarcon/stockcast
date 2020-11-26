@@ -16,4 +16,5 @@ model = keras.Sequential([
     layers.LSTM(10)
 ])
 
-model(input_data)
+# needs the extra batch dimension
+print(model(input_data.reshape((1,) + input_data.shape)))
