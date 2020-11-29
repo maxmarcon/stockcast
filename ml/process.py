@@ -39,6 +39,7 @@ features, labels = np.array(features), np.array(labels)
 
 x_train, x_val, x_test = make_sets(features, training_size, validation_size)
 y_train, y_val, y_test = make_sets(labels, training_size, validation_size)
+# check out model.fit validation_split option... maybe we don't need an explicit validation set
 
 print("Training set has size {}, validation set has size {}, test set has size {}".format(len(x_train), len(x_val), len(x_test)))
 
