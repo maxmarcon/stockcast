@@ -21,7 +21,7 @@ feature_data = np.array(data[feature_columns])
 label_data = np.array(data[label_columns])
 
 model = keras.Sequential([
-    layers.Input((None, 2)),
+    layers.Input((None, len(feature_columns))),
     # needs to feed sequences and not only the last output to the next layer
     layers.BatchNormalization(),
     layers.LSTM(50, return_sequences=True),
