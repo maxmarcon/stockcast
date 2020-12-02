@@ -2,19 +2,23 @@ import numpy as np
 import pandas as pd
 import tensorflow.keras as keras
 import tensorflow.keras.layers as layers
-import matplotlib.pyplot as plt
+
 
 def make_sets(array, training, validation):
     array_size = len(array)
     return np.split(array, (int(array_size * training), int(array_size * (training + validation))))
 
 
-data = pd.read_csv('prices-AMZ-GY-2020-01-01-2020-11-21.csv')
-input_data = np.array(data[['day_of_week', 'close']])
-
+feature_columns = ['day_of_week', 'close']
+sequence_length = 60
 output_size = 5
 training_size = 0.7
 validation_size = 0.15
+
+data = pd.read_csv('prices-AMZ-GY-2020-01-01-2020-11-21.csv')
+label_columns = ['close']
+feature_data = np.array(data[feature_columns])
+label_data = np.array(data[label_columns])
 
 model = keras.Sequential([
     layers.Input((None, 2)),
@@ -27,11 +31,12 @@ model = keras.Sequential([
 ])
 
 features, labels = [], []
-sequence_length = 60
 
-for i in range(0, input_data.shape[0] - (sequence_length + output_size) + 1):
-    features.append(input_data[i:i + sequence_length])
-    labels.append(input_data[i + sequence_length:i + sequence_length + output_size, 1])
+for i in range(0, feature_data.shape[0] - (sequence_length + output_size) + 1):
+    features.append(feature_data[i:i + sequence_length])
+
+for i in range(0, label_data.shape[0] - (sequence_length + output_size) + 1):
+    labels.append(label_data[i + sequence_length:i + sequence_length + output_size, 0])
 
 print("Feature set has size {}".format(len(features)))
 
