@@ -12,7 +12,7 @@ def make_sets(array, training, validation):
 
 feature_columns = ['close', 'day_of_week']
 input_length = 60
-output_length = 1
+output_length = 5
 training_size = 0.7
 validation_size = 0.15
 epochs = 100
@@ -53,11 +53,15 @@ y_train, y_val, y_test = make_sets(labels, training_size, validation_size)
 print("Training set has size {}, validation set has size {}, test set has size {}".format(len(x_train), len(x_val),
                                                                                           len(x_test)))
 
-model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mean_squared_error'])
+model.compile(optimizer='adam', loss='mean_squared_error')
 
 model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=epochs, batch_size=x_train.shape[0])
 
-for r in map(lambda a, b: a + ": " + str(b), model.metrics_names, model.test_on_batch(x_test, y_test)):
+metric_results = model.test_on_batch(x_test, y_test)
+if type(metric_results) != list:
+    metric_results = [metric_results]
+
+for r in map(lambda a, b: a + ": " + str(b), model.metrics_names, metric_results):
     print(r)
 
 predicted = model.predict(x_test[plot_results_for_test_sample].reshape(1, input_length, len(feature_columns)))
