@@ -10,13 +10,13 @@ def make_sets(array, training, validation):
     return np.split(array, (int(array_size * training), int(array_size * (training + validation))))
 
 
-feature_columns = ['close']
+feature_columns = ['close', 'day_of_week']
 sequence_length = 60
 output_size = 5
 training_size = 0.7
 validation_size = 0.15
 epochs = 100
-plot_results_for_test = 1
+plot_results_for_test_sample = 1
 
 data = pd.read_csv('prices-AMZ-GY-2020-01-01-2020-11-21.csv')
 label_columns = ['close']
@@ -55,17 +55,17 @@ print("Training set has size {}, validation set has size {}, test set has size {
 
 model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mean_squared_error'])
 
-model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=200, batch_size=x_train.shape[0])
+model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=epochs, batch_size=x_train.shape[0])
 
 
 for r in map(lambda a, b: a + ": " + str(b), model.metrics_names, model.test_on_batch(x_test, y_test)):
     print(r)
     
-predicted = model.predict(x_test[plot_results_for_test].reshape(1, 60, len(feature_columns)))
-    
-    
-pyplot.plot(range(0, x_test.shape[1]), x_test[plot_results_for_test, :, 1], color='blue', label='Real prices')
-pyplot.plot(range(x_test.shape[1], x_test.shape[1] + 5), y_test[plot_results_for_test], color='blue')
+predicted = model.predict(x_test[plot_results_for_test_sample].reshape(1, 60, len(feature_columns)))
+
+pyplot.plot(range(0, x_test.shape[1]), x_test[plot_results_for_test_sample, :, feature_columns.index('close')], color='blue',
+            label='Real prices')
+pyplot.plot(range(x_test.shape[1], x_test.shape[1] + 5), y_test[plot_results_for_test_sample], color='blue')
 pyplot.plot(range(x_test.shape[1], x_test.shape[1] + 5), predicted[0], color='red', label='Predicted prices')
 pyplot.legend()
 pyplot.show()
