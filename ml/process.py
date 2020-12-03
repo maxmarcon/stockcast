@@ -11,8 +11,8 @@ def make_sets(array, training, validation):
 
 
 feature_columns = ['close', 'day_of_week']
-sequence_length = 60
-output_size = 5
+input_length = 60
+output_length = 1
 training_size = 0.7
 validation_size = 0.15
 epochs = 100
@@ -32,16 +32,16 @@ model = keras.Sequential([
     layers.LSTM(50, return_sequences=True),
     layers.LSTM(50),
     # next five days
-    layers.Dense(output_size)
+    layers.Dense(output_length)
 ])
 
 features, labels = [], []
 
-for i in range(0, feature_data.shape[0] - (sequence_length + output_size) + 1):
-    features.append(feature_data[i:i + sequence_length])
+for i in range(0, feature_data.shape[0] - (input_length + output_length) + 1):
+    features.append(feature_data[i:i + input_length])
 
-for i in range(0, label_data.shape[0] - (sequence_length + output_size) + 1):
-    labels.append(label_data[i + sequence_length:i + sequence_length + output_size, 0])
+for i in range(0, label_data.shape[0] - (input_length + output_length) + 1):
+    labels.append(label_data[i + input_length:i + input_length + output_length, 0])
 
 print("Feature set has size {}".format(len(features)))
 
@@ -57,15 +57,17 @@ model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mean_square
 
 model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=epochs, batch_size=x_train.shape[0])
 
-
 for r in map(lambda a, b: a + ": " + str(b), model.metrics_names, model.test_on_batch(x_test, y_test)):
     print(r)
-    
-predicted = model.predict(x_test[plot_results_for_test_sample].reshape(1, 60, len(feature_columns)))
 
-pyplot.plot(range(0, x_test.shape[1]), x_test[plot_results_for_test_sample, :, feature_columns.index('close')], color='blue',
+predicted = model.predict(x_test[plot_results_for_test_sample].reshape(1, input_length, len(feature_columns)))
+
+pyplot.plot(range(0, x_test.shape[1]), x_test[plot_results_for_test_sample, :, feature_columns.index('close')],
+            color='blue', marker='.',
             label='Real prices')
-pyplot.plot(range(x_test.shape[1], x_test.shape[1] + 5), y_test[plot_results_for_test_sample], color='blue')
-pyplot.plot(range(x_test.shape[1], x_test.shape[1] + 5), predicted[0], color='red', label='Predicted prices')
+pyplot.plot(range(x_test.shape[1], x_test.shape[1] + output_length), y_test[plot_results_for_test_sample], color='blue',
+            marker='.')
+pyplot.plot(range(x_test.shape[1], x_test.shape[1] + output_length), predicted[0], color='red',
+            label='Predicted prices', marker='.')
 pyplot.legend()
 pyplot.show()
