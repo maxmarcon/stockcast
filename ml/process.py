@@ -17,8 +17,9 @@ training_size = 0.7
 validation_size = 0.15
 epochs = 100
 plot_results_for_test_sample = 1
+batch_size = 30
 
-data = pd.read_csv('prices-AMZ-GY-2020-01-01-2020-11-21.csv')
+data = pd.read_csv('prices-AMZ-GY-2016-01-01-2020-12-03.csv')
 label_columns = ['close']
 feature_data = np.array(data[feature_columns])
 label_data = np.array(data[label_columns])
@@ -28,9 +29,13 @@ model = keras.Sequential([
     # needs to feed sequences and not only the last output to the next layer
     layers.BatchNormalization(),
     layers.LSTM(50, return_sequences=True),
+    layers.BatchNormalization(),
     layers.LSTM(50, return_sequences=True),
+    layers.BatchNormalization(),
     layers.LSTM(50, return_sequences=True),
+    layers.BatchNormalization(),
     layers.LSTM(50),
+    layers.BatchNormalization(),
     # next five days
     layers.Dense(output_length)
 ])
@@ -55,9 +60,9 @@ print("Training set has size {}, validation set has size {}, test set has size {
 
 model.compile(optimizer='adam', loss='mean_squared_error')
 
-model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=epochs, batch_size=x_train.shape[0])
+model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=epochs, batch_size=batch_size)
 
-metric_results = model.test_on_batch(x_test, y_test)
+metric_results = model.evaluate(x_test, y_test)
 if type(metric_results) != list:
     metric_results = [metric_results]
 
