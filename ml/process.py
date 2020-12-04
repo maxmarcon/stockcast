@@ -16,9 +16,9 @@ def make_sets(array, training, validation):
 def preprocess(data):
     close, dow = data['close'].to_numpy(), data['day_of_week'].to_numpy()
     close = MinMaxScaler().fit_transform(close.reshape(-1, 1))
-    # dow = OneHotEncoder(sparse=False).fit_transform(dow.reshape(-1, 1))
+    dow = OneHotEncoder(sparse=False).fit_transform(dow.reshape(-1, 1))
     # one-hot encoding might not be needed?
-    return np.append(close, dow.reshape(-1, 1), axis=1)
+    return np.append(close, dow, axis=1)
 
 data = pd.read_csv('prices-AMZ-GY-2016-01-01-2020-12-03.csv')
 preprocessed_data = preprocess(data)
@@ -29,7 +29,7 @@ input_length = 60
 output_length = 5
 training_size = 0.7
 validation_size = 0.15
-epochs = 10
+epochs = 50
 plot_results_for_test_sample = 1
 batch_size = 30
 dropout = 0.2
