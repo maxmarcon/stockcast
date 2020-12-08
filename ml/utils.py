@@ -1,7 +1,20 @@
 import matplotlib.pyplot as pyplot
 import numpy as np
+import tensorflow.keras as keras
+import tensorflow.keras.layers as layers
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import OneHotEncoder
+
+
+def make_model(input_len, output_len, layer_size, layer_num, dropout=0.0):
+    model = keras.Sequential([
+        layers.Input((None, input_len))
+    ])
+    for _ in range(0, layer_num - 1):
+        model.add(layers.LSTM(layer_size, return_sequences=True, dropout=dropout))
+    model.add(layers.LSTM(layer_size, return_sequences=False, dropout=dropout))
+    model.add(layers.Dense(output_len))
+    return model
 
 
 def make_sets(array, training, validation):
@@ -24,20 +37,17 @@ def preprocess(data):
     return close_scaler
 
 
-def plot_results(model, x_test, y_test, nof_samples=9):
-    for i in range(0, nof_samples):
-        pyplot.subplot(3, 3, i + 1, title='test sample {}'.format(i))
+def plot_results(dates, y_predicted, y_test, only_next_day=False, max_labels=10):
+    if only_next_day:
+        y_predicted_flat = y_predicted[:, 0]
+        y_test_flat = y_test[:, 0]
+    else:
+        prediction_length = y_predicted.shape[1]
+        y_predicted_flat = y_predicted[::prediction_length].reshape(-1)
+        y_test_flat = y_test[::prediction_length].reshape(-1)
 
-        predicted = model.predict(x_test[i].reshape(1, *x_test.shape[1:]))
-
-        feature_x_range = range(0, x_test.shape[1])
-        label_x_range = range(x_test.shape[1], x_test.shape[1] + y_test.shape[1])
-
-        pyplot.plot(
-            feature_x_range, x_test[i, :, 0], 'b.-',
-            label_x_range, y_test[i], 'b.-',
-            label_x_range, predicted[0], 'r.-'
-        )
-        pyplot.ylim(bottom=0)
-        pyplot.grid(True)
+    x = dates[-y_test_flat.size:]
+    pyplot.plot(x, y_test_flat, 'b-', x, y_predicted_flat, 'r-')
+    pyplot.xticks(np.arange(0, y_test_flat.size, y_test_flat.size / max_labels), rotation=-30, fontsize='x-small')
+    pyplot.grid(True)
     pyplot.show()
