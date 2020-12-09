@@ -41,13 +41,15 @@ def plot_results(dates, y_predicted, y_test, only_next_day=False, max_labels=10)
     if only_next_day:
         y_predicted_flat = y_predicted[:, 0]
         y_test_flat = y_test[:, 0]
+        dates_flat = dates[:, 0]
     else:
         prediction_length = y_predicted.shape[1]
         y_predicted_flat = y_predicted[::prediction_length].reshape(-1)
         y_test_flat = y_test[::prediction_length].reshape(-1)
+        dates_flat = dates[::prediction_length].reshape(-1)
 
-    x = dates[-y_test_flat.size:]
-    pyplot.plot(x, y_test_flat, 'b-', x, y_predicted_flat, 'r-')
-    pyplot.xticks(np.arange(0, y_test_flat.size, y_test_flat.size / max_labels), rotation=-30, fontsize='x-small')
+    pyplot.plot(dates_flat, y_test_flat, 'b-', dates_flat, y_predicted_flat, 'r-')
+    pyplot.xticks(np.arange(0, dates_flat.size, dates_flat.size / max_labels), rotation=-30, fontsize='x-small')
+    pyplot.ylim(bottom=0)
     pyplot.grid(True)
     pyplot.show()
