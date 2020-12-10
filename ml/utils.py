@@ -1,5 +1,8 @@
+import os.path
+
 import matplotlib.pyplot as pyplot
 import numpy as np
+import pandas
 import tensorflow.keras as keras
 import tensorflow.keras.layers as layers
 from sklearn.preprocessing import MinMaxScaler
@@ -23,6 +26,23 @@ def make_sets(array, training, validation):
     return np.split(array, (int(array_size * training), int(array_size * (training + validation))))
 
 
+def save_hyperparameters(datafile, parameters, metrics):
+    (stem, _) = os.path.splitext(datafile)
+    params_file = stem + ".hp"
+
+    row = {k: [v] for k, v in {**parameters, **metrics}.items()}
+
+    if os.path.exists(params_file):
+        hp_data = pandas.read_csv(params_file)
+        # append row
+    else:
+        hp_data = pandas.DataFrame.from_dict(row)
+
+    # save
+
+    return hp_data
+
+
 def preprocess(data):
     close, dow = data['close'].to_numpy().reshape(-1, 1), data['day_of_week'].to_numpy().reshape(-1, 1)
     close_scaler = MinMaxScaler()
@@ -37,18 +57,14 @@ def preprocess(data):
     return close_scaler
 
 
-def plot_results(dates, y_predicted, y_test, only_next_day=False, max_labels=10):
-    if only_next_day:
-        y_predicted_flat = y_predicted[:, 0]
-        y_test_flat = y_test[:, 0]
-        dates_flat = dates[:, 0]
-    else:
-        prediction_length = y_predicted.shape[1]
-        y_predicted_flat = y_predicted[::prediction_length].reshape(-1)
-        y_test_flat = y_test[::prediction_length].reshape(-1)
-        dates_flat = dates[::prediction_length].reshape(-1)
+def plot_results(dates, y_predicted, y_test, max_labels=10):
+    prediction_length = y_predicted.shape[1]
+    y_predicted_flat = y_predicted[::prediction_length].reshape(-1)
+    y_test_flat = y_test[::prediction_length].reshape(-1)
+    dates_flat = dates[::prediction_length].reshape(-1)
 
     pyplot.plot(dates_flat, y_test_flat, 'b-', dates_flat, y_predicted_flat, 'r-')
+    max_labels = max_labels if max_labels < dates_flat.size else dates_flat.size
     pyplot.xticks(np.arange(0, dates_flat.size, dates_flat.size / max_labels), rotation=-30, fontsize='x-small')
     pyplot.ylim(bottom=0)
     pyplot.grid(True)
