@@ -8,48 +8,53 @@ import tensorflow.keras.models as kmodels
 import utils
 
 arg_parser = argparse.ArgumentParser()
-arg_parser.add_argument('--load-model', action='store_true')
+arg_parser.add_argument('--model', '-m', action='store')
+arg_parser.add_argument('command', choices=('train', 'load', 'save'))
 arg_parser.add_argument('datafile')
-arg_parser.add_argument('model_name')
 
 arguments = arg_parser.parse_args()
-
-data = pd.read_csv(arguments.datafile)
-close_rescaler = utils.preprocess(data)
 
 training_size = 0.7
 validation_size = 0.15
 epochs = 30
 batch_size = 30
-
 feature_columns = ['close_scaled']
-label_columns = ['date', 'close_scaled']
-input_length = 60
-output_length = 5
 dropout = 0.0
 
 
-feature_data = data[feature_columns].values
-label_data = data[label_columns].values
+def prepare_data(datafile):
+    global close_rescaler
+    global x_train, x_val, x_test
+    global y_train, y_val, y_test
+    global dates_train, dates_val, dates_test
 
-features, labels, dates = [], [], []
+    input_length = 60
+    output_length = 5
 
-for i in range(0, feature_data.shape[0] - (input_length + output_length) + 1):
-    features.append(feature_data[i:i + input_length])
+    data = pd.read_csv(datafile)
+    close_rescaler = utils.preprocess(data)
 
-for i in range(0, label_data.shape[0] - (input_length + output_length) + 1):
-    dates.append(label_data[i + input_length:i + input_length + output_length, 0])
-    labels.append(label_data[i + input_length:i + input_length + output_length, 1])
-    
+    feature_data = data[feature_columns]
 
-print("Feature set has size {}".format(len(features)))
+    features, labels, dates = [], [], []
 
-features, labels, dates = np.array(features, np.float), np.array(labels, np.float), np.array(dates)
+    for i in range(0, feature_data.shape[0] - (input_length + output_length) + 1):
+        features.append(feature_data[i:i + input_length].values)
 
-x_train, x_val, x_test = utils.make_sets(features, training_size, validation_size)
-y_train, y_val, y_test = utils.make_sets(labels, training_size, validation_size)
-dates_train, dates_val, dates_test = utils.make_sets(dates, training_size, validation_size)
+    for i in range(0, data.shape[0] - (input_length + output_length) + 1):
+        dates.append(data[i + input_length:i + input_length + output_length]['date'])
+        labels.append(data[i + input_length:i + input_length + output_length]['close_scaled'])
 
+    print("Feature set has size {}".format(len(features)))
+
+    features, labels, dates = np.array(features, np.float), np.array(labels, np.float), np.array(dates)
+
+    x_train, x_val, x_test = utils.make_sets(features, training_size, validation_size)
+    y_train, y_val, y_test = utils.make_sets(labels, training_size, validation_size)
+    dates_train, dates_val, dates_test = utils.make_sets(dates, training_size, validation_size)
+
+
+prepare_data(arguments.datafile)
 
 print("Training set has size {}, validation set has size {}, test set has size {}".format(len(x_train), len(x_val),
                                                                                           len(x_test)))
@@ -57,16 +62,26 @@ print("Training set has size {}, validation set has size {}, test set has size {
 
 def train(model, x_train, y_train, x_val, y_val, epochs, batch_size):
     model.compile(optimizer='adam', loss='mean_squared_error')
-    training_history = model.fit(x_train, y_train, shuffle=True, validation_data=(x_val, y_val), epochs=epochs, batch_size=batch_size)
+    training_history = model.fit(x_train, y_train, shuffle=True, validation_data=(x_val, y_val), epochs=epochs,
+                                 batch_size=batch_size)
 
 
-if arguments.load_model:
-    print('loading model from {}'.format(arguments.model_name))
-    model = kmodels.load_model(arguments.model_name)
-else:
+def require_model_name():
+    if arguments.model is None:
+        raise RuntimeError("You need to specify a model with --model")
+
+
+if arguments.command == 'load':
+    require_model_name()
+    print('loading model from {}'.format(arguments.model))
+    model = kmodels.load_model(arguments.model)
+elif arguments.command == 'train':
+    require_model_name()
     model = utils.make_model(len(feature_columns), output_length, 50, 5)
     train(model, x_test, y_test, x_val, y_val, epochs, batch_size)
-    model.save(arguments.model_name)
+    model.save(arguments.model)
+else:
+    raise RuntimeError("Unimplemented command {}".format(arguments.command))
 
 metric_results = model.evaluate(x_test, y_test)
 

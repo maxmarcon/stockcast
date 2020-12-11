@@ -26,21 +26,27 @@ def make_sets(array, training, validation):
     return np.split(array, (int(array_size * training), int(array_size * (training + validation))))
 
 
-def save_hyperparameters(datafile, parameters, metrics):
-    (stem, _) = os.path.splitext(datafile)
-    params_file = stem + ".hp"
+def __get_hyperparameter_filename(file):
+    (stem, _) = os.path.splitext(file)
+    return stem + ".hp"
 
-    row = {k: [v] for k, v in {**parameters, **metrics}.items()}
 
-    if os.path.exists(params_file):
-        hp_data = pandas.read_csv(params_file)
-        # append row
+def load_hyperparameters(file):
+    try:
+        return pandas.read_csv(__get_hyperparameter_filename(file))
+    except FileNotFoundError:
+        return None
+
+
+def save_hyperparameters(dataframe, parameters, metrics, time, file):
+    row = {k: [v] for k, v in {**parameters, **metrics, 'time': time}.items()}
+
+    if dataframe is None:
+        dataframe = pandas.DataFrame.from_dict(row)
     else:
-        hp_data = pandas.DataFrame.from_dict(row)
+        dataframe = dataframe.append(row)
 
-    # save
-
-    return hp_data
+    dataframe.to_csv(__get_hyperparameter_filename(file))
 
 
 def preprocess(data):
