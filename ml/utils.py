@@ -9,11 +9,11 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import OneHotEncoder
 
 
-def make_model(input_len, output_len, layer_size, layer_num, dropout=0.0):
+def make_model(input_len, output_len, layer_size, nof_hidden_layers, dropout=0.0):
     model = keras.Sequential([
         layers.Input((None, input_len))
     ])
-    for _ in range(0, layer_num - 1):
+    for _ in range(0, nof_hidden_layers - 1):
         model.add(layers.LSTM(layer_size, return_sequences=True, dropout=dropout))
     model.add(layers.LSTM(layer_size, return_sequences=False, dropout=dropout))
     model.add(layers.Dense(output_len))
@@ -22,7 +22,6 @@ def make_model(input_len, output_len, layer_size, layer_num, dropout=0.0):
 
 def make_sets(array, training, validation):
     array_size = len(array)
-    # TODO: add random sampling!
     return np.split(array, (int(array_size * training), int(array_size * (training + validation))))
 
 
@@ -75,3 +74,38 @@ def plot_results(dates, y_predicted, y_test, max_labels=10):
     pyplot.ylim(bottom=0)
     pyplot.grid(True)
     pyplot.show()
+
+
+def prepare_data(datafile, feature_columns, input_length, output_length, training_size, validation_size):
+    data = pandas.read_csv(datafile)
+    close_rescaler = preprocess(data)
+
+    feature_data = data[feature_columns]
+
+    features, labels, dates = [], [], []
+
+    for i in range(0, feature_data.shape[0] - (input_length + output_length) + 1):
+        features.append(feature_data[i:i + input_length].values)
+
+    for i in range(0, data.shape[0] - (input_length + output_length) + 1):
+        dates.append(data[i + input_length:i + input_length + output_length]['date'])
+        labels.append(data[i + input_length:i + input_length + output_length]['close_scaled'])
+
+    features, labels, dates = np.array(features, np.float), np.array(labels, np.float), np.array(dates)
+
+    x_train, x_val, x_test = make_sets(features, training_size, validation_size)
+    y_train, y_val, y_test = make_sets(labels, training_size, validation_size)
+    dates_train, dates_val, dates_test = make_sets(dates, training_size, validation_size)
+
+    return {
+        'x_train': x_train,
+        'y_train': y_train,
+        'x_val': x_val,
+        'y_val': y_val,
+        'x_test': x_test,
+        'y_test': y_test,
+        'dates_train': dates_train,
+        'dates_val': dates_val,
+        'dates_test': dates_test,
+        'rescaler': close_rescaler
+    }
