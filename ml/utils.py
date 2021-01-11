@@ -1,4 +1,5 @@
 import os.path
+from functools import reduce
 
 import matplotlib.pyplot as pyplot
 import numpy as np
@@ -25,27 +26,36 @@ def make_sets(array, training, validation):
     return np.split(array, (int(array_size * training), int(array_size * (training + validation))))
 
 
-def __get_hyperparameter_filename(file):
+def tuning_state_filename(file):
     (stem, _) = os.path.splitext(file)
-    return stem + ".hp"
+    return stem + ".tuning"
 
 
-def load_hyperparameters(file):
+def load_tuning_state(file):
     try:
-        return pandas.read_csv(__get_hyperparameter_filename(file))
+        return pandas.read_csv(tuning_state_filename(file))
     except FileNotFoundError:
         return None
 
 
-def save_hyperparameters(dataframe, parameters, metrics, time, file):
-    row = {k: [v] for k, v in {**parameters, **metrics, 'time': time}.items()}
-
+def contains_tuning_state(dataframe, parameters):
     if dataframe is None:
-        dataframe = pandas.DataFrame.from_dict(row)
-    else:
-        dataframe = dataframe.append(row)
+        return False
 
-    dataframe.to_csv(__get_hyperparameter_filename(file))
+    cond = reduce(lambda l, r: l and r, map(lambda k: dataframe[k] == parameters[k], parameters))
+    return not dataframe.loc[cond].empty
+
+
+def save_tuning_state(dataframe, parameters, metrics, time, file):
+    row_dict = {**parameters, **metrics, 'time': time}  
+    
+    if dataframe is None:
+        dataframe = pandas.DataFrame.from_dict({k: [v] for k, v in row_dict.items()})
+    else:
+        dataframe = dataframe.append(row_dict, ignore_index=True)
+
+    dataframe.to_csv(tuning_state_filename(file), index=False)
+    return dataframe
 
 
 def preprocess(data):
