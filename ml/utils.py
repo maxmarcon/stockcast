@@ -54,7 +54,7 @@ def contains_tuning_state(dataframe, parameters):
     selector = reduce(lambda l, r: operator.and_(l, r),
                       (dataframe[param_key] == param_value for (param_key, param_value) in
                        paramaters_for_lookup(parameters).items()))
-    return not dataframe.loc[selector].empty
+    return not dataframe[selector].empty
 
 
 def save_tuning_state(dataframe, parameters, metrics, time, file):
