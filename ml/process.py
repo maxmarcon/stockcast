@@ -2,33 +2,8 @@
 import argparse
 import time
 
-arg_parser = argparse.ArgumentParser()
-arg_parser.add_argument('command', choices=('tune', 'train', 'evaluate', 'save'))
-arg_parser.add_argument('datafile')
-arg_parser.add_argument('--model', '-m', required=True)
-
-# subparsers = arg_parser.add_subparsers(dest="command", required=True)
-# 
-# parser_load = subparsers.add_parser('evaluate')
-# parser_load.add_argument('datafile')
-# # parser_load.add_argument('--model', '-m', required=True)
-# 
-# parser_train = subparsers.add_parser('train')
-# parser_train.add_argument('datafile')
-# # parser_load.add_argument('--model', '-m', required=True)
-# 
-# parser_train = subparsers.add_parser('tune')
-# parser_train.add_argument('datafile')
-# # parser_load.add_argument('--model', '-m', required=True)
-# 
-# parser_save = subparsers.add_parser('save')
-# parser_save.add_argument('datafile')
-# # parser_save.add_argument('--model', '-m', required=True)
-
-args = arg_parser.parse_args()
-print("Loading libraries...")
-
 import tensorflow.keras.models as kmodels
+
 import utils
 
 training_size = 0.7
@@ -40,8 +15,8 @@ output_length = 5
 
 ## tuning_state
 feature_columns = [
+    ['close_scaled', 'day_of_week'],
     ['close_scaled'],
-    ['close_scaled', 'day_of_the_week'],
     ['close_scaled', *['dow_{}'.format(i) for i in range(0, 6)]]
 ]
 dropout_rates = [0.0, 0.1, 0.2]
@@ -49,15 +24,6 @@ optimizer = ['adam']
 loss = ['mean_squared_error']
 layer_sizes = [10, 20, 30, 40, 50, 100]
 nof_hidden_layers = [1, 2, 3, 4, 5]
-
-print("Loading data...")
-
-data = utils.prepare_data(
-    args.datafile, feature_columns[0], input_length, output_length, training_size, validation_size)
-
-print("Training set has size {}, validation set has size {}, test set has size {}".format(len(data['x_train']),
-                                                                                          len(data['x_val']),
-                                                                                          len(data['x_test'])))
 
 
 def train(epochs, batch_size, x_train, y_train, x_val, y_val, **kwargs):
@@ -71,11 +37,11 @@ def tune(model):
 
     print("{} models to train".format(total_models))
 
-    dataframe = utils.load_tuning_state(model)
     tuning_state_filename = utils.tuning_state_filename(model)
     print("storing tuning state in: {}".format(tuning_state_filename))
+    dataframe = utils.load_tuning_state(tuning_state_filename)
     if dataframe is not None:
-        print("resuming interrupted tuning session with {} models".format(len(dataframe)))
+        print("resuming interrupted tuning session with {} trained models".format(len(dataframe)))
 
     try:
         for features in feature_columns:
@@ -89,9 +55,9 @@ def tune(model):
                             'hidden_layers': hidden_layers
                         }
                         if utils.contains_tuning_state(dataframe, parameters):
-                            print("Skipping parameters: {}".format(parameters))
+                            print("skipping parameters: {}".format(parameters))
                         else:
-                            print("sleeping 10 seconds...")
+                            print("sleeping 5 seconds...")
                             time.sleep(5)
                             try:
                                 pass
@@ -115,15 +81,49 @@ def evaluate(model, x_test, y_test, dates_test, rescaler, **kwargs):
                        rescaler.inverse_transform(y_test))
 
 
-if args.command == 'evaluate':
-    print('loading model from {}'.format(args.model))
-    model = kmodels.load_model(args.model)
-    evaluate(kmodels.load_model(args.model), **data)
-elif args.command == 'train':
-    model = utils.make_model(len(feature_columns), output_length, 50, 5)
-    train(model, epochs, batch_size, **data)
-    model.save(args.model)
-elif args.command == 'tune':
-    tune(args.model)
-else:
-    raise RuntimeError("Unimplemented command {}".format(args.command))
+if __name__ == '__main__':
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('command', choices=('tune', 'train', 'evaluate', 'save'))
+    arg_parser.add_argument('datafile')
+    arg_parser.add_argument('--model', '-m', required=True)
+
+    # subparsers = arg_parser.add_subparsers(dest="command", required=True)
+    # 
+    # parser_load = subparsers.add_parser('evaluate')
+    # parser_load.add_argument('datafile')
+    # # parser_load.add_argument('--model', '-m', required=True)
+    # 
+    # parser_train = subparsers.add_parser('train')
+    # parser_train.add_argument('datafile')
+    # # parser_load.add_argument('--model', '-m', required=True)
+    # 
+    # parser_train = subparsers.add_parser('tune')
+    # parser_train.add_argument('datafile')
+    # # parser_load.add_argument('--model', '-m', required=True)
+    # 
+    # parser_save = subparsers.add_parser('save')
+    # parser_save.add_argument('datafile')
+    # # parser_save.add_argument('--model', '-m', required=True)
+
+    args = arg_parser.parse_args()
+
+    print("Loading data...")
+
+    data = utils.prepare_data(
+        args.datafile, feature_columns[0], input_length, output_length, training_size, validation_size)
+
+    print("Training set has size {}, validation set has size {}, test set has size {}".format(len(data['x_train']),
+                                                                                              len(data['x_val']),
+                                                                                              len(data['x_test'])))
+    if args.command == 'evaluate':
+        print('loading model from {}'.format(args.model))
+        model = kmodels.load_model(args.model)
+        evaluate(kmodels.load_model(args.model), **data)
+    elif args.command == 'train':
+        model = utils.make_model(len(feature_columns), output_length, 50, 5)
+        train(model, epochs, batch_size, **data)
+        model.save(args.model)
+    elif args.command == 'tune':
+        tune(args.model)
+    else:
+        raise RuntimeError("Unimplemented command {}".format(args.command))

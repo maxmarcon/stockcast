@@ -1,3 +1,4 @@
+import operator
 import os.path
 from functools import reduce
 
@@ -31,24 +32,34 @@ def tuning_state_filename(file):
     return stem + ".tuning"
 
 
-def load_tuning_state(file):
+def load_tuning_state(filename):
     try:
-        return pandas.read_csv(tuning_state_filename(file))
+        return pandas.read_csv(filename)
     except FileNotFoundError:
         return None
+
+
+def paramaters_for_lookup(parameters):
+    return dict(
+        (param_key, ','.join(sorted(param_value)) if type(param_value) is list else param_value) for
+        (param_key, param_value) in
+        parameters.items()
+    )
 
 
 def contains_tuning_state(dataframe, parameters):
     if dataframe is None:
         return False
 
-    cond = reduce(lambda l, r: l and r, map(lambda k: dataframe[k] == parameters[k], parameters))
-    return not dataframe.loc[cond].empty
+    selector = reduce(lambda l, r: operator.and_(l, r),
+                      (dataframe[param_key] == param_value for (param_key, param_value) in
+                       paramaters_for_lookup(parameters).items()))
+    return not dataframe.loc[selector].empty
 
 
 def save_tuning_state(dataframe, parameters, metrics, time, file):
-    row_dict = {**parameters, **metrics, 'time': time}  
-    
+    row_dict = {**paramaters_for_lookup(parameters), **metrics, 'time': time}
+
     if dataframe is None:
         dataframe = pandas.DataFrame.from_dict({k: [v] for k, v in row_dict.items()})
     else:
