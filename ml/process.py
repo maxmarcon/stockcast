@@ -1,43 +1,24 @@
 #!/usr/bin/env python
 import argparse
-import time
+from time import time
 
 import tensorflow.keras.models as kmodels
 
 import utils
 
-training_size = 0.7
-validation_size = 0.15
-epochs = 30
-batch_size = 30
-input_length = 60
-output_length = 5
 
-## tuning_state
-feature_columns = [
-    ['close_scaled', 'day_of_week'],
-    ['close_scaled'],
-    ['close_scaled', *['dow_{}'.format(i) for i in range(0, 6)]]
-]
-dropout_rates = [0.0, 0.1, 0.2]
-optimizer = ['adam']
-loss = ['mean_squared_error']
-layer_sizes = [10, 20, 30, 40, 50, 100]
-nof_hidden_layers = [1, 2, 3, 4, 5]
-
-
-def train(epochs, batch_size, x_train, y_train, x_val, y_val, **kwargs):
+def train(model, epochs, batch_size, x_train, y_train, x_val, y_val, **kwargs):
     model.compile(optimizer='adam', loss='mean_squared_error')
-    training_history = model.fit(x_train, y_train, shuffle=True, validation_data=(x_val, y_val), epochs=epochs,
-                                 batch_size=batch_size)
+    return model.fit(x_train, y_train, shuffle=True, validation_data=(x_val, y_val), epochs=epochs,
+                     batch_size=batch_size)
 
 
-def tune(model):
+def tune(model_name, datafile, input_length, output_length, training_size, validation_size):
     total_models = len(feature_columns) * len(dropout_rates) * len(layer_sizes) * len(nof_hidden_layers)
 
     print("{} models to train".format(total_models))
 
-    tuning_state_filename = utils.tuning_state_filename(model)
+    tuning_state_filename = utils.tuning_state_filename(model_name)
     print("storing tuning state in: {}".format(tuning_state_filename))
     dataframe = utils.load_tuning_state(tuning_state_filename)
     if dataframe is not None:
@@ -57,15 +38,26 @@ def tune(model):
                         if utils.contains_tuning_state(dataframe, parameters):
                             print("skipping parameters: {}".format(parameters))
                         else:
-                            print("sleeping 5 seconds...")
-                            time.sleep(5)
+                            print("validating model with parameters {}".format(parameters))
+
+                            data = utils.prepare_data(datafile, parameters['features'], input_length, output_length,
+                                                      training_size, validation_size)
+                            model = utils.make_model(input_length, len(parameters['features']), output_length,
+                                                     **parameters)
+                            start = time()
+                            history = train(model, epochs, batch_size, **data)
+                            training_time = time() - start
                             try:
                                 pass
                             except KeyboardInterrupt:
                                 print("received interrupt from keyboard, saving tuning state first")
                                 raise
                             finally:
-                                dataframe = utils.save_tuning_state(dataframe, parameters, {'loss': 0.1}, 10, model)
+                                dataframe = utils.save_tuning_state(dataframe, parameters,
+                                                                    {'loss': history.history['loss'][-1],
+                                                                     'val_loss': history.history['val_loss'][-1]},
+                                                                    training_time,
+                                                                    model_name)
         print("tuning completed, results stored in: {}".format(tuning_state_filename))
     except KeyboardInterrupt:
         print("tuning interrupted by user, tuning state saved in: {}".format(tuning_state_filename))
@@ -82,6 +74,26 @@ def evaluate(model, x_test, y_test, dates_test, rescaler, **kwargs):
 
 
 if __name__ == '__main__':
+
+    training_size = 0.7
+    validation_size = 0.15
+    epochs = 30
+    batch_size = 30
+    input_length = 60
+    output_length = 5
+
+    ## tuning_state
+    feature_columns = [
+        ['close_scaled', 'day_of_week'],
+        ['close_scaled'],
+        ['close_scaled', *['dow_{}'.format(i) for i in range(0, 6)]]
+    ]
+    dropout_rates = [0.0, 0.1, 0.2]
+    optimizer = ['adam']
+    loss = ['mean_squared_error']
+    layer_sizes = [10, 20, 30, 40, 50, 100]
+    nof_hidden_layers = [1, 2, 3, 4, 5]
+
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('command', choices=('tune', 'train', 'evaluate', 'save'))
     arg_parser.add_argument('datafile')
@@ -124,6 +136,6 @@ if __name__ == '__main__':
         train(model, epochs, batch_size, **data)
         model.save(args.model)
     elif args.command == 'tune':
-        tune(args.model)
+        tune(args.model, args.datafile, input_length, output_length, training_size, validation_size)
     else:
         raise RuntimeError("Unimplemented command {}".format(args.command))

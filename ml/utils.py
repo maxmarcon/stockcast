@@ -11,13 +11,13 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import OneHotEncoder
 
 
-def make_model(input_len, output_len, layer_size, nof_hidden_layers, dropout=0.0):
+def make_model(input_len, feature_size, output_len, layer_size, hidden_layers, dropout_rate=0.0, **kwargs):
     model = keras.Sequential([
-        layers.Input((None, input_len))
+        layers.Input((input_len, feature_size))
     ])
-    for _ in range(0, nof_hidden_layers - 1):
-        model.add(layers.LSTM(layer_size, return_sequences=True, dropout=dropout))
-    model.add(layers.LSTM(layer_size, return_sequences=False, dropout=dropout))
+    for _ in range(0, hidden_layers - 1):
+        model.add(layers.LSTM(layer_size, return_sequences=True, dropout=dropout_rate))
+    model.add(layers.LSTM(layer_size, return_sequences=False, dropout=dropout_rate))
     model.add(layers.Dense(output_len))
     return model
 
@@ -57,7 +57,7 @@ def contains_tuning_state(dataframe, parameters):
     return not dataframe[selector].empty
 
 
-def save_tuning_state(dataframe, parameters, metrics, time, file):
+def save_tuning_state(dataframe, parameters, metrics, time, model_name):
     row_dict = {**paramaters_for_lookup(parameters), **metrics, 'time': time}
 
     if dataframe is None:
@@ -65,7 +65,7 @@ def save_tuning_state(dataframe, parameters, metrics, time, file):
     else:
         dataframe = dataframe.append(row_dict, ignore_index=True)
 
-    dataframe.to_csv(tuning_state_filename(file), index=False)
+    dataframe.to_csv(tuning_state_filename(model_name), index=False)
     return dataframe
 
 
