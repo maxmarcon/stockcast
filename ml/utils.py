@@ -7,15 +7,16 @@ import numpy as np
 import pandas
 import tensorflow.keras as keras
 import tensorflow.keras.layers as layers
+from colors import *
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import OneHotEncoder
 
 
-def make_model(input_len, feature_size, output_len, layer_size, hidden_layers, dropout_rate=0.0, **kwargs):
+def make_model(input_len, feature_size, output_len, layer_size, nof_hidden_layers, dropout_rate=0.0, **kwargs):
     model = keras.Sequential([
         layers.Input((input_len, feature_size))
     ])
-    for _ in range(0, hidden_layers - 1):
+    for _ in range(0, nof_hidden_layers - 1):
         model.add(layers.LSTM(layer_size, return_sequences=True, dropout=dropout_rate))
     model.add(layers.LSTM(layer_size, return_sequences=False, dropout=dropout_rate))
     model.add(layers.Dense(output_len))
@@ -39,6 +40,21 @@ def load_tuning_state(filename):
         return None
 
 
+def enumerate_parameter_space(parameters):
+    key, values = parameters.popitem()
+    if len(parameters) == 0:
+        for v in values:
+            yield {key: v}
+    else:
+        for rest in enumerate_parameter_space(parameters):
+            for v in values:
+                yield {key: v, **rest}
+
+
+def parameter_space_size(parameters):
+    return reduce(operator.mul, (len(values) for values in parameters.values()))
+
+
 def paramaters_for_lookup(parameters):
     return dict(
         (param_key, ','.join(sorted(param_value)) if type(param_value) is list else param_value) for
@@ -58,6 +74,7 @@ def contains_tuning_state(dataframe, parameters):
 
 
 def save_tuning_state(dataframe, parameters, metrics, time, model_name):
+    print(f"saving tuning state {parameters}")
     row_dict = {**paramaters_for_lookup(parameters), **metrics, 'time': time}
 
     if dataframe is None:
@@ -130,3 +147,15 @@ def prepare_data(datafile, feature_columns, input_length, output_length, trainin
         'dates_test': dates_test,
         'rescaler': close_rescaler
     }
+
+
+def ok(msg):
+    print(color(msg, fg='green'))
+
+
+def error(msg):
+    print(color(msg, fg='red'))
+
+
+def warn(msg):
+    print(color(msg, fg='yellow'))
