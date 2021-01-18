@@ -9,8 +9,8 @@ import utils
 from utils import ok, warn
 
 
-def train(model, epochs, batch_size, optimizer, x_train, y_train, x_val, y_val, **kwargs):
-    model.compile(optimizer=optimizer, loss='mean_squared_error')
+def train(model, epochs, batch_size, loss_function, optimizer, x_train, y_train, x_val, y_val, **kwargs):
+    model.compile(optimizer=optimizer, loss=loss_function)
     return model.fit(x_train, y_train, shuffle=True, validation_data=(x_val, y_val), epochs=epochs,
                      batch_size=batch_size)
 
@@ -45,7 +45,7 @@ def tune(model_name, datafile, hyperparameters, input_length, output_length, tra
                 model = utils.make_model(input_length, len(parameter_combination['feature_columns']), output_length,
                                          **parameter_combination)
                 start = time()
-                history = train(model, epochs, batch_size, **parameter_combination, **data)
+                history = train(model, **parameter_combination, **data)
                 training_time = time() - start
                 try:
                     pass
@@ -78,8 +78,6 @@ if __name__ == '__main__':
 
     training_size = 0.7
     validation_size = 0.15
-    epochs = 30
-    batch_size = 30
     input_length = 60
     output_length = 5
 
@@ -91,9 +89,11 @@ if __name__ == '__main__':
         ],
         dropout_rate=[0.0, 0.1, 0.2],
         optimizer=['adam', 'sgd'],
-        loss=['mean_squared_error'],
+        loss_function=['mean_squared_error'],
         layer_size=[10, 20, 30, 40, 50, 100],
-        nof_hidden_layers=[1, 2, 3, 4, 5]
+        nof_hidden_layers=[1, 2, 3, 4, 5],
+        epochs=[30],
+        batch_size=[32]
     )
 
     arg_parser = argparse.ArgumentParser()
@@ -120,7 +120,7 @@ if __name__ == '__main__':
         evaluate(kmodels.load_model(args.model), **data)
     elif args.command == 'train':
         model = utils.make_model(len(feature_columns), output_length, 50, 5)
-        train(model, epochs, batch_size, **data)
+        train(model, hyperparameters['epochs'][0], hyperparameters['batch_size'][0], **data)
         model.save(args.model)
     elif args.command == 'tune':
         tune(args.model, args.datafile, hyperparameters, input_length, output_length, training_size, validation_size)
