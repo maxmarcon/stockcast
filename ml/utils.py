@@ -40,19 +40,19 @@ def load_tuning_state(filename):
         return None
 
 
-def enumerate_parameter_space(parameters):
-    key, values = parameters.popitem()
-    if len(parameters) == 0:
+def enumerate_parameter_space(parameter_space):
+    key, values = parameter_space.popitem()
+    if len(parameter_space) == 0:
         for v in values:
             yield {key: v}
     else:
-        for rest in enumerate_parameter_space(parameters):
+        for rest in enumerate_parameter_space(parameter_space):
             for v in values:
                 yield {key: v, **rest}
 
 
-def parameter_space_size(parameters):
-    return reduce(operator.mul, (len(values) for values in parameters.values()))
+def parameter_space_size(parameter_space):
+    return reduce(operator.mul, (len(values) for values in parameter_space.values()))
 
 
 def paramaters_for_lookup(parameters):

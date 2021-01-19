@@ -86,7 +86,7 @@ if __name__ == '__main__':
         feature_columns=[
             ['close_scaled', 'day_of_week'],
             ['close_scaled'],
-            ['close_scaled', *['dow_{}'.format(i) for i in range(0, 6)]]
+            ['close_scaled', *[f'dow_{i}' for i in range(0, 5)]]
         ],
         dropout_rate=[0.0, 0.1, 0.2],
         optimizer=['adam', 'sgd'],
