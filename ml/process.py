@@ -15,8 +15,8 @@ def train(model, epochs, batch_size, loss_function, optimizer, x_train, y_train,
                      batch_size=batch_size)
 
 
-def tune(model_name, datafile, hyperparameters, input_length, output_length, training_size, validation_size):
-    total_models = utils.parameter_space_size(hyperparameters)
+def tune(model_name, datafile, hyperparameter_space, input_length, output_length, training_size, validation_size):
+    total_models = utils.parameter_space_size(hyperparameter_space)
 
     ok("{} models to train".format(total_models))
 
@@ -25,27 +25,28 @@ def tune(model_name, datafile, hyperparameters, input_length, output_length, tra
     tuning_state = utils.load_tuning_state(tuning_state_filename)
     if tuning_state is not None:
         warn("resuming interrupted tuning session with {} trained models".format(len(tuning_state)))
-
-    trained_models = 0
+        trained_models = len(tuning_state)
+    else:
+        trained_models = 0
 
     try:
-        for parameter_combination in utils.enumerate_parameter_space(hyperparameters):
-            if utils.contains_tuning_state(tuning_state, parameter_combination):
-                warn("skipping parameters: {}".format(parameter_combination))
+        for hyeperparameters in utils.enumerate_parameter_space(hyperparameter_space):
+            if utils.contains_tuning_state(tuning_state, hyeperparameters):
+                warn("skipping parameters: {}".format(hyeperparameters))
             else:
-                ok("training and validating model with parameters {}".format(parameter_combination))
+                ok("training and validating model with parameters {}".format(hyeperparameters))
                 ok(f"{total_models - trained_models} models left to go")
                 if tuning_state is not None:
                     time_left = timedelta(seconds=tuning_state.mean()['time'] * (total_models - trained_models))
                     ok(f"approx. {time_left} left")
 
-                data = utils.prepare_data(datafile, parameter_combination['feature_columns'], input_length,
+                data = utils.prepare_data(datafile, hyeperparameters['feature_columns'], input_length,
                                           output_length,
                                           training_size, validation_size)
-                model = utils.make_model(input_length, len(parameter_combination['feature_columns']), output_length,
-                                         **parameter_combination)
+                model = utils.make_model(input_length, len(hyeperparameters['feature_columns']), output_length,
+                                         **hyeperparameters)
                 start = time()
-                history = train(model, **parameter_combination, **data)
+                history = train(model, **hyeperparameters, **data)
                 training_time = time() - start
                 try:
                     pass
@@ -53,7 +54,7 @@ def tune(model_name, datafile, hyperparameters, input_length, output_length, tra
                     warn("received interrupt from keyboard, saving tuning state first")
                     raise
                 finally:
-                    tuning_state = utils.save_tuning_state(tuning_state, parameter_combination,
+                    tuning_state = utils.save_tuning_state(tuning_state, hyeperparameters,
                                                            {'loss': history.history['loss'][-1],
                                                             'val_loss': history.history['val_loss'][-1]},
                                                            training_time,
@@ -81,7 +82,7 @@ if __name__ == '__main__':
     input_length = 60
     output_length = 5
 
-    hyperparameters = dict(
+    hyperparameter_space = dict(
         feature_columns=[
             ['close_scaled', 'day_of_week'],
             ['close_scaled'],
@@ -105,7 +106,7 @@ if __name__ == '__main__':
 
     ok("Loading data...")
 
-    feature_columns = hyperparameters['feature_columns']
+    feature_columns = hyperparameter_space['feature_columns']
 
     data = utils.prepare_data(
         args.datafile, feature_columns[0], input_length, output_length, training_size, validation_size)
@@ -120,9 +121,10 @@ if __name__ == '__main__':
         evaluate(kmodels.load_model(args.model), **data)
     elif args.command == 'train':
         model = utils.make_model(len(feature_columns), output_length, 50, 5)
-        train(model, hyperparameters['epochs'][0], hyperparameters['batch_size'][0], **data)
+        train(model, hyperparameter_space['epochs'][0], hyperparameter_space['batch_size'][0], **data)
         model.save(args.model)
     elif args.command == 'tune':
-        tune(args.model, args.datafile, hyperparameters, input_length, output_length, training_size, validation_size)
+        tune(args.model, args.datafile, hyperparameter_space, input_length, output_length, training_size,
+             validation_size)
     else:
         raise RuntimeError("Unimplemented command {}".format(args.command))
