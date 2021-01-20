@@ -17,6 +17,7 @@ def train(model, epochs, batch_size, loss_function, optimizer, x_train, y_train,
 
 def tune(model_name, datafile, hyperparameter_space, input_length, output_length, training_size, validation_size):
     total_models = utils.parameter_space_size(hyperparameter_space)
+    trained_models = 0
 
     ok("{} models to train".format(total_models))
 
@@ -25,9 +26,6 @@ def tune(model_name, datafile, hyperparameter_space, input_length, output_length
     tuning_state = utils.load_tuning_state(tuning_state_filename)
     if tuning_state is not None:
         warn("resuming interrupted tuning session with {} trained models".format(len(tuning_state)))
-        trained_models = len(tuning_state)
-    else:
-        trained_models = 0
 
     try:
         for hyeperparameters in utils.enumerate_parameter_space(hyperparameter_space):
@@ -59,7 +57,7 @@ def tune(model_name, datafile, hyperparameter_space, input_length, output_length
                                                             'val_loss': history.history['val_loss'][-1]},
                                                            training_time,
                                                            model_name)
-                trained_models = trained_models + 1
+            trained_models = trained_models + 1
         warn("tuning completed, results stored in: {}".format(tuning_state_filename))
     except KeyboardInterrupt:
         warn("tuning interrupted by user, tuning state saved in: {}".format(tuning_state_filename))
