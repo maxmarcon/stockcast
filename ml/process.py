@@ -73,48 +73,50 @@ def evaluate(model, x_test, y_test, dates_test, rescaler, **kwargs):
                        rescaler.inverse_transform(y_test))
 
 
-if __name__ == '__main__':
-
-    training_size = 0.7
-    validation_size = 0.15
-    input_length = 60
-    output_length = 5
+training_size = 0.7
+validation_size = 0.15
+input_length = 60
+output_length = 5
 
     hyperparameter_space = dict(
-        feature_columns=[
-            ['close_scaled', 'day_of_week'],
-            ['close_scaled'],
+    feature_columns=[
+        ['close_scaled', 'day_of_week'],
+        ['close_scaled'],
             ['close_scaled', *[f'dow_{i}' for i in range(0, 5)]]
-        ],
-        dropout_rate=[0.0, 0.1, 0.2],
-        optimizer=['adam', 'sgd'],
-        loss_function=['mean_squared_error'],
-        layer_size=[10, 20, 30, 40, 50, 100],
-        nof_hidden_layers=[1, 2, 3, 4, 5],
-        epochs=[30],
-        batch_size=[32]
-    )
+    ],
+    dropout_rate=[0.0, 0.1, 0.2],
+    optimizer=['adam', 'sgd'],
+    loss_function=['mean_squared_error'],
+    layer_size=[10, 20, 30, 40, 50, 100],
+    nof_hidden_layers=[1, 2, 3, 4, 5],
+    epochs=[30],
+    batch_size=[32]
+)
+
+if __name__ == '__main__':
+
 
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument('command', choices=('tune', 'train', 'evaluate', 'save'))
-    arg_parser.add_argument('datafile')
-    arg_parser.add_argument('--model', '-m', required=True)
+    arg_parser.add_argument('datafile', help="Input data file")
+    arg_parser.add_argument('--model', '-m', required=True, help="The model name")
+    subparsers = arg_parser.add_subparsers(dest='command')
+    tune = subparsers.add_parser('tune', help="Tune hyperparameters")
+    
+    train = subparsers.add_parser('train', help="Train a model")
+    train.add_argument('--index', '-i', help="Hyperparameters index")
+
 
     args = arg_parser.parse_args()
-
-    ok("Loading data...")
+    ok(f"Loading data from {args.datafile}...")
 
     feature_columns = hyperparameter_space['feature_columns']
 
     data = utils.prepare_data(
         args.datafile, feature_columns[0], input_length, output_length, training_size, validation_size)
 
-    ok("Training set has size {}, validation set has size {}, test set has size {}".format(len(data['x_train']),
-                                                                                           len(data['x_val']),
+    ok(f"Training set has size {len(data['x_train'])}, validation set has size {len(data['x_val'])}, test set has size {len(data['x_test'])}")
 
-                                                                                           len(data['x_test'])))
     if args.command == 'evaluate':
-        print('loading model from {}'.format(args.model))
         model = kmodels.load_model(args.model)
         evaluate(kmodels.load_model(args.model), **data)
     elif args.command == 'train':
