@@ -91,8 +91,8 @@ def load_hyperparameters(model_name, index):
     if tuning_state is None:
         error(f"Could not open file {tuning_state_filename} - maybe you should tune first?")
         exit(1)
-    if tuning_state.loc[index].empty:
-        error(f"No row at index {index}")
+    if index >= len(tuning_state):
+        error(f"Index {index} exceed max index {len(tuning_state)-1}")
         exit(1)
 
     return tuning_state.loc[index]
