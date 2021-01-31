@@ -84,18 +84,6 @@ def evaluate(model, x_test, y_test, dates_test, rescaler, **kwargs):
                        rescaler.inverse_transform(y_test))
 
 
-def load_hyperparameters(model_name, index):
-    tuning_state_filename = utils.tuning_state_filename(model_name)
-    ok("Rading stuning state from: {}".format(tuning_state_filename))
-    tuning_state = utils.load_tuning_state(tuning_state_filename)
-    if tuning_state is None:
-        error(f"Could not open file {tuning_state_filename} - maybe you should tune first?")
-        exit(1)
-    if index >= len(tuning_state):
-        error(f"Index {index} exceed max index {len(tuning_state)-1}")
-        exit(1)
-
-    return tuning_state.loc[index]
 
 
 training_size = 0.7
@@ -127,7 +115,7 @@ if __name__ == '__main__':
     tune_parser = subparsers.add_parser('tune', help="Tune hyperparameters")
 
     train_parser = subparsers.add_parser('train', help="Train a model")
-    train_parser.add_argument('--index', '-i', help="Hyperparameters index", required=True, type=int)
+    train_parser.add_argument('--index', '-i', help="Hyperparameters index", required=False, type=int)
 
     args = arg_parser.parse_args()
     datafile = args.datafile
@@ -139,10 +127,16 @@ if __name__ == '__main__':
         raise RuntimeError("not implemented yet")
     elif args.command == 'train':
         index = args.index
-        hyperparameters = load_hyperparameters(model_name, index)
+        if index is None:
+            ok(f'Loading hyperparameters that minimize val_loss')
+            hyperparameters = utils.load_optimal_hyperparameters(model_name)
+        else:
+            ok(f'Loading hyperparameters at position {index}')
+            hyperparameters = utils.load_hyperparameters(model_name, index)
         model, *rest = train(datafile, hyperparameters, input_length, output_length, training_size,
                              validation_size)
         model.save(model_name)
+        ok(model.summary())
         ok(f"Model saved in folder: {model_name}")
     elif args.command == 'tune':
         tune(args.model, datafile, hyperparameter_space, input_length, output_length, training_size,

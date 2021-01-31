@@ -85,6 +85,28 @@ def save_tuning_state(dataframe, parameters, metrics, time, model_name):
     dataframe.to_csv(tuning_state_filename(model_name), index=False)
     return dataframe
 
+def load_hyperparameters(model_name, index):
+    filename = tuning_state_filename(model_name)
+    ok("Rading stuning state from: {}".format(filename))
+    tuning_state = load_tuning_state(filename)
+    if tuning_state is None:
+        error(f"Could not open file {filename} - maybe you should tune first?")
+        exit(1)
+    if index >= len(tuning_state):
+        error(f"Index {index} exceed max index {len(tuning_state)-1}")
+        exit(1)
+
+    return tuning_state.loc[index]
+
+def load_optimal_hyperparameters(model_name, column='val_loss'):
+    filename = tuning_state_filename(model_name)
+    ok("Rading stuning state from: {}".format(filename))
+    tuning_state = load_tuning_state(filename)
+    if tuning_state is None:
+        error(f"Could not open file {filename} - maybe you should tune first?")
+        exit(1)
+    return tuning_state[tuning_state['val_loss'] == tuning_state.min()['val_loss']].iloc[0]
+
 
 def preprocess(data):
     close, dow = data['close'].to_numpy().reshape(-1, 1), data['day_of_week'].to_numpy().reshape(-1, 1)
