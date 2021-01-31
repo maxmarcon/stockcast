@@ -33,10 +33,15 @@ def tuning_state_filename(file):
     return stem + ".tuning"
 
 
-def load_tuning_state(filename):
+def load_tuning_state(model_name, dontfail=True):
+    filename = tuning_state_filename(model_name)
+    ok("Rading stuning state from: {}".format(filename))
     try:
         return pandas.read_csv(filename)
     except FileNotFoundError:
+        if not dontfail:
+            error(f"Could not open file {filename} - maybe you should tune first?")
+            exit(1)
         return None
 
 
@@ -85,26 +90,22 @@ def save_tuning_state(dataframe, parameters, metrics, time, model_name):
     dataframe.to_csv(tuning_state_filename(model_name), index=False)
     return dataframe
 
+
 def load_hyperparameters(model_name, index):
     filename = tuning_state_filename(model_name)
     ok("Rading stuning state from: {}".format(filename))
-    tuning_state = load_tuning_state(filename)
-    if tuning_state is None:
-        error(f"Could not open file {filename} - maybe you should tune first?")
-        exit(1)
+    tuning_state = load_tuning_state(filename, False)
     if index >= len(tuning_state):
-        error(f"Index {index} exceed max index {len(tuning_state)-1}")
+        error(f"Index {index} exceed max index {len(tuning_state) - 1}")
         exit(1)
 
     return tuning_state.loc[index]
 
+
 def load_optimal_hyperparameters(model_name, column='val_loss'):
     filename = tuning_state_filename(model_name)
     ok("Rading stuning state from: {}".format(filename))
-    tuning_state = load_tuning_state(filename)
-    if tuning_state is None:
-        error(f"Could not open file {filename} - maybe you should tune first?")
-        exit(1)
+    tuning_state = load_tuning_state(filename, False)
     return tuning_state[tuning_state['val_loss'] == tuning_state.min()['val_loss']].iloc[0]
 
 

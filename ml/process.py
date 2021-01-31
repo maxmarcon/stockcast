@@ -3,8 +3,10 @@ import argparse
 from datetime import timedelta
 from time import time
 
+import config
 import utils
-from utils import ok, warn, error
+from utils import ok, warn
+import tensorflow.keras as keras
 
 
 def _train(model, epochs, batch_size, loss_function, optimizer, x_train, y_train, x_val, y_val, **kwargs):
@@ -74,37 +76,18 @@ def train(datafile, hyperparameters, input_length, output_length, training_size,
     return model, history, training_time
 
 
-def evaluate(model, x_test, y_test, dates_test, rescaler, **kwargs):
-    metric_results = model.evaluate(x_test, y_test)
+def evaluate(model, feature_columns, input_length, output_length, training_size, validation_size):
+    data = utils.prepare_data(datafile, feature_columns, input_length,
+                              output_length,
+                              training_size, validation_size)
+    metric_results = model.evaluate(data['x_test'], data['y_test'])
     if type(metric_results) != list:
         metric_results = [metric_results]
     for r in map(lambda a, b: a + ": " + str(b), model.metrics_names, metric_results):
         print(r)
-    utils.plot_results(dates_test, rescaler.inverse_transform(model.predict(x_test)),
-                       rescaler.inverse_transform(y_test))
+    utils.plot_results(data['dates_test'], data['rescaler'].inverse_transform(model.predict(data['x_test'])),
+                       data['rescaler'].inverse_transform(data['y_test']))
 
-
-
-
-training_size = 0.7
-validation_size = 0.15
-input_length = 60
-output_length = 5
-
-hyperparameter_space = dict(
-    feature_columns=[
-        ['close_scaled', 'day_of_week'],
-        ['close_scaled'],
-        ['close_scaled', *[f'dow_{i}' for i in range(0, 5)]]
-    ],
-    dropout_rate=[0.0, 0.1, 0.2],
-    optimizer=['adam', 'sgd'],
-    loss_function=['mean_squared_error'],
-    layer_size=[10, 20, 30, 40, 50, 100],
-    nof_hidden_layers=[1, 2, 3, 4, 5],
-    epochs=[30],
-    batch_size=[32]
-)
 
 if __name__ == '__main__':
 
@@ -117,13 +100,19 @@ if __name__ == '__main__':
     train_parser = subparsers.add_parser('train', help="Train a model")
     train_parser.add_argument('--index', '-i', help="Hyperparameters index", required=False, type=int)
 
+    evaluate_parser = subparsers.add_parser('evaluate', help='Evaluate a model')
+    # evaluate_parser.add_argument('--index', '-i', help="Hyperparameters index", required=False, type=int)
+
     args = arg_parser.parse_args()
     datafile = args.datafile
 
     ok(f"Loading data from {datafile}...")
-    model_name = args.model
+    model_name = f'{args.model}-{config.input_length}-{config.output_length}'
 
     if args.command == 'evaluate':
+        model = keras.models.load_model(model_name)
+        # fix this
+        evaluate(model, ['close_scaled', 'day_of_week'], config.input_length, config.output_length, config.training_size, config.validation_size)
         raise RuntimeError("not implemented yet")
     elif args.command == 'train':
         index = args.index
@@ -133,11 +122,12 @@ if __name__ == '__main__':
         else:
             ok(f'Loading hyperparameters at position {index}')
             hyperparameters = utils.load_hyperparameters(model_name, index)
-        model, *rest = train(datafile, hyperparameters, input_length, output_length, training_size,
-                             validation_size)
+        model, *rest = train(datafile, hyperparameters, config.input_length, config.output_length, config.training_size,
+                             config.validation_size)
         model.save(model_name)
         ok(model.summary())
         ok(f"Model saved in folder: {model_name}")
     elif args.command == 'tune':
-        tune(args.model, datafile, hyperparameter_space, input_length, output_length, training_size,
-             validation_size)
+        tune(model_name, datafile, config.hyperparameter_space, config.input_length, config.output_length,
+             config.training_size,
+             config.validation_size)
