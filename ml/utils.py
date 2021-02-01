@@ -28,13 +28,18 @@ def make_sets(array, training, validation):
     return np.split(array, (int(array_size * training), int(array_size * (training + validation))))
 
 
-def tuning_state_filename(file):
+def generate_tuning_state_filename(file, datafile):
     (stem, _) = os.path.splitext(file)
-    return stem + ".tuning"
+    if datafile is not None:
+        (datafile_stem, _) = os.path.splitext(datafile)
+        prefix = f'{stem}-{datafile_stem}'
+    else:
+        prefix = stem
+
+    return f'{prefix}.tuning'
 
 
-def load_tuning_state(model_name, dontfail=True):
-    filename = tuning_state_filename(model_name)
+def load_tuning_state(filename, dontfail=True):
     ok("Rading stuning state from: {}".format(filename))
     try:
         return pandas.read_csv(filename)
@@ -78,7 +83,7 @@ def contains_tuning_state(dataframe, parameters):
     return not dataframe[selector].empty
 
 
-def save_tuning_state(dataframe, parameters, metrics, time, model_name):
+def save_tuning_state(dataframe, parameters, metrics, time, filename):
     print(f"saving tuning state {parameters}")
     row_dict = {**paramaters_for_lookup(parameters), **metrics, 'time': time}
 
@@ -87,14 +92,13 @@ def save_tuning_state(dataframe, parameters, metrics, time, model_name):
     else:
         dataframe = dataframe.append(row_dict, ignore_index=True)
 
-    dataframe.to_csv(tuning_state_filename(model_name), index=False)
+    dataframe.to_csv(filename, index=False)
     return dataframe
 
 
-def load_hyperparameters(model_name, index):
-    filename = tuning_state_filename(model_name)
-    ok("Rading stuning state from: {}".format(filename))
-    tuning_state = load_tuning_state(filename, False)
+def load_hyperparameters(tuning_file, index):
+    ok("Rading stuning state from: {}".format(tuning_file))
+    tuning_state = load_tuning_state(tuning_file, False)
     if index >= len(tuning_state):
         error(f"Index {index} exceed max index {len(tuning_state) - 1}")
         exit(1)
@@ -102,10 +106,9 @@ def load_hyperparameters(model_name, index):
     return tuning_state.loc[index]
 
 
-def load_optimal_hyperparameters(model_name, column='val_loss'):
-    filename = tuning_state_filename(model_name)
-    ok("Rading stuning state from: {}".format(filename))
-    tuning_state = load_tuning_state(filename, False)
+def load_optimal_hyperparameters(tuning_file, column='val_loss'):
+    ok("Rading stuning state from: {}".format(tuning_file))
+    tuning_state = load_tuning_state(tuning_file, False)
     return tuning_state[tuning_state['val_loss'] == tuning_state.min()['val_loss']].iloc[0]
 
 
