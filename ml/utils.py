@@ -106,10 +106,10 @@ def load_hyperparameters(tuning_file, index):
     return tuning_state.loc[index]
 
 
-def load_optimal_hyperparameters(tuning_file, column='val_loss'):
+def load_optimal_hyperparameters_index(tuning_file, column='val_loss'):
     ok("Rading stuning state from: {}".format(tuning_file))
     tuning_state = load_tuning_state(tuning_file, False)
-    return tuning_state[tuning_state['val_loss'] == tuning_state.min()['val_loss']].iloc[0]
+    return tuning_state[tuning_state['val_loss'] == tuning_state.min()['val_loss']].index[0]
 
 
 def preprocess(data):

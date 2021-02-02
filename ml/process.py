@@ -92,27 +92,33 @@ def evaluate(model, datafile, feature_columns, input_length, output_length, trai
                        data['rescaler'].inverse_transform(data['y_test']))
 
 
+def add_common_args(arg_parser):
+    arg_parser.add_argument('datafile', help="Input data file")
+    arg_parser.add_argument('model', help="The model name")
+    
+
 if __name__ == '__main__':
 
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument('datafile', help="Input data file")
-    arg_parser.add_argument('--model', '-m', required=True, help="The model name")
     subparsers = arg_parser.add_subparsers(dest='command', required=True)
     tune_parser = subparsers.add_parser('tune', help="Tune hyperparameters")
+    add_common_args(tune_parser)
 
     train_parser = subparsers.add_parser('train', help="Train a model")
-    train_parser.add_argument('--index', '-i', help="Hyperparameters index",
+    add_common_args(train_parser)
+    train_parser.add_argument('--index', '-i', help="Hyperparameters index - if not provided, the optimal hyperparameters will be used",
                               type=int)
-    train_parser.add_argument('--tuning-file', '-tf', required=True, help='File keeping tuning state')
+    train_parser.add_argument('tuning_file', help='File keeping tuning state')
 
     evaluate_parser = subparsers.add_parser('evaluate', aliases=('eval',), help='Evaluate a model')
+    add_common_args(evaluate_parser)
 
     args = arg_parser.parse_args()
 
     ok(f"Loading data from {args.datafile}...")
-    model_name = f'{args.model}-{config.input_length}-{config.output_length}'
 
     if args.command in ('evaluate', 'eval'):
+        model_name = args.model
         ok(f"Loading model from {model_name}")
         model = keras.models.load_model(model_name)
         # fix hard-coded features
@@ -122,14 +128,14 @@ if __name__ == '__main__':
     elif args.command == 'train':
         index = args.index
         if index is None:
-            ok(f'Loading hyperparameters that minimize val_loss')
-            hyperparameters = utils.load_optimal_hyperparameters(args.tuning_file)
-        else:
-            ok(f'Loading hyperparameters at position {index}')
-            hyperparameters = utils.load_hyperparameters(args.tuning_file)
+            index = utils.load_optimal_hyperparameters_index(args.tuning_file)
+            ok(f'Loading hyperparameters that minimize val_loss (found at position {index})')
+        ok(f'Loading hyperparameters at position {index}')
+        hyperparameters = utils.load_hyperparameters(args.tuning_file, index)
         model, *rest = train(args.datafile, hyperparameters, config.input_length, config.output_length,
                              config.training_size,
                              config.validation_size)
+        model_name = f'{args.model}-I{config.input_length}-O{config.output_length}-HP{index}'
         model.save(model_name)
         ok(model.summary())
         ok(f"Model saved to folder: {model_name}")
@@ -138,6 +144,7 @@ if __name__ == '__main__':
         shutil.copy(args.tuning_file, asset_folder)
         ok(f"Datafile and tuning file copied to {asset_folder}")
     elif args.command == 'tune':
+        model_name = f'{args.model}-I{config.input_length}-O{config.output_length}'
         tune(model_name, args.datafile, config.hyperparameter_space, config.input_length, config.output_length,
              config.training_size,
              config.validation_size)
