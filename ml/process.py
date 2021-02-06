@@ -25,21 +25,21 @@ def tune(model_name, datafile, hyperparameter_space, input_length, output_length
     ok("{} models to train".format(total_models))
 
     tuning_state_filename = utils.generate_tuning_state_filename(model_name, datafile)
-    ok("storing tuning state in: {}".format(tuning_state_filename))
+    ok("Storing tuning state in: {}".format(tuning_state_filename))
     tuning_state = utils.load_tuning_state(tuning_state_filename)
     if tuning_state is not None:
-        warn("resuming interrupted tuning session with {} trained models".format(len(tuning_state)))
+        warn(f'Resuming interrupted tuning session with {len(tuning_state)} trained models')
 
     try:
         for hyperparameters in utils.enumerate_parameter_space(hyperparameter_space):
             if utils.contains_tuning_state(tuning_state, hyperparameters):
-                warn("skipping parameters: {}".format(hyperparameters))
+                warn("Skipping parameters: {}".format(hyperparameters))
             else:
-                ok("training and validating model with parameters {}".format(hyperparameters))
+                ok("Training and validating model with parameters {}".format(hyperparameters))
                 ok(f"{total_models - trained_models} models left to go")
                 if tuning_state is not None:
                     time_left = timedelta(seconds=tuning_state.mean()['time'] * (total_models - trained_models))
-                    ok(f"approx. {time_left} left")
+                    ok(f"Approx. {time_left} left")
 
                 model, history, training_time = train(datafile, hyperparameters, input_length, output_length,
                                                       training_size,
@@ -47,7 +47,7 @@ def tune(model_name, datafile, hyperparameter_space, input_length, output_length
                 try:
                     pass
                 except KeyboardInterrupt:
-                    warn("received interrupt from keyboard, saving tuning state first")
+                    warn("Received interrupt from keyboard, saving tuning state first")
                     raise
                 finally:
                     tuning_state = utils.save_tuning_state(tuning_state, hyperparameters,
@@ -56,9 +56,9 @@ def tune(model_name, datafile, hyperparameter_space, input_length, output_length
                                                            training_time,
                                                            tuning_state_filename)
             trained_models = trained_models + 1
-        warn("tuning completed, results stored in: {}".format(tuning_state_filename))
+        warn("Tuning completed, results stored in: {}".format(tuning_state_filename))
     except KeyboardInterrupt:
-        warn("tuning interrupted by user, tuning state saved in: {}".format(tuning_state_filename))
+        warn("Tuning interrupted by user, tuning state saved in: {}".format(tuning_state_filename))
 
 
 def train(datafile, hyperparameters, input_length, output_length, training_size, validation_size, silent=False):
@@ -92,41 +92,53 @@ def evaluate(model, datafile, feature_columns, input_length, output_length, trai
                        data['rescaler'].inverse_transform(data['y_test']))
 
 
-def add_common_args(arg_parser):
-    arg_parser.add_argument('datafile', help="Input data file")
-    arg_parser.add_argument('model', help="The model name")
+def add_common_args(arg_parser, which=('datafile', 'model')):
+    if 'datafile' in which:
+        arg_parser.add_argument('datafile',
+                                help="Input data file")
+    if 'model' in which:
+        arg_parser.add_argument('model', help="The model name")
 
 
 def evaluate_command(model_name):
     ok(f"Loading model from {model_name}")
     model = keras.models.load_model(model_name)
-    # fix hard-coded features
-    evaluate(model, args.datafile, ['close_scaled', 'day_of_week'], config.input_length, config.output_length,
+    datafile = os.path.join(model_name, "assets", "data")
+    tuning_file = os.path.join(model_name, 'assets', 'tuning')
+    hp_index = utils.get_hp_index_from_model_name(model_name)
+    hp = utils.load_hyperparameters(tuning_file, hp_index)
+    ok(f"Features are: {hp['feature_columns']}")
+    evaluate(model, datafile, hp['feature_columns'].split(','), config.input_length, config.output_length,
              config.training_size, config.validation_size)
 
 
-def train_command(model_name, hp_index):
+def train_command(model_name, datafile, tuning_file, hp_index):
+    ok(f'Loading tuning state from {tuning_file}')
     if hp_index is None:
-        hp_index = utils.load_optimal_hyperparameters_index(args.tuning_file)
+        hp_index = utils.load_optimal_hyperparameters_index(tuning_file)
         ok(f'Loading hyperparameters that minimize val_loss (found at position {hp_index})')
     ok(f'Loading hyperparameters at position {hp_index}')
-    hyperparameters = utils.load_hyperparameters(args.tuning_file, hp_index)
-    model, *rest = train(args.datafile, hyperparameters, config.input_length, config.output_length,
+    ok(f"Loading data from {datafile}")
+    hyperparameters = utils.load_hyperparameters(tuning_file, hp_index)
+    model, *rest = train(datafile, hyperparameters, config.input_length, config.output_length,
                          config.training_size,
                          config.validation_size)
-    model_name = f'{args.model}-I{config.input_length}-O{config.output_length}-HP{hp_index}'
+    model_name = f'{model_name}-I{config.input_length}-O{config.output_length}-HP{hp_index}'
     model.save(model_name)
-    ok(model.summary())
+    model.summary()
     ok(f"Model saved to folder: {model_name}")
     asset_folder = os.path.join(model_name, 'assets')
-    shutil.copy(args.datafile, asset_folder)
-    shutil.copy(args.tuning_file, asset_folder)
+    datafile = shutil.copy(datafile, asset_folder)
+    os.symlink(os.path.basename(datafile), os.path.join(os.path.dirname(datafile), 'data'))
+    tuning_file = shutil.copy(tuning_file, asset_folder)
+    os.symlink(os.path.basename(tuning_file), os.path.join(os.path.dirname(tuning_file), 'tuning'))
     ok(f"Datafile and tuning file copied to {asset_folder}")
 
 
-def tune_command(model_name):
+def tune_command(model_name, datafile):
+    ok(f"Loading data from {datafile}")
     model_name = f'{model_name}-I{config.input_length}-O{config.output_length}'
-    tune(model_name, args.datafile, config.hyperparameter_space, config.input_length, config.output_length,
+    tune(model_name, datafile, config.hyperparameter_space, config.input_length, config.output_length,
          config.training_size,
          config.validation_size)
 
@@ -140,21 +152,19 @@ if __name__ == '__main__':
 
     train_parser = subparsers.add_parser('train', help="Train a model")
     add_common_args(train_parser)
-    train_parser.add_argument('--index', '-i',
+    train_parser.add_argument('--hp-index', '-hp',
                               help="Hyperparameters index - if not provided, the optimal hyperparameters will be used",
                               type=int)
     train_parser.add_argument('tuning_file', help='File keeping tuning state')
 
     evaluate_parser = subparsers.add_parser('evaluate', aliases=('eval',), help='Evaluate a model')
-    add_common_args(evaluate_parser)
+    add_common_args(evaluate_parser, ('model',))
 
     args = arg_parser.parse_args()
-
-    ok(f"Loading data from {args.datafile}...")
 
     if args.command in ('evaluate', 'eval'):
         evaluate_command(args.model)
     elif args.command == 'train':
-        train_command()
+        train_command(args.model, args.datafile, args.tuning_file, args.hp_index)
     elif args.command == 'tune':
-        tune_command()
+        tune_command(args.model, args.datafile)

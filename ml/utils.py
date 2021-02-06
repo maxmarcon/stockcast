@@ -40,7 +40,6 @@ def generate_tuning_state_filename(file, datafile):
 
 
 def load_tuning_state(filename, dontfail=True):
-    ok("Rading stuning state from: {}".format(filename))
     try:
         return pandas.read_csv(filename)
     except FileNotFoundError:
@@ -84,7 +83,6 @@ def contains_tuning_state(dataframe, parameters):
 
 
 def save_tuning_state(dataframe, parameters, metrics, time, filename):
-    print(f"saving tuning state {parameters}")
     row_dict = {**paramaters_for_lookup(parameters), **metrics, 'time': time}
 
     if dataframe is None:
@@ -96,18 +94,23 @@ def save_tuning_state(dataframe, parameters, metrics, time, filename):
     return dataframe
 
 
-def load_hyperparameters(tuning_file, index):
-    ok("Rading stuning state from: {}".format(tuning_file))
+def get_hp_index_from_model_name(model_name):
+    res = re.search(r'HP(\d+)$', model_name)
+    if res is None:
+        raise RuntimeError(f"Could not find hp index in model name {model_name}")
+    return int(res.group(1))
+
+
+def load_hyperparameters(tuning_file, hp_index):
     tuning_state = load_tuning_state(tuning_file, False)
-    if index >= len(tuning_state):
-        error(f"Index {index} exceed max index {len(tuning_state) - 1}")
+    if hp_index >= len(tuning_state):
+        error(f"Index {hp_index} exceed max index {len(tuning_state) - 1}")
         exit(1)
 
-    return tuning_state.loc[index]
+    return tuning_state.loc[hp_index]
 
 
 def load_optimal_hyperparameters_index(tuning_file, column='val_loss'):
-    ok("Rading stuning state from: {}".format(tuning_file))
     tuning_state = load_tuning_state(tuning_file, False)
     return tuning_state[tuning_state['val_loss'] == tuning_state.min()['val_loss']].index[0]
 
