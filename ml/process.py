@@ -95,7 +95,41 @@ def evaluate(model, datafile, feature_columns, input_length, output_length, trai
 def add_common_args(arg_parser):
     arg_parser.add_argument('datafile', help="Input data file")
     arg_parser.add_argument('model', help="The model name")
-    
+
+
+def evaluate_command(model_name):
+    ok(f"Loading model from {model_name}")
+    model = keras.models.load_model(model_name)
+    # fix hard-coded features
+    evaluate(model, args.datafile, ['close_scaled', 'day_of_week'], config.input_length, config.output_length,
+             config.training_size, config.validation_size)
+
+
+def train_command(model_name, hp_index):
+    if hp_index is None:
+        hp_index = utils.load_optimal_hyperparameters_index(args.tuning_file)
+        ok(f'Loading hyperparameters that minimize val_loss (found at position {hp_index})')
+    ok(f'Loading hyperparameters at position {hp_index}')
+    hyperparameters = utils.load_hyperparameters(args.tuning_file, hp_index)
+    model, *rest = train(args.datafile, hyperparameters, config.input_length, config.output_length,
+                         config.training_size,
+                         config.validation_size)
+    model_name = f'{args.model}-I{config.input_length}-O{config.output_length}-HP{hp_index}'
+    model.save(model_name)
+    ok(model.summary())
+    ok(f"Model saved to folder: {model_name}")
+    asset_folder = os.path.join(model_name, 'assets')
+    shutil.copy(args.datafile, asset_folder)
+    shutil.copy(args.tuning_file, asset_folder)
+    ok(f"Datafile and tuning file copied to {asset_folder}")
+
+
+def tune_command(model_name):
+    model_name = f'{model_name}-I{config.input_length}-O{config.output_length}'
+    tune(model_name, args.datafile, config.hyperparameter_space, config.input_length, config.output_length,
+         config.training_size,
+         config.validation_size)
+
 
 if __name__ == '__main__':
 
@@ -106,7 +140,8 @@ if __name__ == '__main__':
 
     train_parser = subparsers.add_parser('train', help="Train a model")
     add_common_args(train_parser)
-    train_parser.add_argument('--index', '-i', help="Hyperparameters index - if not provided, the optimal hyperparameters will be used",
+    train_parser.add_argument('--index', '-i',
+                              help="Hyperparameters index - if not provided, the optimal hyperparameters will be used",
                               type=int)
     train_parser.add_argument('tuning_file', help='File keeping tuning state')
 
@@ -118,33 +153,8 @@ if __name__ == '__main__':
     ok(f"Loading data from {args.datafile}...")
 
     if args.command in ('evaluate', 'eval'):
-        model_name = args.model
-        ok(f"Loading model from {model_name}")
-        model = keras.models.load_model(model_name)
-        # fix hard-coded features
-        evaluate(model, args.datafile, ['close_scaled', 'day_of_week'], config.input_length, config.output_length,
-                 config.training_size, config.validation_size)
-        raise RuntimeError("not implemented yet")
+        evaluate_command(args.model)
     elif args.command == 'train':
-        index = args.index
-        if index is None:
-            index = utils.load_optimal_hyperparameters_index(args.tuning_file)
-            ok(f'Loading hyperparameters that minimize val_loss (found at position {index})')
-        ok(f'Loading hyperparameters at position {index}')
-        hyperparameters = utils.load_hyperparameters(args.tuning_file, index)
-        model, *rest = train(args.datafile, hyperparameters, config.input_length, config.output_length,
-                             config.training_size,
-                             config.validation_size)
-        model_name = f'{args.model}-I{config.input_length}-O{config.output_length}-HP{index}'
-        model.save(model_name)
-        ok(model.summary())
-        ok(f"Model saved to folder: {model_name}")
-        asset_folder = os.path.join(model_name, 'assets')
-        shutil.copy(args.datafile, asset_folder)
-        shutil.copy(args.tuning_file, asset_folder)
-        ok(f"Datafile and tuning file copied to {asset_folder}")
+        train_command()
     elif args.command == 'tune':
-        model_name = f'{args.model}-I{config.input_length}-O{config.output_length}'
-        tune(model_name, args.datafile, config.hyperparameter_space, config.input_length, config.output_length,
-             config.training_size,
-             config.validation_size)
+        tune_command()
