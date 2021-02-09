@@ -7,13 +7,14 @@ from datetime import timedelta
 from time import time
 
 import tensorflow.keras as keras
+from matplotlib.backends.backend_pdf import PdfPages
 
 import config
 import utils
-from utils import ok, warn
+from utils import ok, warn, error
 
 
-def _train(model, epochs, batch_size, loss_function, optimizer, x_train, y_train, x_val, y_val, **kwargs):
+def fit(model, epochs, batch_size, loss_function, optimizer, x_train, y_train, x_val, y_val, **kwargs):
     model.compile(optimizer=optimizer, loss=loss_function)
     return model.fit(x_train, y_train, shuffle=True, validation_data=(x_val, y_val), epochs=epochs,
                      batch_size=batch_size)
@@ -75,12 +76,14 @@ def train(datafile, hyperparameters, input_length, output_length, training_size,
     if not silent:
         ok("training and validating model with parameters:\n{}".format(hyperparameters))
 
-    history = _train(model, **hyperparameters, **data)
+    history = fit(model, **hyperparameters, **data)
     training_time = time() - start
     return model, history, training_time
 
 
-def evaluate(model, datafile, feature_columns, input_length, output_length, training_size, validation_size):
+def evaluate(model, datafile, output_file, feature_columns, input_length, output_length, training_size,
+             validation_size):
+    global data
     data = utils.prepare_data(datafile, feature_columns, input_length,
                               output_length,
                               training_size, validation_size)
@@ -89,8 +92,20 @@ def evaluate(model, datafile, feature_columns, input_length, output_length, trai
         metric_results = [metric_results]
     for r in map(lambda a, b: a + ": " + str(b), model.metrics_names, metric_results):
         print(r)
-    utils.plot_results(data['dates_test'], data['rescaler'].inverse_transform(model.predict(data['x_test'])),
-                       data['rescaler'].inverse_transform(data['y_test']))
+
+    with PdfPages(output_file) as pdf:
+
+        utils.plot_results('Training set', data['dates_train'],
+                           data['rescaler'].inverse_transform(model.predict(data['x_train'])),
+                           data['rescaler'].inverse_transform(data['y_train']), pdf=pdf)
+
+        utils.plot_results('Validation set', data['dates_val'],
+                           data['rescaler'].inverse_transform(model.predict(data['x_val'])),
+                           data['rescaler'].inverse_transform(data['y_val']), pdf=pdf)
+
+        utils.plot_results('Test set', data['dates_test'],
+                           data['rescaler'].inverse_transform(model.predict(data['x_test'])),
+                           data['rescaler'].inverse_transform(data['y_test']), pdf=pdf)
 
 
 def add_common_args(arg_parser, which=('datafile', 'model')):
@@ -107,14 +122,20 @@ def evaluate_command(model_name):
     assets_folder = os.path.join(model_name, "assets")
     datafile = os.path.join(assets_folder, "data")
     metadata_file = os.path.join(assets_folder, 'metadata.json')
+    output_file = os.path.join(assets_folder, 'results.pdf')
     with open(metadata_file, 'r') as fd:
         metadata = json.load(fd)
     ok(f"Features are: {metadata['feature_columns']}")
-    evaluate(model, datafile, metadata['feature_columns'], metadata['input_length'], metadata['output_length'],
+    evaluate(model, datafile, output_file, metadata['feature_columns'], metadata['input_length'],
+             metadata['output_length'],
              metadata['training_size'], metadata['validation_size'])
 
 
 def train_command(model_name, datafile, tuning_file, hp_index):
+    if os.path.exists(model_name):
+        error(f'{model_name} already exists. Please delete it or use a different name')
+        exit(1)
+
     ok(f'Loading tuning state from {tuning_file}')
     if hp_index is None:
         hp_index = utils.load_optimal_hyperparameters_index(tuning_file)

@@ -122,40 +122,47 @@ def preprocess(data):
     return close_scaler
 
 
-def plot_results(dates, y_predicted, y_test, max_labels=10):
-    prediction_length = y_predicted.shape[1]
-    y_predicted_flat = y_predicted[::prediction_length].reshape(-1)
-    y_test_flat = y_test[::prediction_length].reshape(-1)
-    dates_flat = dates[::prediction_length].reshape(-1)
+def plot_results(title, dates, predicted_labels, labels, max_labels=10, pdf=None):
+    prediction_length = predicted_labels.shape[1]
+    predicted_labels_nonoverlapping = predicted_labels[::prediction_length].reshape(-1)
+    labels_nonoverlapping = labels[::prediction_length].reshape(-1)
+    labels_nonoverlapping_first_ones = labels_nonoverlapping[::prediction_length]
+    dates_nonoverlapping = dates[::prediction_length].reshape(-1)
+    dates_nonoverlapping_first_ones = dates_nonoverlapping[::prediction_length]
 
-    pyplot.plot(dates_flat, y_test_flat, 'b-', dates_flat, y_predicted_flat, 'r-')
-    max_labels = max_labels if max_labels < dates_flat.size else dates_flat.size
-    pyplot.xticks(np.arange(0, dates_flat.size, dates_flat.size / max_labels), rotation=-30, fontsize='x-small')
+    pyplot.title(title)
+    pyplot.plot(dates_nonoverlapping, labels_nonoverlapping, 'b-', label='Real value')
+    pyplot.plot(dates_nonoverlapping, predicted_labels_nonoverlapping, 'r-', label='Predicted')
+    pyplot.plot(dates_nonoverlapping_first_ones, labels_nonoverlapping_first_ones, 'gx')
+    max_labels = max_labels if max_labels < dates_nonoverlapping.size else dates_nonoverlapping.size
+    pyplot.xticks(np.arange(0, dates_nonoverlapping.size, dates_nonoverlapping.size / max_labels), rotation=-30,
+                  fontsize='x-small')
     pyplot.ylim(bottom=0)
+    pyplot.legend()
     pyplot.grid(True)
-    pyplot.show()
+    if pdf:
+        pdf.savefig()
+        pyplot.close()
 
 
 def prepare_data(datafile, feature_columns, input_length, output_length, training_size, validation_size):
     data = pandas.read_csv(datafile)
     close_rescaler = preprocess(data)
 
-    feature_data = data[feature_columns]
+    features, labels, label_dates = [], [], []
 
-    features, labels, dates = [], [], []
+    for i in range(0, len(data) - (input_length + output_length) + 1):
+        features.append(data[i:i + input_length][feature_columns].values)
 
-    for i in range(0, feature_data.shape[0] - (input_length + output_length) + 1):
-        features.append(feature_data[i:i + input_length].values)
-
-    for i in range(0, data.shape[0] - (input_length + output_length) + 1):
-        dates.append(data[i + input_length:i + input_length + output_length]['date'])
+    for i in range(0, len(data) - (input_length + output_length) + 1):
+        label_dates.append(data[i + input_length:i + input_length + output_length]['date'])
         labels.append(data[i + input_length:i + input_length + output_length]['close_scaled'])
 
-    features, labels, dates = np.array(features, np.float), np.array(labels, np.float), np.array(dates)
+    features, labels, label_dates = np.array(features, np.float), np.array(labels, np.float), np.array(label_dates)
 
     x_train, x_val, x_test = make_sets(features, training_size, validation_size)
     y_train, y_val, y_test = make_sets(labels, training_size, validation_size)
-    dates_train, dates_val, dates_test = make_sets(dates, training_size, validation_size)
+    dates_train, dates_val, dates_test = make_sets(label_dates, training_size, validation_size)
 
     return {
         'x_train': x_train,
