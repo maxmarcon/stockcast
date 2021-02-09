@@ -6,6 +6,7 @@ import shutil
 from datetime import timedelta
 from time import time
 
+import matplotlib.pyplot as pyplot
 import tensorflow.keras as keras
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -82,7 +83,7 @@ def train(datafile, hyperparameters, input_length, output_length, training_size,
 
 
 def evaluate(model, datafile, output_file, feature_columns, input_length, output_length, training_size,
-             validation_size):
+             validation_size, pdf=False):
     global data
     data = utils.prepare_data(datafile, feature_columns, input_length,
                               output_length,
@@ -93,19 +94,38 @@ def evaluate(model, datafile, output_file, feature_columns, input_length, output
     for r in map(lambda a, b: a + ": " + str(b), model.metrics_names, metric_results):
         print(r)
 
-    with PdfPages(output_file) as pdf:
+    if pdf:
+        with PdfPages(output_file) as pdf_file:
 
+            utils.plot_results('Training set', data['dates_train'],
+                               data['rescaler'].inverse_transform(model.predict(data['x_train'])),
+                               data['rescaler'].inverse_transform(data['y_train']), pdf=pdf_file)
+
+            utils.plot_results('Validation set', data['dates_val'],
+                               data['rescaler'].inverse_transform(model.predict(data['x_val'])),
+                               data['rescaler'].inverse_transform(data['y_val']), pdf=pdf_file)
+
+            utils.plot_results('Test set', data['dates_test'],
+                               data['rescaler'].inverse_transform(model.predict(data['x_test'])),
+                               data['rescaler'].inverse_transform(data['y_test']), pdf=pdf_file)
+    else:
+        pyplot.subplot(3, 1, 1)
         utils.plot_results('Training set', data['dates_train'],
                            data['rescaler'].inverse_transform(model.predict(data['x_train'])),
-                           data['rescaler'].inverse_transform(data['y_train']), pdf=pdf)
+                           data['rescaler'].inverse_transform(data['y_train']))
+
+        pyplot.subplot(3, 1, 2)
 
         utils.plot_results('Validation set', data['dates_val'],
                            data['rescaler'].inverse_transform(model.predict(data['x_val'])),
-                           data['rescaler'].inverse_transform(data['y_val']), pdf=pdf)
+                           data['rescaler'].inverse_transform(data['y_val']))
+
+        pyplot.subplot(3, 1, 3)
 
         utils.plot_results('Test set', data['dates_test'],
                            data['rescaler'].inverse_transform(model.predict(data['x_test'])),
-                           data['rescaler'].inverse_transform(data['y_test']), pdf=pdf)
+                           data['rescaler'].inverse_transform(data['y_test']))
+        pyplot.show()
 
 
 def add_common_args(arg_parser, which=('datafile', 'model')):
@@ -116,7 +136,7 @@ def add_common_args(arg_parser, which=('datafile', 'model')):
         arg_parser.add_argument('model', help="The model name")
 
 
-def evaluate_command(model_name):
+def evaluate_command(model_name, pdf=False):
     ok(f"Loading model from {model_name}")
     model = keras.models.load_model(model_name)
     assets_folder = os.path.join(model_name, "assets")
@@ -128,7 +148,7 @@ def evaluate_command(model_name):
     ok(f"Features are: {metadata['feature_columns']}")
     evaluate(model, datafile, output_file, metadata['feature_columns'], metadata['input_length'],
              metadata['output_length'],
-             metadata['training_size'], metadata['validation_size'])
+             metadata['training_size'], metadata['validation_size'], pdf=pdf)
 
 
 def train_command(model_name, datafile, tuning_file, hp_index):
@@ -190,11 +210,12 @@ if __name__ == '__main__':
 
     evaluate_parser = subparsers.add_parser('evaluate', aliases=('eval',), help='Evaluate a model')
     add_common_args(evaluate_parser, ('model',))
+    evaluate_parser.add_argument('--pdf', action='store_true', help='Store results as pdf')
 
     args = arg_parser.parse_args()
 
     if args.command in ('evaluate', 'eval'):
-        evaluate_command(args.model)
+        evaluate_command(args.model, pdf=args.pdf)
     elif args.command == 'train':
         train_command(args.model, args.datafile, args.tuning_file, args.hp_index)
     elif args.command == 'tune':
