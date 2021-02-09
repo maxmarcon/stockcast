@@ -94,13 +94,6 @@ def save_tuning_state(dataframe, parameters, metrics, time, filename):
     return dataframe
 
 
-def get_hp_index_from_model_name(model_name):
-    res = re.search(r'HP(\d+)$', model_name)
-    if res is None:
-        raise RuntimeError(f"Could not find hp index in model name {model_name}")
-    return int(res.group(1))
-
-
 def load_hyperparameters(tuning_file, hp_index):
     tuning_state = load_tuning_state(tuning_file, False)
     if hp_index >= len(tuning_state):

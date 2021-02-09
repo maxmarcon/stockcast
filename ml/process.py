@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import json
 import os.path
 import shutil
 from datetime import timedelta
@@ -103,13 +104,14 @@ def add_common_args(arg_parser, which=('datafile', 'model')):
 def evaluate_command(model_name):
     ok(f"Loading model from {model_name}")
     model = keras.models.load_model(model_name)
-    datafile = os.path.join(model_name, "assets", "data")
-    tuning_file = os.path.join(model_name, 'assets', 'tuning')
-    hp_index = utils.get_hp_index_from_model_name(model_name)
-    hp = utils.load_hyperparameters(tuning_file, hp_index)
-    ok(f"Features are: {hp['feature_columns']}")
-    evaluate(model, datafile, hp['feature_columns'].split(','), config.input_length, config.output_length,
-             config.training_size, config.validation_size)
+    assets_folder = os.path.join(model_name, "assets")
+    datafile = os.path.join(assets_folder, "data")
+    metadata_file = os.path.join(assets_folder, 'metadata.json')
+    with open(metadata_file, 'r') as fd:
+        metadata = json.load(fd)
+    ok(f"Features are: {metadata['feature_columns']}")
+    evaluate(model, datafile, metadata['feature_columns'], metadata['input_length'], metadata['output_length'],
+             metadata['training_size'], metadata['validation_size'])
 
 
 def train_command(model_name, datafile, tuning_file, hp_index):
@@ -123,7 +125,6 @@ def train_command(model_name, datafile, tuning_file, hp_index):
     model, *rest = train(datafile, hyperparameters, config.input_length, config.output_length,
                          config.training_size,
                          config.validation_size)
-    model_name = f'{model_name}-I{config.input_length}-O{config.output_length}-HP{hp_index}'
     model.save(model_name)
     model.summary()
     ok(f"Model saved to folder: {model_name}")
@@ -132,12 +133,21 @@ def train_command(model_name, datafile, tuning_file, hp_index):
     os.symlink(os.path.basename(datafile), os.path.join(os.path.dirname(datafile), 'data'))
     tuning_file = shutil.copy(tuning_file, asset_folder)
     os.symlink(os.path.basename(tuning_file), os.path.join(os.path.dirname(tuning_file), 'tuning'))
-    ok(f"Datafile and tuning file copied to {asset_folder}")
+    with open(os.path.join(asset_folder, "metadata.json"), 'w') as fd:
+        metadata = dict(
+            input_length=config.input_length,
+            output_length=config.output_length,
+            training_size=config.training_size,
+            validation_size=config.validation_size,
+            feature_columns=hyperparameters['feature_columns'].split(','),
+            hp_index=int(hp_index)
+        )
+        json.dump(metadata, fd)
+    ok(f"Datafile, tuning file and metadata copied to {asset_folder}")
 
 
 def tune_command(model_name, datafile):
     ok(f"Loading data from {datafile}")
-    model_name = f'{model_name}-I{config.input_length}-O{config.output_length}'
     tune(model_name, datafile, config.hyperparameter_space, config.input_length, config.output_length,
          config.training_size,
          config.validation_size)
