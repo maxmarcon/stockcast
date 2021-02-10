@@ -3,6 +3,7 @@ import os.path
 from functools import reduce
 
 import matplotlib.pyplot as pyplot
+import matplotlib.dates
 import numpy as np
 import pandas
 import tensorflow.keras as keras
@@ -127,17 +128,16 @@ def plot_results(title, dates, predicted_labels, labels, max_labels=10, pdf=None
     predicted_labels_nonoverlapping = predicted_labels[::prediction_length].reshape(-1)
     labels_nonoverlapping = labels[::prediction_length].reshape(-1)
     labels_nonoverlapping_first_ones = labels_nonoverlapping[::prediction_length]
-    dates_nonoverlapping = dates[::prediction_length].reshape(-1)
+    dates_nonoverlapping = matplotlib.dates.datestr2num(dates[::prediction_length].reshape(-1))
     dates_nonoverlapping_first_ones = dates_nonoverlapping[::prediction_length]
 
     pyplot.title(title)
-    pyplot.plot(dates_nonoverlapping, labels_nonoverlapping, 'b-', label='Real value')
-    pyplot.plot(dates_nonoverlapping, predicted_labels_nonoverlapping, 'r-', label='Predicted')
-    pyplot.plot(dates_nonoverlapping_first_ones, labels_nonoverlapping_first_ones, 'gx')
-    max_labels = max_labels if max_labels < dates_nonoverlapping.size else dates_nonoverlapping.size
-    pyplot.xticks(np.arange(0, dates_nonoverlapping.size, dates_nonoverlapping.size / max_labels), rotation=-30,
-                  fontsize='x-small')
-    pyplot.ylim(bottom=0)
+    pyplot.plot_date(dates_nonoverlapping, labels_nonoverlapping, 'b-', label='Real value')
+    pyplot.plot_date(dates_nonoverlapping, predicted_labels_nonoverlapping, 'r-', label='Predicted')
+    pyplot.plot_date(dates_nonoverlapping_first_ones, labels_nonoverlapping_first_ones, 'gx')
+    # pyplot.xticks( rotation=-30,
+    #               fontsize='x-small')
+    # pyplot.ylim(bottom=0)
     pyplot.legend()
     pyplot.grid(True)
     if pdf:

@@ -84,7 +84,6 @@ def train(datafile, hyperparameters, input_length, output_length, training_size,
 
 def evaluate(model, datafile, output_file, feature_columns, input_length, output_length, training_size,
              validation_size, pdf=False):
-    global data
     data = utils.prepare_data(datafile, feature_columns, input_length,
                               output_length,
                               training_size, validation_size)
