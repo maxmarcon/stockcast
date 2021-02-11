@@ -3,6 +3,7 @@ import argparse
 import json
 import os.path
 import shutil
+from contextlib import nullcontext
 from datetime import timedelta
 from time import time
 
@@ -90,41 +91,38 @@ def evaluate(model, datafile, output_file, feature_columns, input_length, output
     metric_results = model.evaluate(data['x_test'], data['y_test'])
     if type(metric_results) != list:
         metric_results = [metric_results]
-    for r in map(lambda a, b: a + ": " + str(b), model.metrics_names, metric_results):
-        print(r)
 
-    if pdf:
-        with PdfPages(output_file) as pdf_file:
+    metric_summary = ', '.join(map(lambda a, b: a + f"={b:.4f}", model.metrics_names, metric_results))
+    print(metric_summary)
 
-            utils.plot_results('Training set', data['dates_train'],
-                               data['rescaler'].inverse_transform(model.predict(data['x_train'])),
-                               data['rescaler'].inverse_transform(data['y_train']), pdf=pdf_file)
+    data = utils.prepare_data(datafile, feature_columns, input_length,
+                              output_length,
+                              training_size, validation_size, labels_starting_on_weekday=0)
 
-            utils.plot_results('Validation set', data['dates_val'],
-                               data['rescaler'].inverse_transform(model.predict(data['x_val'])),
-                               data['rescaler'].inverse_transform(data['y_val']), pdf=pdf_file)
+    with PdfPages(output_file) if pdf else nullcontext() as pdf_file:
+        if not pdf:
+            fig, axes = pyplot.subplots(3, 1)
+            fig.suptitle(metric_summary)
+            fig.set_tight_layout(True)
 
-            utils.plot_results('Test set', data['dates_test'],
-                               data['rescaler'].inverse_transform(model.predict(data['x_test'])),
-                               data['rescaler'].inverse_transform(data['y_test']), pdf=pdf_file)
-    else:
-        pyplot.subplot(3, 1, 1)
-        utils.plot_results('Training set', data['dates_train'],
-                           data['rescaler'].inverse_transform(model.predict(data['x_train'])),
-                           data['rescaler'].inverse_transform(data['y_train']))
+        for (plot_num, (title, dates, x, y)) in enumerate(zip(('Training set', 'Validation set', 'Test set'),
+                                                              ('dates_train', 'dates_val', 'dates_test'),
+                                                              ('x_train', 'x_val', 'x_test'),
+                                                              ('y_train', 'y_val', 'y_test'))):
 
-        pyplot.subplot(3, 1, 2)
+            if pdf:
+                fig, axes = pyplot.subplots()
+                fig.suptitle(metric_summary)
 
-        utils.plot_results('Validation set', data['dates_val'],
-                           data['rescaler'].inverse_transform(model.predict(data['x_val'])),
-                           data['rescaler'].inverse_transform(data['y_val']))
+            utils.plot_results(axes if pdf else axes[plot_num], title, data[dates],
+                               data['rescaler'].inverse_transform(model.predict(data[x])),
+                               data['rescaler'].inverse_transform(data[y]), minor_xtics=(x != 'x_train'))
 
-        pyplot.subplot(3, 1, 3)
+            if pdf:
+                pdf_file.savefig(fig)
 
-        utils.plot_results('Test set', data['dates_test'],
-                           data['rescaler'].inverse_transform(model.predict(data['x_test'])),
-                           data['rescaler'].inverse_transform(data['y_test']))
-        pyplot.show()
+        if not pdf:
+            pyplot.show()
 
 
 def add_common_args(arg_parser, which=('datafile', 'model')):

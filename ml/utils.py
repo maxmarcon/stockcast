@@ -2,13 +2,13 @@ import operator
 import os.path
 from functools import reduce
 
-import matplotlib.pyplot as pyplot
 import matplotlib.dates
 import numpy as np
 import pandas
 import tensorflow.keras as keras
 import tensorflow.keras.layers as layers
 from colors import *
+from dateutil.rrule import MO
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import OneHotEncoder
 
@@ -123,40 +123,47 @@ def preprocess(data):
     return close_scaler
 
 
-def plot_results(title, dates, predicted_labels, labels, max_labels=10, pdf=None):
-    prediction_length = predicted_labels.shape[1]
-    predicted_labels_nonoverlapping = predicted_labels[::prediction_length].reshape(-1)
-    labels_nonoverlapping = labels[::prediction_length].reshape(-1)
-    labels_nonoverlapping_first_ones = labels_nonoverlapping[::prediction_length]
-    dates_nonoverlapping = matplotlib.dates.datestr2num(dates[::prediction_length].reshape(-1))
-    dates_nonoverlapping_first_ones = dates_nonoverlapping[::prediction_length]
+def plot_results(ax, title, dates, predicted_labels, labels, minor_xtics=True):
+    dates = matplotlib.dates.datestr2num(dates.reshape(-1))
 
-    pyplot.title(title)
-    pyplot.plot_date(dates_nonoverlapping, labels_nonoverlapping, 'b-', label='Real value')
-    pyplot.plot_date(dates_nonoverlapping, predicted_labels_nonoverlapping, 'r-', label='Predicted')
-    pyplot.plot_date(dates_nonoverlapping_first_ones, labels_nonoverlapping_first_ones, 'gx')
-    # pyplot.xticks( rotation=-30,
-    #               fontsize='x-small')
-    # pyplot.ylim(bottom=0)
-    pyplot.legend()
-    pyplot.grid(True)
-    if pdf:
-        pdf.savefig()
-        pyplot.close()
+    ax.set_title(title)
+    ax.plot_date(dates, labels.reshape(-1), 'b.-', label='Real value')
+    ax.plot_date(dates, predicted_labels.reshape(-1), 'r.-', label='Predicted')
+    ax.legend()
+    if minor_xtics:
+        ax.xaxis.set_minor_locator(matplotlib.dates.WeekdayLocator(byweekday=MO))
+        ax.xaxis.grid(which='minor')
+    ax.set_xlim(dates[0], dates[-1])
+    ax.yaxis.grid(True)
+    for t in ax.xaxis.get_ticklabels():
+        t.set_horizontalalignment('right')
+        t.set_rotation(30)
+        t.set_fontsize('small')
 
 
-def prepare_data(datafile, feature_columns, input_length, output_length, training_size, validation_size):
+def prepare_data(datafile, feature_columns, input_length, output_length, training_size, validation_size,
+                 labels_starting_on_weekday=None):
     data = pandas.read_csv(datafile)
     close_rescaler = preprocess(data)
 
     features, labels, label_dates = [], [], []
 
-    for i in range(0, len(data) - (input_length + output_length) + 1):
-        features.append(data[i:i + input_length][feature_columns].values)
+    first_label_indexes = []
 
-    for i in range(0, len(data) - (input_length + output_length) + 1):
-        label_dates.append(data[i + input_length:i + input_length + output_length]['date'])
-        labels.append(data[i + input_length:i + input_length + output_length]['close_scaled'])
+    for i in range(input_length, len(data) - output_length + 1):
+        if labels_starting_on_weekday is None or data.iloc[i]['day_of_week'] == labels_starting_on_weekday + 1:
+            first_label_indexes.append(i)
+
+    print(f'found {len(first_label_indexes)} label sets')
+    print(f'first label on {data.loc[first_label_indexes[0]]["date"]}')
+    print(f'second label on {data.loc[first_label_indexes[1]]["date"]}')
+    print(f'next to last label on {data.loc[first_label_indexes[-2]]["date"]}')
+    print(f'last label on {data.loc[first_label_indexes[-1]]["date"]}')
+
+    for i in first_label_indexes:
+        features.append(data[i - input_length:i][feature_columns].values)
+        label_dates.append(data[i:i + output_length]['date'])
+        labels.append(data[i:i + output_length]['close_scaled'])
 
     features, labels, label_dates = np.array(features, np.float), np.array(labels, np.float), np.array(label_dates)
 
