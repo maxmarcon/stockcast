@@ -1,5 +1,4 @@
 import operator
-import os.path
 from functools import reduce
 
 import matplotlib.dates
@@ -9,6 +8,7 @@ import tensorflow.keras as keras
 import tensorflow.keras.layers as layers
 from colors import *
 from dateutil.rrule import MO
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import OneHotEncoder
 
@@ -22,22 +22,6 @@ def make_model(input_len, feature_size, output_len, layer_size, nof_hidden_layer
     model.add(layers.LSTM(layer_size, return_sequences=False, dropout=dropout_rate))
     model.add(layers.Dense(output_len))
     return model
-
-
-def make_sets(array, training, validation):
-    array_size = len(array)
-    return np.split(array, (int(array_size * training), int(array_size * (training + validation))))
-
-
-def generate_tuning_state_filename(file, datafile):
-    (stem, _) = os.path.splitext(file)
-    if datafile is not None:
-        (datafile_stem, _) = os.path.splitext(datafile)
-        prefix = f'{stem}-{datafile_stem}'
-    else:
-        prefix = stem
-
-    return f'{prefix}.tuning'
 
 
 def load_tuning_state(filename, dontfail=True):
@@ -141,45 +125,33 @@ def plot_results(ax, title, dates, predicted_labels, labels, minor_xtics=True):
         t.set_fontsize('small')
 
 
-def prepare_data(datafile, feature_columns, input_length, output_length, training_size, validation_size,
-                 labels_starting_on_weekday=None):
+def load_data(datafile, feature_columns, input_length, output_length, training_size, random_state,
+              labels_starting_on_weekday=None):
+    ok(f"Reading data from {datafile}")
     data = pandas.read_csv(datafile)
     close_rescaler = preprocess(data)
 
     features, labels, label_dates = [], [], []
 
-    first_label_indexes = []
-
     for i in range(input_length, len(data) - output_length + 1):
         if labels_starting_on_weekday is None or data.iloc[i]['day_of_week'] == labels_starting_on_weekday + 1:
-            first_label_indexes.append(i)
-
-    print(f'found {len(first_label_indexes)} label sets')
-    print(f'first label on {data.loc[first_label_indexes[0]]["date"]}')
-    print(f'second label on {data.loc[first_label_indexes[1]]["date"]}')
-    print(f'next to last label on {data.loc[first_label_indexes[-2]]["date"]}')
-    print(f'last label on {data.loc[first_label_indexes[-1]]["date"]}')
-
-    for i in first_label_indexes:
-        features.append(data[i - input_length:i][feature_columns].values)
-        label_dates.append(data[i:i + output_length]['date'])
-        labels.append(data[i:i + output_length]['close_scaled'])
+            features.append(data[i - input_length:i][feature_columns].values)
+            label_dates.append(data[i:i + output_length]['date'])
+            labels.append(data[i:i + output_length]['close_scaled'])
 
     features, labels, label_dates = np.array(features, np.float), np.array(labels, np.float), np.array(label_dates)
 
-    x_train, x_val, x_test = make_sets(features, training_size, validation_size)
-    y_train, y_val, y_test = make_sets(labels, training_size, validation_size)
-    dates_train, dates_val, dates_test = make_sets(label_dates, training_size, validation_size)
+    x_train, x_test, y_train, y_test, dates_train, dates_test = train_test_split(features, labels, label_dates,
+                                                                                 random_state=random_state,
+                                                                                 train_size=training_size,
+                                                                                 shuffle=False)
 
     return {
         'x_train': x_train,
         'y_train': y_train,
-        'x_val': x_val,
-        'y_val': y_val,
         'x_test': x_test,
         'y_test': y_test,
         'dates_train': dates_train,
-        'dates_val': dates_val,
         'dates_test': dates_test,
         'rescaler': close_rescaler
     }
