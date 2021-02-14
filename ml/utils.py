@@ -12,6 +12,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import OneHotEncoder
 
+COLUMNS_TO_RESCALE = ['open', 'high', 'low', 'close', 'volume', 'change', 'changePercent']
+
 
 def make_model(input_len, feature_size, output_len, layer_size, nof_hidden_layers, dropout_rate=0.0, **kwargs):
     model = keras.Sequential([
@@ -95,10 +97,15 @@ def load_optimal_hyperparameters_index(tuning_file, column='val_loss'):
 
 def preprocess(data):
     close, dow = data['close'].to_numpy().reshape(-1, 1), data['day_of_week'].to_numpy().reshape(-1, 1)
-    close_scaler = MinMaxScaler()
-    close_scaler.fit(close)
-    close_scaled = close_scaler.transform(close)
-    data['close_scaled'] = close_scaled
+    close_scaler = None
+    for column in COLUMNS_TO_RESCALE:
+        if column in data:
+            scaler = MinMaxScaler()
+            values = data[column].to_numpy().reshape(-1, 1)
+            scaler.fit(values)
+            data[f'{column}_scaled'] = scaler.transform(values)
+            if column == 'close':
+                close_scaler = scaler
 
     dow_onehot = OneHotEncoder(sparse=False).fit_transform(dow)
     for i in range(0, dow_onehot.shape[1]):

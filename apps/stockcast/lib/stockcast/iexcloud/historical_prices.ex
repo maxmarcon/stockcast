@@ -23,9 +23,8 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
   def retrieve(symbol, from, to, sampling \\ 1)
       when is_binary(symbol) and is_integer(sampling) and
              sampling >= 1 do
-    
     symbol = String.upcase(symbol)
-    
+
     with true <- Date.compare(from, to) in [:lt, :eq],
          :lt <- Date.compare(to, Date.utc_today()) do
       case maybe_fetch_prices(symbol, from, to) do

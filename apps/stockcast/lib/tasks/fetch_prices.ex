@@ -64,7 +64,21 @@ defmodule Mix.Tasks.Fetch.Prices do
 
     prices
     |> Enum.map(&Map.put(&1, :day_of_week, Date.day_of_week(&1.date)))
-    |> CSV.encode(delimiter: "\n", headers: [:date, :day_of_week, :symbol, :close])
+    |> CSV.encode(
+      delimiter: "\n",
+      headers: [
+        :day_of_week,
+        :symbol,
+        :date,
+        :open,
+        :high,
+        :low,
+        :close,
+        :volume,
+        :change,
+        :changePercent
+      ]
+    )
     |> Enum.each(&IO.write(file, &1))
   end
 end
