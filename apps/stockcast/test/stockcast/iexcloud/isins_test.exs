@@ -8,7 +8,7 @@ defmodule Stockcast.IexCloud.IsinsTest do
 
   @isin "IE00B4L5Y983"
   @invalid_isin "XIE00B4L5Y983X"
-  @old_iex_id "IEX_42423450545A2D52"
+  @old_symbol "SWDA-LN"
 
   setup do
     mock_isin_api()
@@ -22,13 +22,7 @@ defmodule Stockcast.IexCloud.IsinsTest do
       isins = Repo.all(Isin)
       assert length(isins) == 3
 
-      Enum.each(
-        isins,
-        fn %{isin: isin, iex_id: iex_id} ->
-          assert isin == @isin
-          refute is_nil(iex_id)
-        end
-      )
+      check_isins(isins)
     end
 
     test "doesn't save isins with wrong format" do
@@ -38,34 +32,28 @@ defmodule Stockcast.IexCloud.IsinsTest do
     end
 
     test "deletes existing isins" do
-      {:ok, _} = Repo.insert(%Isin{isin: @isin, iex_id: "OLD_IEX_ID"})
+      {:ok, _} = Repo.insert(%Isin{isin: @isin, symbol: "OLD_SYMBOL"})
 
       assert {:ok, %{deleted: 1, created: 3}} == Isins.fetch(@isin)
 
       isins = Repo.all(Isin)
       assert length(isins) == 3
 
-      Enum.each(
-        isins,
-        fn %{isin: isin, iex_id: iex_id} ->
-          assert isin == @isin
-          refute is_nil(iex_id)
-        end
-      )
+      check_isins(isins)
     end
 
     test "does not delete existing isins if new ones are invalid" do
-      {:ok, _} = Repo.insert(%Isin{isin: @invalid_isin, iex_id: @old_iex_id})
+      {:ok, _} = Repo.insert(%Isin{isin: @invalid_isin, symbol: @old_symbol})
 
       assert {:error, _} = Isins.fetch(@invalid_isin)
 
       isins = Repo.all(Isin)
       assert length(isins) == 1
 
-      assert [%{isin: @invalid_isin, iex_id: @old_iex_id} | _] = isins
+      assert [%{isin: @invalid_isin, symbol: @old_symbol} | _] = isins
     end
 
-    test "adds an isin with null iex_id in case of empty response" do
+    test "adds an isin with null symbol in case of empty response" do
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: [], status: 200} end)
 
       assert {:ok, %{created: 1, deleted: 0}} = Isins.fetch(@isin)
@@ -73,10 +61,10 @@ defmodule Stockcast.IexCloud.IsinsTest do
       isins = Repo.all(Isin)
       assert length(isins) == 1
 
-      assert [%{isin: @isin, iex_id: nil} | _] = isins
+      assert [%{isin: @isin, symbol: nil} | _] = isins
     end
 
-    test "adds an isin with null iex_id in case of empty response (2)" do
+    test "adds an isin with null symbol in case of empty response (2)" do
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: nil, status: 200} end)
 
       assert {:ok, %{created: 1, deleted: 0}} = Isins.fetch(@isin)
@@ -84,10 +72,10 @@ defmodule Stockcast.IexCloud.IsinsTest do
       isins = Repo.all(Isin)
       assert length(isins) == 1
 
-      assert [%{isin: @isin, iex_id: nil} | _] = isins
+      assert [%{isin: @isin, symbol: nil} | _] = isins
     end
 
-    test "doesn't add an isin with null iex_id if format is wrong" do
+    test "doesn't add an isin with null symbol if format is wrong" do
       Tesla.Mock.mock(fn %{method: :get} -> %Tesla.Env{body: [], status: 200} end)
 
       assert {:error, %{errors: [isin: {_, [validation: :format]}]}} = Isins.fetch(@invalid_isin)
@@ -103,13 +91,7 @@ defmodule Stockcast.IexCloud.IsinsTest do
       isins = Repo.all(Isin)
       assert length(isins) == 3
 
-      Enum.each(
-        isins,
-        fn %{isin: isin, iex_id: iex_id} ->
-          assert isin == @isin
-          refute is_nil(iex_id)
-        end
-      )
+      check_isins(isins)
     end
 
     test "raises in case of error" do
@@ -119,5 +101,15 @@ defmodule Stockcast.IexCloud.IsinsTest do
 
       assert Repo.aggregate(Isin, :count) == 0
     end
+  end
+
+  defp check_isins(isins) do
+    Enum.each(
+      isins,
+      fn %{isin: isin, symbol: symbol} ->
+        assert isin == @isin
+        refute is_nil(symbol)
+      end
+    )
   end
 end

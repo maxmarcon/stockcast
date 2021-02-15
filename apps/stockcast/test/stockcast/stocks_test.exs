@@ -48,11 +48,11 @@ defmodule Stockcast.StocksTest do
   @isins [
     %{
       isin: "IE00B4L5Y983",
-      iex_id: "IEX_5043564631472D52"
+      symbol: "00XS-GY"
     },
     %{
       isin: "IE00B4L5Y984",
-      iex_id: "IEX_5043564631472D52"
+      symbol: "00XS-GY"
     }
   ]
 
@@ -73,10 +73,9 @@ defmodule Stockcast.StocksTest do
   defp setup_isins_api_mock do
     api_isins = [
       %{
-        "symbol" => "IRRRF",
+        "symbol" => "00XP-GY",
         "region" => "US",
-        "exchange" => "CTO",
-        "iexId" => "IEX_5339503747312D52"
+        "exchange" => "CTO"
       }
     ]
 
@@ -134,7 +133,6 @@ defmodule Stockcast.StocksTest do
       assert Stocks.search("EGoeteadirCr   lDtmrie") == [symbol]
     end
 
-    @describetag skip: "https://github.com/iexg/IEX-API/issues/1496"
     test "triggers isin search if isin is not present", %{iex_symbols: iex_symbols} do
       symbol = Enum.at(iex_symbols, 0)
 

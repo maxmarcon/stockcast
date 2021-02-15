@@ -51,8 +51,8 @@ defmodule Stockcast.IexCloud.Isins do
     end
   end
 
-  defp save_isin(isin, %{"iexId" => iex_id}) do
-    case Repo.insert(Isin.changeset(%{isin: isin, iex_id: iex_id})) do
+  defp save_isin(isin, %{"symbol" => symbol}) do
+    case Repo.insert(Isin.changeset(%{isin: isin, symbol: symbol})) do
       {:ok, _} -> nil
       error -> error
     end

@@ -200,8 +200,7 @@ defmodule StockcastWeb.PriceControllerTest do
         "uVolume",
         "change",
         "changePercent",
-        "label",
-        "changeOverTime"
+        "label"
       ]
       |> Enum.each(
         &assert Map.has_key?(price, &1), "price at position #{index} is missing key \"#{&1}\""

@@ -17,15 +17,15 @@ defmodule Stockcast.IexCloud.Isin do
   schema "iexc_isins" do
     field :isin, :string
 
-    belongs_to :symbol, Symbol, foreign_key: :iex_id, references: :iex_id, type: :string
+    belongs_to :for_symbol, Symbol, foreign_key: :symbol, references: :symbol, type: :string
     timestamps(type: :utc_datetime)
   end
 
   def changeset(isin \\ %Isin{}, params) do
     isin
-    |> cast(params, [:isin, :iex_id])
+    |> cast(params, [:isin, :symbol])
     |> validate_required([:isin])
     |> validate_format(:isin, @isin_format)
-    |> unique_constraint(:isin, name: :iexc_isins_isin_iex_id_index)
+    |> unique_constraint(:isin, name: :iexc_isins_isin_symbol_index)
   end
 end

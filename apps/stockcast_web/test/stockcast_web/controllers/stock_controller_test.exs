@@ -49,11 +49,11 @@ defmodule StockcastWeb.StockControllerTest do
   @isins [
     %{
       isin: "IE00B4L5Y983",
-      iex_id: "IEX_5339503747312D52"
+      symbol: "00XP-GY"
     },
     %{
       isin: "IE00B4L5Y984",
-      iex_id: "IEX_5339503747312D52"
+      symbol: "00XP-GY"
     }
   ]
 

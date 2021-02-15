@@ -2,19 +2,16 @@
   {
     "symbol": "IWDA-NA",
     "region": "NL",
-    "exchange": "MSA",
-    "iexId": "IEX_4C4438484C372D52"
+    "exchange": "MSA"
   },
   {
     "symbol": "IRRRF",
     "region": "US",
-    "exchange": "CTO",
-    "iexId": "IEX_42423450545A2D52"
+    "exchange": "CTO"
   },
   {
     "symbol": "SWDA-LN",
     "region": "GB",
-    "exchange": "NOL",
-    "iexId": "IEX_4B54334248512D52"
+    "exchange": "NOL"
   }
 ]
