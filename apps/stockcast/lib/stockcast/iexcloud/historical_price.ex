@@ -21,7 +21,6 @@ defmodule Stockcast.IexCloud.HistoricalPrice do
     field :change, :decimal
     field :changePercent, :decimal
     field :label, :string
-    field :changeOverTime, :decimal
 
     timestamps(type: :utc_datetime)
   end
@@ -43,8 +42,7 @@ defmodule Stockcast.IexCloud.HistoricalPrice do
       :uVolume,
       :change,
       :changePercent,
-      :label,
-      :changeOverTime
+      :label
     ])
     |> validate_required([:symbol, :date])
     |> unique_constraint(:symbol, name: :iexc_historical_prices_symbol_date_index)
