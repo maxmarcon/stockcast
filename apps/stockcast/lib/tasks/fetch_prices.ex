@@ -47,6 +47,9 @@ defmodule Mix.Tasks.Fetch.Prices do
       {:error, error} ->
         fail(to_string(error))
 
+      {:error, :too_old, earliest_fetchable} ->
+        fail("Earliest fetchable date is: #{earliest_fetchable}")
+
       {:ok, prices} ->
         write_prices(prices, symbol, from, to, options[:stdout])
     end

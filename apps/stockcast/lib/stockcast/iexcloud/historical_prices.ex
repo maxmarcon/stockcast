@@ -96,8 +96,15 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
            end
          ) do
       [range: range, days: _] -> {:ok, range}
-      _ -> {:error, :too_old}
+      _ -> {:error, :too_old, earliest_fetchable()}
     end
+  end
+
+  defp earliest_fetchable() do
+    [_, days: days] = List.last(@ranges)
+
+    Date.utc_today()
+    |> Date.add(-days)
   end
 
   defp fetch_prices(symbol, range) do

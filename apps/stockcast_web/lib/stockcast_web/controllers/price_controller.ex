@@ -61,8 +61,8 @@ defmodule StockcastWeb.PriceController do
       {:error, :invalid_dates} ->
         {:error, :bad_request, :invalid_dates}
 
-      {:error, :too_old} ->
-        {:error, :gone, :too_old}
+      {:error, :too_old, earliest_fetchable} ->
+        {:error, :gone, "Too old: earliest fetchable date is #{earliest_fetchable}"}
 
       {:error, :unknown_symbol} ->
         {:error, :not_found, :unknown_symbol}

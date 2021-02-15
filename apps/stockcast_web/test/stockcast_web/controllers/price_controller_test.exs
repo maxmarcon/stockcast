@@ -130,7 +130,9 @@ defmodule StockcastWeb.PriceControllerTest do
                    utc_today: fn -> Date.from_iso8601!(@far_future) end do
       conn = get(conn, Routes.price_path(conn, :index, @symbol, @date_from, @date_to))
 
-      json_error_response(conn, 410, "Too old")
+      earliest_fetchable = Date.utc_today() |> Date.add(-365 * 5)
+
+      json_error_response(conn, 410, "Too old: earliest fetchable date is #{earliest_fetchable}")
     end
 
     test "returns 500 if some prices cannot be stored", %{conn: conn} do
