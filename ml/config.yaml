@@ -1,0 +1,18 @@
+random_state: 1
+training_size: 0.9
+validation_split: 0.1
+input_length: 60
+output_length: 5
+hyperparameter_space:
+  feature_columns:
+    - [ 'close_scaled', 'day_of_week' ]
+    - [ 'close_scaled' ]
+    - [ 'close_scaled','dow_0','dow_1','dow_2','dow_3','dow_4' ]
+  dropout_rate: [ 0.0, 0.1, 0.2 ]
+  optimizer: [ 'adam', 'sgd' ]
+  loss_function: [ 'mean_squared_error' ]
+  layer_size: [ 10, 20, 30, 40, 50, 100 ]
+  nof_hidden_layers: [ 1, 2, 3, 4, 5 ]
+  epochs: [ 30 ]
+  batch_size: [ 32 ]
+

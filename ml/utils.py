@@ -115,16 +115,18 @@ def preprocess(data):
 
 
 def plot_results(ax, title, dates, predicted_labels, labels, minor_xtics=True):
-    dates = matplotlib.dates.datestr2num(dates.reshape(-1))
+    # dates = matplotlib.dates.datestr2num(dates.reshape(-1))
 
     ax.set_title(title)
-    ax.plot_date(dates, labels.reshape(-1), 'b.-', label='Real value')
-    ax.plot_date(dates, predicted_labels.reshape(-1), 'r.-', label='Predicted')
-    ax.legend()
+    for i in range(0, len(dates)):
+        # mdates = matplotlib.dates.datestr2num(dates[i])
+        ax.plot_date(mdates, labels[i], 'b.-', label='Real value')
+        ax.plot_date(mdates, predicted_labels[i], 'r.-', label='Predicted')
+    # ax.legend()
     if minor_xtics:
         ax.xaxis.set_minor_locator(matplotlib.dates.WeekdayLocator(byweekday=MO))
         ax.xaxis.grid(which='minor')
-    ax.set_xlim(dates[0], dates[-1])
+    # ax.set_xlim(dates[0], dates[-1])
     ax.yaxis.grid(True)
     for t in ax.xaxis.get_ticklabels():
         t.set_horizontalalignment('right')
@@ -150,8 +152,7 @@ def load_data(datafile, feature_columns, input_length, output_length, training_s
 
     x_train, x_test, y_train, y_test, dates_train, dates_test = train_test_split(features, labels, label_dates,
                                                                                  random_state=random_state,
-                                                                                 train_size=training_size,
-                                                                                 shuffle=False)
+                                                                                 train_size=training_size)
 
     return {
         'x_train': x_train,

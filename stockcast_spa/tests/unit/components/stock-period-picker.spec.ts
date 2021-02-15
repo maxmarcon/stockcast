@@ -10,7 +10,7 @@ localVue.use(bootstrapVue)
 localVue.use(VueTagsInput)
 
 let axiosMock: any
-let wrapper: Wrapper<StockPeriodPicker>
+let wrapper: Wrapper<Vue>
 
 const S1 = { symbol: 'S1', currency: 'EUR', name: 'Stock 1', isins: ['ISIN1', 'ISIN2'], figi: 'FIGI1' }
 const S2 = { symbol: 'S2', currency: 'USD', name: 'Stock 2', isins: ['ISIN1', 'ISIN2'], figi: 'FIGI1' }
@@ -128,7 +128,7 @@ describe('StockPeriodPicker', () => {
     })
 
     it('value.tags is updated', () => {
-      expect((wrapper.vm as any).$props.value.stocks).toEqual([{ text: 'S2' }])
+      expect(wrapper.vm.$props.value.stocks).toEqual([{ text: 'S2' }])
     })
 
     it('and the input event is emitted', () => {
@@ -142,7 +142,7 @@ describe('StockPeriodPicker', () => {
     })
 
     it('value.dateFrom is updated', () => {
-      expect((wrapper.vm as any).$props.value.dateFrom).toEqual(parseISO('2020-01-01'))
+      expect(wrapper.vm.$props.value.dateFrom).toEqual(parseISO('2020-01-01'))
     })
 
     it('and the input event is emitted', () => {
@@ -156,7 +156,7 @@ describe('StockPeriodPicker', () => {
     })
 
     it('value.dateTo is updated', () => {
-      expect((wrapper.vm as any).$props.value.dateTo).toEqual(parseISO('2020-01-01'))
+      expect(wrapper.vm.$props.value.dateTo).toEqual(parseISO('2020-01-01'))
     })
 
     it('and the input event is emitted', () => {
@@ -170,7 +170,7 @@ describe('StockPeriodPicker', () => {
     })
 
     it('date-to is set to date-from', () => {
-      expect((wrapper.vm as any).$props.value.dateTo).toEqual((wrapper.vm as any).$props.value.dateFrom)
+      expect(wrapper.vm.$props.value.dateTo).toEqual(wrapper.vm.$props.value.dateFrom)
     })
   })
 
@@ -180,7 +180,7 @@ describe('StockPeriodPicker', () => {
     })
 
     it('date-from is set to date-to', () => {
-      expect((wrapper.vm as any).$props.value.dateFrom).toEqual((wrapper.vm as any).$props.value.dateTo)
+      expect(wrapper.vm.$props.value.dateFrom).toEqual(wrapper.vm.$props.value.dateTo)
     })
   })
 
@@ -200,7 +200,7 @@ describe('StockPeriodPicker', () => {
     })
 
     it('stores the result of the search', () => {
-      expect((wrapper.vm as any).$data.autocompleteItems).toEqual([
+      expect(wrapper.vm.$data.autocompleteItems).toEqual([
         expect.objectContaining({ symbol: 'S1', name: 'Stock 1' }),
         expect.objectContaining({ symbol: 'S2', name: 'Stock 2' })
       ])
@@ -223,7 +223,7 @@ describe('StockPeriodPicker', () => {
     })
 
     it('stores the result of the search including the matching ISIN', () => {
-      expect((wrapper.vm as any).$data.autocompleteItems).toEqual([
+      expect(wrapper.vm.$data.autocompleteItems).toEqual([
         expect.objectContaining({ symbol: 'S1', name: 'Stock 1', isin: 'ISIN2' }),
         expect.objectContaining({ symbol: 'S2', name: 'Stock 2', isin: 'ISIN2' })
       ])
@@ -246,7 +246,7 @@ describe('StockPeriodPicker', () => {
     })
 
     it('stores the result of the search including the matching FIGI', () => {
-      expect((wrapper.vm as any).$data.autocompleteItems).toEqual([
+      expect(wrapper.vm.$data.autocompleteItems).toEqual([
         expect.objectContaining({ symbol: 'S1', name: 'Stock 1', figi: 'FIGI1' }),
         expect.objectContaining({ symbol: 'S2', name: 'Stock 2', figi: 'FIGI1' })
       ])
