@@ -31,8 +31,12 @@ defmodule Stockcast.IexCloud.Isins do
   defp update_isins(isin, mappings) do
     # TODO: write a test for duplicate symbols in response! 
     unique_mappings =
-      mappings
-      |> Enum.uniq_by(& &1["symbol"])
+      if is_list(mappings) do
+        mappings
+        |> Enum.uniq_by(& &1["symbol"])
+      else
+        mappings
+      end
 
     Repo.transaction(fn ->
       {deleted, _} =
