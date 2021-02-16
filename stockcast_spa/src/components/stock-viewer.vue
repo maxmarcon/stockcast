@@ -29,11 +29,12 @@
           </b-col>
           <b-col v-if="hasDataToShow" class="p-md-2 border border-secondary rounded mt-2 mt-md-0" md="2"
                  style="height: 70vh; overflow-y: scroll;">
-            <b-card v-for="({prices: {performance}, label, metadata, variant, stock: {symbol}}, index) in nonEmptyStockBags"
-                    :key="label"
-                    :class="{'mt-1' : index > 0}"
-                    :name="symbol"
-                    no-body>
+            <b-card
+              v-for="({prices: {performance}, label, metadata, variant, stock: {symbol}}, index) in nonEmptyStockBags"
+              :key="label"
+              :class="{'mt-1' : index > 0}"
+              :name="symbol"
+              no-body>
               <b-card-header :header-bg-variant="variant" header-class="d-flex justify-content-between"
                              header-tag="div">
                 <b>{{ label }}</b>
@@ -79,7 +80,7 @@
   </b-card>
 </template>
 <script lang="ts">
-import {differenceInCalendarDays, formatISO, isSameDay, parseISO} from 'date-fns'
+import {formatISO, isSameDay, parseISO} from 'date-fns'
 import VARIANT_COLORS from '@/scss/main.scss'
 import Vue, {PropType} from 'vue'
 import {
@@ -202,14 +203,11 @@ export default Vue.extend({
       return this.axios.get<SymbolResponse>(`/stocks/symbol/${symbol}`)
     },
     fetchPrices(symbol: string): Promise<AxiosResponse<PriceResponse>> {
-      const maxDataPoints = 50
-      const days = differenceInCalendarDays(this.stockPeriod.dateTo, this.stockPeriod.dateFrom)
-      const sampling = Math.max(Math.round(days / maxDataPoints), 1)
       const dateFrom = formatISO(this.stockPeriod.dateFrom, {representation: 'date'})
       const dateTo = formatISO(this.stockPeriod.dateTo, {representation: 'date'})
 
       return this.axios.get<PriceResponse>(`/prices/${symbol}/from/${dateFrom}/to/${dateTo}`, {
-        params: {sampling}
+        params: {sampling: 1}
       })
     },
     parseResponse({metadataResponse, pricesResponse, stock}: {
@@ -260,7 +258,7 @@ export default Vue.extend({
           data: prices.map(
             ({date, close}) => ({x: typeof (date) === 'string' ? parseISO(date) : date, y: parseFloat(close)})
           ),
-          cubicInterpolationMode: 'monotone'
+          lineTension: 0
         })
       }
     },
