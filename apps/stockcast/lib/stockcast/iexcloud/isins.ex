@@ -29,10 +29,21 @@ defmodule Stockcast.IexCloud.Isins do
   defp raise_exception(error), do: raise("Error while retrieving isins: #{inspect(error)}")
 
   defp update_isins(isin, mappings) do
-    Repo.transaction(fn ->
-      {deleted, _} = Repo.delete_all(from Isin, where: [isin: ^isin])
+    # TODO: write a test for duplicate symbols in response! 
+    unique_mappings =
+      mappings
+      |> Enum.uniq_by(& &1["symbol"])
 
-      case save_isins(isin, mappings) do
+    Repo.transaction(fn ->
+      {deleted, _} =
+        Repo.delete_all(
+          from Isin,
+            where: [
+              isin: ^isin
+            ]
+        )
+
+      case save_isins(isin, unique_mappings) do
         {:ok, created} -> %{deleted: deleted, created: created}
         {:error, error} -> Repo.rollback(error)
       end
