@@ -149,7 +149,7 @@ defmodule Stockcast.Prices do
         price: price,
         action: :buy,
         balance: sub(balance, price),
-        balance_short: sub(balance_short, price)
+        balance_short: sub(balance_short, mult(2, price))
       }
       | strategy
     ]
