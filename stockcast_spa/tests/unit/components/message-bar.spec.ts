@@ -1,7 +1,7 @@
 import MessageBar from '@/components/message-bar.vue'
 import BootstrapVue from 'bootstrap-vue'
 
-import { createLocalVue, shallowMount, Wrapper } from '@vue/test-utils'
+import {createLocalVue, shallowMount, Wrapper} from '@vue/test-utils'
 
 const localVue = createLocalVue()
 localVue.use(BootstrapVue)
@@ -10,12 +10,12 @@ const MESSAGE = "I'm a message"
 const VARIANT = 'danger'
 const SECONDS = 10
 
-let wrapper: Wrapper<MessageBar>
+let wrapper: Wrapper<Vue>
 let alert: Wrapper<any>
 
 describe('messageBar', () => {
   it('can be mounted', () => {
-    wrapper = shallowMount(MessageBar, { localVue })
+    wrapper = shallowMount(MessageBar, {localVue})
     expect(wrapper.exists()).toBeTruthy
   })
 

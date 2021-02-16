@@ -8,18 +8,18 @@
           <b-spinner v-if="ongoing" small></b-spinner>
         </template>
         <vue-tags-input
-          autocomplete="off"
           id="stocks"
           v-model="tag"
-          :tags="value.stocks"
-          :avoidAddingDuplicates="true"
+          :add-only-from-autocomplete="true"
           :autocomplete-items="autocompleteItems"
+          :autocomplete-min-length="autocompleteMinLength"
+          :avoidAddingDuplicates="true"
           :max-tags="maxTags"
           :maxlength="50"
-          :add-only-from-autocomplete="true"
-          :autocomplete-min-length="autocompleteMinLength"
-          @tags-changed="tagsChanged"
-          placeholder="Search by name, ticker, or FIGI">
+          :tags="value.stocks"
+          autocomplete="off"
+          placeholder="Search by name, ticker, or FIGI"
+          @tags-changed="tagsChanged">
 
           <template v-slot:autocomplete-item="{item, performAdd}">
             <div @click="performAdd(item)">
@@ -30,8 +30,8 @@
             </div>
           </template>
           <template v-slot:tag-right="{tag: {isin, figi}}">
-            <span class="ml-1 small" v-if="isin">{{ '[ISIN:' + isin + ']' }}</span>
-            <span class="ml-1 small" v-else-if="figi">{{ '[FIGI:' + figi + ']' }}</span>
+            <span v-if="isin" class="ml-1 small">{{ '[ISIN:' + isin + ']' }}</span>
+            <span v-else-if="figi" class="ml-1 small">{{ '[FIGI:' + figi + ']' }}</span>
           </template>
         </vue-tags-input>
       </b-form-group>
@@ -40,11 +40,11 @@
       <b-form-group label="From:"
                     label-for="date-from">
         <b-form-datepicker id="date-from"
-                           :value="value.dateFrom"
-                           @input="dateFromChanged"
                            :date-format-options="dateFormatOptions"
+                           :max="yesterday"
+                           :value="value.dateFrom"
                            :value-as-date="true"
-                           :max="yesterday">
+                           @input="dateFromChanged">
         </b-form-datepicker>
       </b-form-group>
     </b-col>
@@ -52,11 +52,11 @@
       <b-form-group label="To:"
                     label-for="date-to">
         <b-form-datepicker id="date-to"
-                           :value="value.dateTo"
-                           @input="dateToChanged"
                            :date-format-options="dateFormatOptions"
+                           :max="yesterday"
+                           :value="value.dateTo"
                            :value-as-date="true"
-                           :max="yesterday">
+                           @input="dateToChanged">
         </b-form-datepicker>
       </b-form-group>
     </b-col>
@@ -69,6 +69,7 @@ import Vue, {PropType} from 'vue'
 import {SearchResponse} from '../utils/stockMetadata'
 import {AxiosResponse} from 'axios'
 import {Stock, StockPeriod} from '@/utils/stock'
+import ellipsize from "ellipsize";
 
 const DELAY = 800
 
@@ -94,20 +95,21 @@ export default Vue.extend({
     return {
       tag: '',
       yesterday: startOfYesterday(),
-      autocompleteItems: [],
+      autocompleteItems: [] as Stock[],
       autocompleteMinLength: 3,
       dateFormatOptions: {
         year: 'numeric', month: 'numeric', day: 'numeric'
       },
       ongoing: false,
-      debouncedSearch: undefined as (term: string) => Promise<AxiosResponse<SearchResponse>>
+      debouncedSearch: undefined as ((term: string) => Promise<AxiosResponse<SearchResponse>>) | undefined
     }
   },
   mounted() {
     this.debouncedSearch = debounce(this.searchStocks, DELAY)
   },
   methods: {
-    async searchStocks(term: string): AxiosResponse<SearchResponse> | void {
+    ellipsize,
+    async searchStocks(term: string): Promise<AxiosResponse<SearchResponse> | void> {
       try {
         this.ongoing = true
         return await this.axios.get<SearchResponse>('stocks/search', {params: {q: term, limit: 10}})
@@ -137,7 +139,7 @@ export default Vue.extend({
     }
   },
   watch: {
-    async tag(newTagInput: string): void {
+    async tag(newTagInput: string): Promise<void> {
       if (newTagInput.length < this.autocompleteMinLength) {
         return
       }

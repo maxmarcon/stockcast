@@ -11,7 +11,7 @@ const localVue = createLocalVue()
 localVue.use(bootstrapVue)
 
 let routerMock, axiosMock: any
-let wrapper: Wrapper<StockViewer>
+let wrapper: Wrapper<Vue>
 
 describe('stockViewer', () => {
   beforeEach(async () => {
@@ -87,7 +87,7 @@ describe('stockViewer', () => {
   })
 
   it('initializes the stocks with tags and dates', () => {
-    expect((wrapper.vm as any).stockPeriod).toEqual({
+    expect(wrapper.vm.$data.stockPeriod).toEqual({
       stocks: [new Stock('S1'), new Stock('S2')],
       dateFrom: parseISO('2020-01-01'),
       dateTo: parseISO('2020-03-01')
@@ -95,7 +95,7 @@ describe('stockViewer', () => {
   })
 
   it('initializes the chart object', () => {
-    expect((wrapper.vm as any).chart).toBeTruthy()
+    expect(wrapper.vm.$data.chart).toBeTruthy()
   })
 
   it('renders the stock cards', () => {
@@ -108,16 +108,16 @@ describe('stockViewer', () => {
   })
 
   it('updates the chart data', () => {
-    expect((wrapper.vm as any).chart.data.datasets.length).toBe(2)
-    expect((wrapper.vm as any).chart.data.datasets[0].label).toBe('S1 (USD)')
-    expect((wrapper.vm as any).chart.data.datasets[1].label).toBe('S2 (USD)')
-    expect((wrapper.vm as any).chart.data.datasets[0].data).toEqual(
+    expect(wrapper.vm.$data.chart.data.datasets.length).toBe(2)
+    expect(wrapper.vm.$data.chart.data.datasets[0].label).toBe('S1 (USD)')
+    expect(wrapper.vm.$data.chart.data.datasets[1].label).toBe('S2 (USD)')
+    expect(wrapper.vm.$data.chart.data.datasets[0].data).toEqual(
       priceApiResponse.data.slice(1).map(({date, close}: Partial<HistoricalPrice>) => ({
         x: parseISO(date as string),
         y: parseFloat(close as string)
       }))
     )
-    expect((wrapper.vm as any).chart.data.datasets[1].data).toEqual(
+    expect(wrapper.vm.$data.chart.data.datasets[1].data).toEqual(
       priceApiResponse.data.slice(1).map(({date, close}: Partial<HistoricalPrice>) => ({
         x: parseISO(date as string),
         y: parseFloat(close as string)
@@ -156,17 +156,17 @@ describe('stockViewer', () => {
     })
 
     it('updates the chart data', () => {
-      expect((wrapper.vm as any).chart.data.datasets.length).toBe(3)
-      expect((wrapper.vm as any).chart.data.datasets[0].label).toBe('S3 (USD) - ISIN: ISIN3')
-      expect((wrapper.vm as any).chart.data.datasets[1].label).toBe('S4 (USD) - FIGI: FIGI4')
-      expect((wrapper.vm as any).chart.data.datasets[2].label).toBe('S5 (USD)')
+      expect(wrapper.vm.$data.chart.data.datasets.length).toBe(3)
+      expect(wrapper.vm.$data.chart.data.datasets[0].label).toBe('S3 (USD) - ISIN: ISIN3')
+      expect(wrapper.vm.$data.chart.data.datasets[1].label).toBe('S4 (USD) - FIGI: FIGI4')
+      expect(wrapper.vm.$data.chart.data.datasets[2].label).toBe('S5 (USD)')
       const parsedData = priceApiResponse.data.map(({date, close}: HistoricalPrice) => ({
         x: parseISO(date as string),
         y: parseFloat(close)
       }))
-      expect((wrapper.vm as any).chart.data.datasets[0].data).toEqual(parsedData)
-      expect((wrapper.vm as any).chart.data.datasets[1].data).toEqual(parsedData)
-      expect((wrapper.vm as any).chart.data.datasets[2].data).toEqual(parsedData)
+      expect(wrapper.vm.$data.chart.data.datasets[0].data).toEqual(parsedData)
+      expect(wrapper.vm.$data.chart.data.datasets[1].data).toEqual(parsedData)
+      expect(wrapper.vm.$data.chart.data.datasets[2].data).toEqual(parsedData)
     })
   })
 
@@ -176,7 +176,7 @@ describe('stockViewer', () => {
     })
 
     it('removes the stock', () => {
-      expect((wrapper.vm as any).stockPeriod).toEqual({
+      expect(wrapper.vm.$data.stockPeriod).toEqual({
         stocks: [new Stock('S2')],
         dateFrom: parseISO('2020-01-01'),
         dateTo: parseISO('2020-03-01')
@@ -186,7 +186,7 @@ describe('stockViewer', () => {
 
   describe('when the route is updated', () => {
     beforeEach(async () => {
-      (wrapper.vm as any).beforeRouteUpdate({
+      wrapper.vm.$options.beforeRouteUpdate!.call(wrapper.vm, {
         query: {
           s: JSON.stringify(['C1', {s: 'C2', i: 'ISIN2'}, {s: 'C3', f: 'FIGI3'}]),
           df: '2019-01-01',
@@ -196,7 +196,7 @@ describe('stockViewer', () => {
     })
 
     it('updates the stocks', () => {
-      expect((wrapper.vm as any).stockPeriod).toEqual({
+      expect(wrapper.vm.$data.stockPeriod).toEqual({
         stocks: [
           new Stock('C1'),
           new Stock('C2', undefined, undefined, 'ISIN2'),
@@ -214,17 +214,17 @@ describe('stockViewer', () => {
     })
 
     it('updates the chart data', () => {
-      expect((wrapper.vm as any).chart.data.datasets.length).toBe(3)
-      expect((wrapper.vm as any).chart.data.datasets[0].label).toBe('C1 (USD)')
-      expect((wrapper.vm as any).chart.data.datasets[1].label).toBe('C2 (USD) - ISIN: ISIN2')
-      expect((wrapper.vm as any).chart.data.datasets[2].label).toBe('C3 (USD) - FIGI: FIGI3')
+      expect(wrapper.vm.$data.chart.data.datasets.length).toBe(3)
+      expect(wrapper.vm.$data.chart.data.datasets[0].label).toBe('C1 (USD)')
+      expect(wrapper.vm.$data.chart.data.datasets[1].label).toBe('C2 (USD) - ISIN: ISIN2')
+      expect(wrapper.vm.$data.chart.data.datasets[2].label).toBe('C3 (USD) - FIGI: FIGI3')
       const parsedData = priceApiResponse.data.map(({date, close}: HistoricalPrice) => ({
         x: parseISO(date as string),
         y: parseFloat(close)
       }))
-      expect((wrapper.vm as any).chart.data.datasets[0].data).toEqual(parsedData)
-      expect((wrapper.vm as any).chart.data.datasets[1].data).toEqual(parsedData)
-      expect((wrapper.vm as any).chart.data.datasets[2].data).toEqual(parsedData)
+      expect(wrapper.vm.$data.chart.data.datasets[0].data).toEqual(parsedData)
+      expect(wrapper.vm.$data.chart.data.datasets[1].data).toEqual(parsedData)
+      expect(wrapper.vm.$data.chart.data.datasets[2].data).toEqual(parsedData)
     })
   })
 })

@@ -1,8 +1,8 @@
 <template>
-  <b-alert :show="dismissCountDown"
-           fade
-           :dismissible="seconds <= 0"
+  <b-alert :dismissible="seconds <= 0"
+           :show="dismissCountDown"
            :variant="variant"
+           fade
            @dismissed="dismissCountDown = false"
            @dismiss-count-down="countDownChanged">
     {{ errorMsg }}
@@ -23,7 +23,7 @@ export default Vue.extend({
   data() {
     return {
       dismissCountDown: 0 as number | boolean,
-      errorMsg: null as string
+      errorMsg: undefined as string | undefined
     }
   },
   methods: {
