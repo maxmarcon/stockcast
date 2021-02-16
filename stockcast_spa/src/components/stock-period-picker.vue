@@ -77,7 +77,7 @@ interface State {
   yesterday: Date;
   autocompleteItems: Stock[];
   autocompleteMinLength: number;
-  debouncedSearch?: (term: string) => Promise<AxiosResponse<SearchResponse>>;
+  debouncedSearch: ((term: string) => Promise<AxiosResponse<SearchResponse>>) | undefined;
   dateFormatOptions: object;
   ongoing: boolean;
 }
@@ -109,7 +109,8 @@ export default Vue.extend({
       dateFormatOptions: {
         year: 'numeric', month: 'numeric', day: 'numeric'
       },
-      ongoing: false
+      ongoing: false,
+      debouncedSearch: undefined
     }
   },
   mounted() {
@@ -119,7 +120,7 @@ export default Vue.extend({
     async searchStocks(term: string): Promise<AxiosResponse<SearchResponse> | void> {
       try {
         this.ongoing = true
-        return await this.axios.get<SearchResponse>('stocks/search', {params: {q: term, limit: 10}})
+        return this.axios.get<SearchResponse>('stocks/search', {params: {q: term, limit: 10}})
       } catch (error) {
         this.$emit('error', error)
       } finally {
@@ -146,7 +147,7 @@ export default Vue.extend({
     }
   },
   watch: {
-    async tag(newTagInput: string): Promise<void> {
+    async tag(newTagInput: string): void {
       if (newTagInput.length < this.autocompleteMinLength) {
         return
       }
