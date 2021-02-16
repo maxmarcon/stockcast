@@ -72,16 +72,6 @@ import {Stock, StockPeriod} from '@/utils/stock'
 
 const DELAY = 800
 
-interface State {
-  tag: string;
-  yesterday: Date;
-  autocompleteItems: Stock[];
-  autocompleteMinLength: number;
-  debouncedSearch: ((term: string) => Promise<AxiosResponse<SearchResponse>>) | undefined;
-  dateFormatOptions: object;
-  ongoing: boolean;
-}
-
 export default Vue.extend({
   props: {
     value: {
@@ -100,7 +90,7 @@ export default Vue.extend({
       type: Number, default: 5
     }
   },
-  data(): State {
+  data() {
     return {
       tag: '',
       yesterday: startOfYesterday(),
@@ -110,17 +100,17 @@ export default Vue.extend({
         year: 'numeric', month: 'numeric', day: 'numeric'
       },
       ongoing: false,
-      debouncedSearch: undefined
+      debouncedSearch: undefined as (term: string) => Promise<AxiosResponse<SearchResponse>>
     }
   },
   mounted() {
     this.debouncedSearch = debounce(this.searchStocks, DELAY)
   },
   methods: {
-    async searchStocks(term: string): Promise<AxiosResponse<SearchResponse> | void> {
+    async searchStocks(term: string): AxiosResponse<SearchResponse> | void {
       try {
         this.ongoing = true
-        return this.axios.get<SearchResponse>('stocks/search', {params: {q: term, limit: 10}})
+        return await this.axios.get<SearchResponse>('stocks/search', {params: {q: term, limit: 10}})
       } catch (error) {
         this.$emit('error', error)
       } finally {
