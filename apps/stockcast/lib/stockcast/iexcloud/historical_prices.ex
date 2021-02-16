@@ -101,10 +101,13 @@ defmodule Stockcast.IexCloud.HistoricalPrices do
   end
 
   defp earliest_fetchable() do
-    [_, days: days] = List.last(@ranges)
+    max_days =
+      @ranges
+      |> Enum.map(& &1[:days])
+      |> Enum.max()
 
     Date.utc_today()
-    |> Date.add(-days)
+    |> Date.add(-max_days)
   end
 
   defp fetch_prices(symbol, range) do

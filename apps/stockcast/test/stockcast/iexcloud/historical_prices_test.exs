@@ -77,7 +77,10 @@ defmodule Stockcast.IexCloud.HistoricalPricesTest do
                    Date,
                    [:passthrough],
                    utc_today: fn -> @far_future end do
-      assert {:error, :too_old} == Prices.retrieve(@symbol, @date_from, @date_to)
+      earliest_fetchable = Date.utc_today() |> Date.add(-365 * 5)
+
+      assert {:error, :too_old, earliest_fetchable} ==
+               Prices.retrieve(@symbol, @date_from, @date_to)
     end
 
     test "retrieve/4 returns an error if symbol can't be found" do
