@@ -70,7 +70,7 @@ def train(datafile, hyperparameters, input_length, output_length, training_size,
     feature_columns = hyperparameters['feature_columns']
     data = utils.load_data(datafile, feature_columns, input_length,
                            output_length,
-                           training_size, random_state)
+                           training_size, random_state, shuffle_data=False)
     model = utils.make_model(input_length, len(feature_columns), output_length,
                              **hyperparameters)
     start = time()
@@ -83,10 +83,10 @@ def train(datafile, hyperparameters, input_length, output_length, training_size,
 
 
 def evaluate(model, datafile, output_file, feature_columns, input_length, output_length, training_size, random_state,
-             pdf=False, **kwargs):
+             shuffle_data=True, pdf=False, **kwargs):
     data = utils.load_data(datafile, feature_columns, input_length,
                            output_length,
-                           training_size, random_state)
+                           training_size, random_state, shuffle_data=shuffle_data)
     metric_results = model.evaluate(data['x_test'], data['y_test'])
     if type(metric_results) != list:
         metric_results = [metric_results]
@@ -96,7 +96,7 @@ def evaluate(model, datafile, output_file, feature_columns, input_length, output
 
     data = utils.load_data(datafile, feature_columns, input_length,
                            output_length,
-                           training_size, random_state, labels_starting_on_weekday=0)
+                           training_size, random_state, labels_starting_on_weekday=0, shuffle_data=shuffle_data)
 
     with PdfPages(output_file) if pdf else nullcontext() as pdf_file:
         if not pdf:
@@ -115,7 +115,7 @@ def evaluate(model, datafile, output_file, feature_columns, input_length, output
 
             utils.plot_results(axes if pdf else axes[plot_num], title, data[dates],
                                data['rescaler'].inverse_transform(model.predict(data[x])),
-                               data['rescaler'].inverse_transform(data[y]), minor_xtics=(x != 'x_train'))
+                               data['rescaler'].inverse_transform(data[y]), show_xticks=(x == 'x_test'))
 
             if pdf:
                 pdf_file.savefig(fig)
@@ -132,7 +132,7 @@ def add_common_args(arg_parser, which=('datafile', 'configfile')):
         arg_parser.add_argument('configfile', help="The config file (yaml)")
 
 
-def evaluate_command(model_name, pdf=False):
+def evaluate_command(model_name, pdf=False, shuffle_data=True):
     ok(f"Loading model from {model_name}")
     model = keras.models.load_model(model_name)
     assets_folder = os.path.join(model_name, "assets")
@@ -141,13 +141,14 @@ def evaluate_command(model_name, pdf=False):
     config, _ = load_config(config_file)
     output_file = os.path.join(assets_folder, 'results.pdf')
     ok(f"Features are: {config['feature_columns']}")
-    evaluate(model, datafile, output_file, pdf=pdf, **config)
+    evaluate(model, datafile, output_file, pdf=pdf, shuffle_data=shuffle_data, **config)
 
 
-def train_command(configfile, datafile, hp_index):
+def train_command(configfile, datafile, hp_index, model_prefix_override=None):
     config, prefix = load_config(configfile)
 
-    model_name = f'{prefix}-{hp_index}' if hp_index is not None else prefix
+    model_name = model_prefix_override if model_prefix_override else prefix
+    model_name = f'{model_name}-{hp_index}' if hp_index is not None else model_name
 
     if os.path.exists(model_name):
         error(f'Model {model_name} already exists!')
@@ -200,16 +201,18 @@ if __name__ == '__main__':
     train_parser.add_argument('--hp-index', '-hp',
                               help="Hyperparameters index - if not provided, the optimal hyperparameters will be used",
                               type=int)
+    train_parser.add_argument('--model-prefix', '-mp', help="Model prefix to use - defaults to config filename prefix")
 
     evaluate_parser = subparsers.add_parser('evaluate', aliases=('eval',), help='Evaluate a model')
     evaluate_parser.add_argument('model', help='Model to evaluate')
     evaluate_parser.add_argument('--pdf', action='store_true', help='Store results as pdf')
+    evaluate_parser.add_argument('--no-shuffle', action='store_true')
 
     args = arg_parser.parse_args()
 
     if args.command in ('evaluate', 'eval'):
-        evaluate_command(args.model, pdf=args.pdf)
+        evaluate_command(args.model, pdf=args.pdf, shuffle_data=not args.no_shuffle)
     elif args.command == 'train':
-        train_command(args.configfile, args.datafile, args.hp_index)
+        train_command(args.configfile, args.datafile, args.hp_index, args.model_prefix)
     elif args.command == 'tune':
         tune_command(args.configfile, args.datafile)

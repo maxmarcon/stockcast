@@ -1,13 +1,11 @@
 import operator
 from functools import reduce
 
-import matplotlib.dates
 import numpy as np
 import pandas
 import tensorflow.keras as keras
 import tensorflow.keras.layers as layers
 from colors import *
-from dateutil.rrule import MO
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import OneHotEncoder
@@ -114,20 +112,32 @@ def preprocess(data):
     return close_scaler
 
 
-def plot_results(ax, title, dates, predicted_labels, labels, minor_xtics=True):
-    # dates = matplotlib.dates.datestr2num(dates.reshape(-1))
-
+def plot_results(ax, title, dates, predicted_labels, labels, show_xticks=True):
+    sections = sorted(zip(dates, labels, predicted_labels), key=lambda el: el[0][0])
     ax.set_title(title)
-    for i in range(0, len(dates)):
+
+    xticks, xtick_labels = [], []
+    last_right = 0
+    for i in range(0, len(sections)):
         # mdates = matplotlib.dates.datestr2num(dates[i])
-        ax.plot_date(mdates, labels[i], 'b.-', label='Real value')
-        ax.plot_date(mdates, predicted_labels[i], 'r.-', label='Predicted')
-    # ax.legend()
-    if minor_xtics:
-        ax.xaxis.set_minor_locator(matplotlib.dates.WeekdayLocator(byweekday=MO))
-        ax.xaxis.grid(which='minor')
-    # ax.set_xlim(dates[0], dates[-1])
+        left = 0 if i == 0 else i * len(sections[i - 1][0])
+        right = (i + 1) * len(sections[i][0])
+        last_right = right
+        xticks.append(left)
+        xtick_labels.append(sections[i][0][0])
+        l1, = ax.plot(range(left, right), sections[i][1], 'b.-')
+        l2, = ax.plot(range(left, right), sections[i][2], 'r.-')
+        if i == 0:
+            l1.set_label('Real value')
+            l2.set_label('Predicted value')
+
+    if show_xticks:
+        ax.set_xticks(xticks)
+        ax.set_xticklabels(xtick_labels)
+    ax.legend()
+    ax.set_xlim(0, last_right - 1)
     ax.yaxis.grid(True)
+    ax.xaxis.grid(True)
     for t in ax.xaxis.get_ticklabels():
         t.set_horizontalalignment('right')
         t.set_rotation(30)
@@ -135,6 +145,7 @@ def plot_results(ax, title, dates, predicted_labels, labels, minor_xtics=True):
 
 
 def load_data(datafile, feature_columns, input_length, output_length, training_size, random_state,
+              shuffle_data=True,
               labels_starting_on_weekday=None):
     ok(f"Reading data from {datafile}")
     data = pandas.read_csv(datafile)
@@ -152,7 +163,8 @@ def load_data(datafile, feature_columns, input_length, output_length, training_s
 
     x_train, x_test, y_train, y_test, dates_train, dates_test = train_test_split(features, labels, label_dates,
                                                                                  random_state=random_state,
-                                                                                 train_size=training_size)
+                                                                                 train_size=training_size,
+                                                                                 shuffle=shuffle_data)
 
     return {
         'x_train': x_train,
