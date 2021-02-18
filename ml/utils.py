@@ -115,7 +115,8 @@ def preprocess(data):
 def plot_results(ax, title, dates, predicted_labels, labels, show_xticks=True):
     sections = sorted(
         map(lambda el: dict(dates=el[0], labels=el[1], predicted=el[2]), zip(dates, labels, predicted_labels)),
-        key=lambda el: el['dates'][0])
+        key=lambda el: el['dates'][0]
+    )
     ax.set_title(title)
 
     xticks, xtick_labels = [], []
