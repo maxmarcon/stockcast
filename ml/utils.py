@@ -113,20 +113,21 @@ def preprocess(data):
 
 
 def plot_results(ax, title, dates, predicted_labels, labels, show_xticks=True):
-    sections = sorted(zip(dates, labels, predicted_labels), key=lambda el: el[0][0])
+    sections = sorted(
+        map(lambda el: dict(dates=el[0], labels=el[1], predicted=el[2]), zip(dates, labels, predicted_labels)),
+        key=lambda el: el['dates'][0])
     ax.set_title(title)
 
     xticks, xtick_labels = [], []
     last_right = 0
-    for i in range(0, len(sections)):
-        # mdates = matplotlib.dates.datestr2num(dates[i])
-        left = 0 if i == 0 else i * len(sections[i - 1][0])
-        right = (i + 1) * len(sections[i][0])
+    for i, section in enumerate(sections):
+        left = 0 if i == 0 else i * len(sections[i - 1]['dates'])
+        right = (i + 1) * len(sections[i]['dates'])
         last_right = right
         xticks.append(left)
-        xtick_labels.append(sections[i][0][0])
-        l1, = ax.plot(range(left, right), sections[i][1], 'b.-')
-        l2, = ax.plot(range(left, right), sections[i][2], 'r.-')
+        xtick_labels.append(sections[i]['dates'][0])
+        l1, = ax.plot(range(left, right), sections[i]['labels'], 'b.-')
+        l2, = ax.plot(range(left, right), sections[i]['predicted'], 'r.-')
         if i == 0:
             l1.set_label('Real value')
             l2.set_label('Predicted value')
@@ -144,10 +145,10 @@ def plot_results(ax, title, dates, predicted_labels, labels, show_xticks=True):
         t.set_fontsize('small')
 
 
-def load_data(datafile, feature_columns, input_length, output_length, training_size, random_state,
-              shuffle_data=True,
+def load_data(datafile, feature_columns, input_length, output_length, training_size, random_state, shuffle_data,
               labels_starting_on_weekday=None):
     ok(f"Reading data from {datafile}")
+    warn(f"Data shuffling is {'ON' if shuffle_data else 'OFF'}")
     data = pandas.read_csv(datafile)
     close_rescaler = preprocess(data)
 

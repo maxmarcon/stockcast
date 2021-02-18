@@ -22,7 +22,7 @@ def fit(model, epochs, batch_size, loss_function, optimizer, validation_split, x
 
 
 def tune(prefix, datafile, hyperparameter_space, input_length, output_length, training_size, validation_split,
-         random_state):
+         random_state, shuffle_data):
     total_models = utils.parameter_space_size(hyperparameter_space)
     trained_models = 0
 
@@ -47,7 +47,7 @@ def tune(prefix, datafile, hyperparameter_space, input_length, output_length, tr
 
                 model, history, training_time = train(datafile, hyperparameters, input_length, output_length,
                                                       training_size,
-                                                      validation_split, random_state, silent=True)
+                                                      validation_split, random_state, shuffle_data, silent=True)
                 try:
                     pass
                 except KeyboardInterrupt:
@@ -66,11 +66,11 @@ def tune(prefix, datafile, hyperparameter_space, input_length, output_length, tr
 
 
 def train(datafile, hyperparameters, input_length, output_length, training_size, validation_split, random_state,
-          silent=False, **kwargs):
+          shuffle_data, silent=False, **kwargs):
     feature_columns = hyperparameters['feature_columns']
     data = utils.load_data(datafile, feature_columns, input_length,
                            output_length,
-                           training_size, random_state, shuffle_data=False)
+                           training_size, random_state, shuffle_data)
     model = utils.make_model(input_length, len(feature_columns), output_length,
                              **hyperparameters)
     start = time()
@@ -83,7 +83,7 @@ def train(datafile, hyperparameters, input_length, output_length, training_size,
 
 
 def evaluate(model, datafile, output_file, feature_columns, input_length, output_length, training_size, random_state,
-             shuffle_data=True, pdf=False, **kwargs):
+             shuffle_data, pdf=False, **kwargs):
     data = utils.load_data(datafile, feature_columns, input_length,
                            output_length,
                            training_size, random_state, shuffle_data=shuffle_data)
@@ -124,7 +124,7 @@ def evaluate(model, datafile, output_file, feature_columns, input_length, output
             pyplot.show()
 
 
-def add_common_args(arg_parser, which=('datafile', 'configfile')):
+def add_common_args(arg_parser, which=('datafile', 'configfile', 'no-shuffle')):
     if 'datafile' in which:
         arg_parser.add_argument('datafile',
                                 help="Input data file")
@@ -139,9 +139,11 @@ def evaluate_command(model_name, pdf=False, shuffle_data=True):
     datafile = os.path.join(assets_folder, "data.csv")
     config_file = os.path.join(assets_folder, 'config.yaml')
     config, _ = load_config(config_file)
+    if shuffle_data != config['shuffle_data']:
+        config['shuffle_data'] = shuffle_data
     output_file = os.path.join(assets_folder, 'results.pdf')
     ok(f"Features are: {config['feature_columns']}")
-    evaluate(model, datafile, output_file, pdf=pdf, shuffle_data=shuffle_data, **config)
+    evaluate(model, datafile, output_file, **config, pdf=pdf)
 
 
 def train_command(configfile, datafile, hp_index, model_prefix_override=None):
