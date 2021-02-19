@@ -30,7 +30,7 @@ def load_tuning_state(filename, dontfail=True):
         with open(filename, 'r') as fd:
             comments = filter(lambda line: line.startswith('#'), fd.readlines())
             for comment in comments:
-                m = re.match('#\s+checksum:\s+(\w+)', comment, flags=re.I)
+                m = re.match(r'#\s+checksum:\s+(\w+)', comment, flags=re.I)
                 if m is not None:
                     checksum = m.group(1)
                     break
