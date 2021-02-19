@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import hashlib
 import os.path
 import shutil
 from contextlib import nullcontext
@@ -26,14 +27,24 @@ def tune(prefix, datafile, hyperparameter_space, input_length, output_length, tr
     total_models = utils.parameter_space_size(hyperparameter_space)
     trained_models = 0
 
-    ok("{} models to train".format(total_models))
+    with open(datafile, 'br') as fd:
+        datafile_checkusm = hashlib.md5(fd.read()).hexdigest()
+
+    ok(f"Datafile checksum is: {datafile_checkusm}")
+    ok(f"{total_models} models to train")
 
     tuning_state_filename = f'{prefix}.tuning'
     ok(f"Storing tuning state in: {tuning_state_filename}")
-    tuning_state = utils.load_tuning_state(tuning_state_filename)
+    tuning_state, checksum = utils.load_tuning_state(tuning_state_filename)
     if tuning_state is not None:
         warn(f'Resuming interrupted tuning session with {len(tuning_state)} trained models')
-
+        if not checksum:
+            warn(f"No checkusm for datafile found in {tuning_state_filename}")
+        elif checksum != datafile_checkusm:
+            error(f"""Checksum in {tuning_state_filename} doesn't match datafile checksum:
+Checksum of datafile {datafile}: {datafile_checkusm}
+Checksum from {tuning_state_filename}: {checksum}""")
+            exit(1)
     try:
         for hyperparameters in utils.enumerate_parameter_space(hyperparameter_space):
             if utils.contains_tuning_state(tuning_state, hyperparameters):
@@ -58,7 +69,7 @@ def tune(prefix, datafile, hyperparameter_space, input_length, output_length, tr
                                                            {'loss': history.history['loss'][-1],
                                                             'val_loss': history.history['val_loss'][-1]},
                                                            training_time,
-                                                           tuning_state_filename)
+                                                           tuning_state_filename, datafile_checkusm)
             trained_models = trained_models + 1
         warn("Tuning completed, results stored in: {}".format(tuning_state_filename))
     except KeyboardInterrupt:
@@ -186,9 +197,12 @@ def tune_command(configfile, datafile):
 
 
 def load_config(configfile):
+    configname, ext = os.path.splitext(configfile)
+    if ext == '':
+        configfile = configname + ".yaml"
     ok(f"Loading config from {configfile}")
-    with open(configfile, 'r') as fd:
-        return yaml.safe_load(fd), os.path.splitext(configfile)[0]
+    with open(configfile) as fd:
+        return yaml.safe_load(fd), configname
 
 
 if __name__ == '__main__':

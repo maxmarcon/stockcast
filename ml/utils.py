@@ -25,13 +25,21 @@ def make_model(input_len, feature_size, output_len, layer_size, nof_hidden_layer
 
 
 def load_tuning_state(filename, dontfail=True):
+    checksum = None
     try:
-        return pandas.read_csv(filename)
+        with open(filename, 'r') as fd:
+            comments = filter(lambda line: line.startswith('#'), fd.readlines())
+            for comment in comments:
+                m = re.match('#\s+checksum:\s+(\w+)', comment, flags=re.I)
+                if m is not None:
+                    checksum = m.group(1)
+                    break
+        return pandas.read_csv(filename, comment='#'), checksum
     except FileNotFoundError:
         if not dontfail:
             error(f"Could not open file {filename} - maybe you should tune first?")
             exit(1)
-        return None
+        return None, None
 
 
 def enumerate_parameter_space(parameter_space):
@@ -67,7 +75,7 @@ def contains_tuning_state(dataframe, parameters):
     return not dataframe[selector].empty
 
 
-def save_tuning_state(dataframe, parameters, metrics, time, filename):
+def save_tuning_state(dataframe, parameters, metrics, time, filename, checksum):
     row_dict = {**paramaters_for_lookup(parameters), **metrics, 'time': time}
 
     if dataframe is None:
@@ -75,12 +83,14 @@ def save_tuning_state(dataframe, parameters, metrics, time, filename):
     else:
         dataframe = dataframe.append(row_dict, ignore_index=True)
 
-    dataframe.to_csv(filename, index=False)
+    with open(filename, "w") as fd:
+        print(f'# checksum: {checksum}', file=fd)
+        dataframe.to_csv(fd, index=False)
     return dataframe
 
 
 def load_hyperparameters(tuning_file, hp_index):
-    tuning_state = load_tuning_state(tuning_file, False)
+    tuning_state, _ = load_tuning_state(tuning_file, False)
     if hp_index >= len(tuning_state):
         error(f"Index {hp_index} exceed max index {len(tuning_state) - 1}")
         exit(1)
@@ -89,7 +99,7 @@ def load_hyperparameters(tuning_file, hp_index):
 
 
 def load_optimal_hyperparameters_index(tuning_file, column='val_loss'):
-    tuning_state = load_tuning_state(tuning_file, False)
+    tuning_state, _ = load_tuning_state(tuning_file, False)
     return tuning_state[tuning_state['val_loss'] == tuning_state.min()['val_loss']].index[0]
 
 
